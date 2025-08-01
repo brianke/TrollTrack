@@ -65,29 +65,29 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Models\" />
+	  <Folder Include="MVVM\Models\" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="Views\Analytics.xaml.cs">
+	  <Compile Update="MVVM\Views\Analytics.xaml.cs">
 	    <DependentUpon>Analytics.xaml</DependentUpon>
 	  </Compile>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiXaml Update="Views\Catches.xaml">
+	  <MauiXaml Update="MVVM\Views\Catches.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\Dashboard.xaml">
+	  <MauiXaml Update="MVVM\Views\Dashboard.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\Lures.xaml">
+	  <MauiXaml Update="MVVM\Views\Lures.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\Analytics.xaml">
+	  <MauiXaml Update="MVVM\Views\Analytics.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\Program.xaml">
+	  <MauiXaml Update="MVVM\Views\Program.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>

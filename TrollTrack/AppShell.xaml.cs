@@ -7,11 +7,11 @@
             InitializeComponent();
 
             // Register additional routes for sub-pages
-            Routing.RegisterRoute("dashboard", typeof(Views.Dashboard));
-            Routing.RegisterRoute("catches", typeof(Views.Catches));
-            Routing.RegisterRoute("program", typeof(Views.Program));
-            Routing.RegisterRoute("lures", typeof(Views.Lures));
-            Routing.RegisterRoute("analytics", typeof(Views.Analytics));
+            Routing.RegisterRoute("dashboard", typeof(MVVM.Views.Dashboard));
+            Routing.RegisterRoute("catches", typeof(MVVM.Views.Catches));
+            Routing.RegisterRoute("program", typeof(MVVM.Views.Program));
+            Routing.RegisterRoute("lures", typeof(MVVM.Views.Lures));
+            Routing.RegisterRoute("analytics", typeof(MVVM.Views.Analytics));
         }
     }
 }

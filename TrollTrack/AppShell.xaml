@@ -3,7 +3,7 @@
     x:Class="TrollTrack.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:views="clr-namespace:TrollTrack.Views"
+    xmlns:views="clr-namespace:TrollTrack.MVVM.Views"
     Title="TrollTrack">
 
     <!-- Disable the flyout since you're using bottom tabs -->
@@ -18,7 +18,7 @@
         <ShellContent
             Title="Catches"
             ContentTemplate="{DataTemplate views:Catches}"
-            Route="Cathces" />
+            Route="Catches" />
 
         <ShellContent
             Title="Program"
@@ -31,7 +31,7 @@
             Route="Lures" />
 
         <ShellContent
-            Title="Empty"
+            Title="Analytics"
             ContentTemplate="{DataTemplate views:Analytics}"
             Route="Analytics" />
 
