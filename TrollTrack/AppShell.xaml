@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="TrollTrack.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:TrollTrack.Views"
+    Title="TrollTrack">
+
+    <!-- Disable the flyout since you're using bottom tabs -->
+    <Shell.FlyoutBehavior>Disabled</Shell.FlyoutBehavior>
+
+    <TabBar>
+        <ShellContent
+            Title="Dashboard"
+            ContentTemplate="{DataTemplate views:Dashboard}"
+            Route="Dashboard" />
+        
+        <ShellContent
+            Title="Catches"
+            ContentTemplate="{DataTemplate views:Catches}"
+            Route="Cathces" />
+
+        <ShellContent
+            Title="Program"
+            ContentTemplate="{DataTemplate views:Program}"
+            Route="Program" />
+
+        <ShellContent
+            Title="Lures"
+            ContentTemplate="{DataTemplate views:Lures}"
+            Route="Lures" />
+
+        <ShellContent
+            Title="Empty"
+            ContentTemplate="{DataTemplate views:Analytics}"
+            Route="Analytics" />
+
+    </TabBar>
+</Shell>

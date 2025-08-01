@@ -1,0 +1,71 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\GitHub\\TrollTrack\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{F64FA8D7-4711-4065-9393-E6D0AC215846}|TrollTrack\\TrollTrack.csproj|c:\\github\\trolltrack\\trolltrack\\appshell.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{F64FA8D7-4711-4065-9393-E6D0AC215846}|TrollTrack\\TrollTrack.csproj|solutionrelative:trolltrack\\appshell.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F64FA8D7-4711-4065-9393-E6D0AC215846}|TrollTrack\\TrollTrack.csproj|c:\\github\\trolltrack\\trolltrack\\appshell.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F64FA8D7-4711-4065-9393-E6D0AC215846}|TrollTrack\\TrollTrack.csproj|solutionrelative:trolltrack\\appshell.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F64FA8D7-4711-4065-9393-E6D0AC215846}|TrollTrack\\TrollTrack.csproj|c:\\github\\trolltrack\\trolltrack\\mainpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{F64FA8D7-4711-4065-9393-E6D0AC215846}|TrollTrack\\TrollTrack.csproj|solutionrelative:trolltrack\\mainpage.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "AppShell.xaml",
+              "DocumentMoniker": "C:\\GitHub\\TrollTrack\\TrollTrack\\AppShell.xaml",
+              "RelativeDocumentMoniker": "TrollTrack\\AppShell.xaml",
+              "ToolTip": "C:\\GitHub\\TrollTrack\\TrollTrack\\AppShell.xaml",
+              "RelativeToolTip": "TrollTrack\\AppShell.xaml",
+              "ViewState": "AgIAABMAAAAAAAAAAAAgwCIAAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-08-01T01:09:00.159Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MainPage.xaml",
+              "DocumentMoniker": "C:\\GitHub\\TrollTrack\\TrollTrack\\MainPage.xaml",
+              "RelativeDocumentMoniker": "TrollTrack\\MainPage.xaml",
+              "ToolTip": "C:\\GitHub\\TrollTrack\\TrollTrack\\MainPage.xaml",
+              "RelativeToolTip": "TrollTrack\\MainPage.xaml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2025-08-01T00:59:47.897Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AppShell.xaml.cs",
+              "DocumentMoniker": "C:\\GitHub\\TrollTrack\\TrollTrack\\AppShell.xaml.cs",
+              "RelativeDocumentMoniker": "TrollTrack\\AppShell.xaml.cs",
+              "ToolTip": "C:\\GitHub\\TrollTrack\\TrollTrack\\AppShell.xaml.cs",
+              "RelativeToolTip": "TrollTrack\\AppShell.xaml.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-08-01T00:57:54.333Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
