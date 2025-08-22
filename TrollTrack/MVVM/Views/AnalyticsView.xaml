@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TrollTrack.MVVM.Views.Catches"
-             Title="Catches">
+             x:Class="TrollTrack.MVVM.Views.AnalyticsView"
+             xmlns:vm="clr-namespace:TrollTrack.MVVM.ViewModels"
+             x:DataType="vm:AnalyticsViewModel"
+             Title="{Binding Title}">
     <VerticalStackLayout>
         <Label 
-            Text="Welcome to Catches"
+            Text="Welcome to Analytics"
             VerticalOptions="Center" 
             HorizontalOptions="Center" />
     </VerticalStackLayout>

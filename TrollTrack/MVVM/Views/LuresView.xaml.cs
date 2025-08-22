@@ -1,8 +1,8 @@
 namespace TrollTrack.MVVM.Views;
 
-public partial class Catches : ContentPage
+public partial class LuresView : ContentPage
 {
-	public Catches()
+	public LuresView()
 	{
 		InitializeComponent();
 	}

@@ -3,37 +3,39 @@
     x:Class="TrollTrack.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:views="clr-namespace:TrollTrack.MVVM.Views"
-    Title="TrollTrack">
-
-    <!-- Disable the flyout since you're using bottom tabs -->
-    <Shell.FlyoutBehavior>Disabled</Shell.FlyoutBehavior>
+    xmlns:local="clr-namespace:TrollTrack.MVVM.Views"
+    Title="TrollTrack"
+    Shell.FlyoutBehavior="Disabled">
 
     <TabBar>
         <ShellContent
             Title="Dashboard"
-            ContentTemplate="{DataTemplate views:Dashboard}"
-            Route="Dashboard" />
-        
+            ContentTemplate="{DataTemplate local:DashboardView}"
+            Route="Dashboard" 
+            Icon="dashboard.png"/>
+
         <ShellContent
             Title="Catches"
-            ContentTemplate="{DataTemplate views:Catches}"
-            Route="Catches" />
+            ContentTemplate="{DataTemplate local:CatchesView}"
+            Route="Catches" 
+            Icon="fish.png"/>
 
         <ShellContent
             Title="Program"
-            ContentTemplate="{DataTemplate views:Program}"
-            Route="Program" />
+            ContentTemplate="{DataTemplate local:ProgramsView}"
+            Route="Program" 
+            Icon="program.png"/>
 
         <ShellContent
             Title="Lures"
-            ContentTemplate="{DataTemplate views:Lures}"
-            Route="Lures" />
+            ContentTemplate="{DataTemplate local:LuresView}"
+            Route="Lures" 
+            Icon="lure.png"/>
 
         <ShellContent
             Title="Analytics"
-            ContentTemplate="{DataTemplate views:Analytics}"
-            Route="Analytics" />
-
+            ContentTemplate="{DataTemplate local:AnalyticsView}"
+            Route="Analytics"
+            Icon="analytics.png" />
     </TabBar>
 </Shell>
