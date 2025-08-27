@@ -41,6 +41,14 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 	</PropertyGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		<AndroidKeyStore>true</AndroidKeyStore>
+		<AndroidSigningKeyStore>trolltrack.keystore</AndroidSigningKeyStore>
+		<AndroidSigningKeyAlias>trolltrack</AndroidSigningKeyAlias>
+		<AndroidSigningKeyPass>TrollTrack1234!@#$</AndroidSigningKeyPass>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<!-- App Icon -->
@@ -64,10 +72,6 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="MVVM\Models\" />
 	</ItemGroup>
 
 	<ItemGroup>

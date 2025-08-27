@@ -1,6 +1,6 @@
 ﻿namespace TrollTrack
 {
-    public partial class AppShell : Shell
+    public partial class AppShell : Shell, INotifyPropertyChanged
     {
         public AppShell()
         {
