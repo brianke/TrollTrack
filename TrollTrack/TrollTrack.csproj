@@ -3,16 +3,6 @@
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
-		<LangVersion>13.0</LangVersion>
-		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
-		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
-
-		<!-- Note for MacCatalyst:
-		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
-		When specifying both architectures, use the plural <RuntimeIdentifiers> instead of the singular <RuntimeIdentifier>.
-		The Mac App Store will NOT accept apps with ONLY maccatalyst-arm64 indicated;
-		either BOTH runtimes must be indicated or ONLY macatalyst-x64. -->
-		<!-- For example: <RuntimeIdentifiers>maccatalyst-x64;maccatalyst-arm64</RuntimeIdentifiers> -->
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>TrollTrack</RootNamespace>
@@ -25,29 +15,39 @@
 		<ApplicationTitle>TrollTrack</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.trolltrack</ApplicationId>
+		<ApplicationId>com.trolltrack.fishing</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
-		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
-		<WindowsPackageType>None</WindowsPackageType>
+		<!-- Android specific settings -->
+		<AndroidPackageFormat>apk</AndroidPackageFormat>
+		<AndroidUseAapt2>true</AndroidUseAapt2>
+		<AndroidEnableProfiledAot>false</AndroidEnableProfiledAot>
+		<GeneratePackageOnBuild Condition="'$(TargetFramework)' == 'net9.0-android'">true</GeneratePackageOnBuild>
+		<AndroidKeyStore>false</AndroidKeyStore>
+		
+		<!-- Force APK generation -->
+		<AndroidPackageFormats Condition="'$(TargetFramework)' == 'net9.0-android'">apk</AndroidPackageFormats>
+		
+		<!-- Debug settings -->
+		<EmbedAssembliesIntoApk Condition="'$(Configuration)' == 'Debug'">false</EmbedAssembliesIntoApk>
+		<AndroidLinkMode Condition="'$(Configuration)' == 'Debug'">None</AndroidLinkMode>
+		<AndroidCreatePackagePerAbi Condition="'$(Configuration)' == 'Debug'">false</AndroidCreatePackagePerAbi>
+		<AndroidUseSharedRuntime Condition="'$(Configuration)' == 'Debug'">true</AndroidUseSharedRuntime>
+		
+		<!-- Release settings -->
+		<AndroidLinkMode Condition="'$(Configuration)' == 'Release'">SdkOnly</AndroidLinkMode>
+		<RunAOTCompilation Condition="'$(Configuration)' == 'Release'">false</RunAOTCompilation>
+		<AndroidCreatePackagePerAbi Condition="'$(Configuration)' == 'Release'">false</AndroidCreatePackagePerAbi>
+		<AndroidUseSharedRuntime Condition="'$(Configuration)' == 'Release'">false</AndroidUseSharedRuntime>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
-		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
-	</PropertyGroup>
-	
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
-		<AndroidPackageFormat>apk</AndroidPackageFormat>
-		<AndroidKeyStore>true</AndroidKeyStore>
-		<AndroidSigningKeyStore>trolltrack.keystore</AndroidSigningKeyStore>
-		<AndroidSigningKeyAlias>trolltrack</AndroidSigningKeyAlias>
-		<AndroidSigningKeyPass>TrollTrack1234!@#$</AndroidSigningKeyPass>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -60,11 +60,11 @@
 		<!-- Images -->
 		<MauiImage Include="Resources\Images\*" />
 		<MauiImage Update="Resources\Images\dotnet_bot.png" Resize="True" BaseSize="300,185" />
-
+		
 		<!-- Custom Fonts -->
 		<MauiFont Include="Resources\Fonts\*" />
 
-		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
+		<!-- Raw Assets -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
@@ -72,42 +72,44 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+		
+		<!-- Essential packages for your fishing app -->
+		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.100" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	</ItemGroup>
+
+	<!-- Platform specific configurations -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.100" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="MVVM\Views\AnalyticsView.xaml.cs">
-	    <DependentUpon>AnalyticsView.xaml</DependentUpon>
-	  </Compile>
-	  <Compile Update="MVVM\Views\CatchesView.xaml.cs">
-	    <DependentUpon>CatchesView.xaml</DependentUpon>
-	  </Compile>
-	  <Compile Update="MVVM\Views\DashboardView.xaml.cs">
-	    <DependentUpon>DashboardView.xaml</DependentUpon>
-	  </Compile>
-	  <Compile Update="MVVM\Views\LuresView.xaml.cs">
-	    <DependentUpon>LuresView.xaml</DependentUpon>
-	  </Compile>
-	  <Compile Update="MVVM\Views\ProgramsView.xaml.cs">
-	    <DependentUpon>ProgramsView.xaml</DependentUpon>
-	  </Compile>
+		<Folder Include="MVVM\Models\" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiXaml Update="MVVM\Views\CatchesView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="MVVM\Views\DashboardView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="MVVM\Views\LuresView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="MVVM\Views\AnalyticsView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="MVVM\Views\ProgramsView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
+		<Compile Update="MVVM\Views\Analytics.xaml.cs">
+			<DependentUpon>Analytics.xaml</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<MauiXaml Update="MVVM\Views\Catches.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="MVVM\Views\Dashboard.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="MVVM\Views\Lures.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="MVVM\Views\Analytics.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
+		<MauiXaml Update="MVVM\Views\Program.xaml">
+			<Generator>MSBuild:Compile</Generator>
+		</MauiXaml>
 	</ItemGroup>
 
 </Project>
