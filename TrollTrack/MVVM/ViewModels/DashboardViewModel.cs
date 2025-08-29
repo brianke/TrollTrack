@@ -1,14 +1,26 @@
 ﻿
+using TrollTrack.Configuration;
+using TrollTrack.MVVM.Models;
+
 namespace TrollTrack.MVVM.ViewModels
 {
     public partial class DashboardViewModel : BaseViewModel
     {
         private readonly LocationService _locationService;
+        private readonly WeatherService _weatherService;
         //private readonly DatabaseService _databaseService;
-        //private readonly WeatherService _weatherService;
         //private readonly AIRecommendationService _aiService;
 
         #region Observable Properties
+
+        [ObservableProperty]
+        private bool isInitializing = true;
+
+        [ObservableProperty]
+        private string refreshStatus = "Refreshing data...";
+
+
+        #region Location Properties
 
         [ObservableProperty]
         private double currentLatitude;
@@ -23,37 +35,44 @@ namespace TrollTrack.MVVM.ViewModels
         private string formattedLongitude = "0° 0' 0\" W";
 
         [ObservableProperty]
-        private string locationStatus = "Getting location...";
-
-        //[ObservableProperty]
-        //private WeatherData weatherData;
-
-        [ObservableProperty]
-        private bool isWeatherLoading;
-
-        [ObservableProperty]
-        private string weatherStatus = "Loading weather...";
-
-        [ObservableProperty]
-        private int todaysCatches;
-
-        [ObservableProperty]
-        private string totalFishingTime = "0h 0m";
-
-        [ObservableProperty]
-        private string bestCatch = "No catches today";
-
-        [ObservableProperty]
-        private string currentTrollingMethod = "None active";
+        private string locationName = "Unknown Location";
 
         [ObservableProperty]
         private bool hasLocationPermission;
 
         [ObservableProperty]
-        private DateTime lastUpdated;
+        private DateTime locationLastUpdated;
 
         [ObservableProperty]
-        private string formattedLastUpdated;
+        private string locationLastUpdatedFormatted;
+
+        [ObservableProperty]
+        private bool isLocationEnabled;
+
+        #endregion
+
+        #region WeatherProperties
+
+        [ObservableProperty]
+        private WeatherData weatherData;
+
+        [ObservableProperty]
+        private bool isWeatherLoading;
+
+        [ObservableProperty]
+        private string weatherSummary = "Loading weather...";
+
+        [ObservableProperty]
+        private string fishingConditions = "Loading fishing conditions...";
+
+        [ObservableProperty]
+        private bool isWeatherApiConfigured;
+
+        [ObservableProperty]
+        private string weatherApiStatusMessage = "";
+
+        #endregion
+
 
         //[ObservableProperty]
         //private bool isAutoRefreshEnabled = true;
@@ -61,8 +80,6 @@ namespace TrollTrack.MVVM.ViewModels
         //[ObservableProperty]
         //private int autoRefreshCountdown = 30;
 
-        [ObservableProperty]
-        private bool isInitializing = true;
 
         #endregion
 
@@ -74,97 +91,129 @@ namespace TrollTrack.MVVM.ViewModels
         #endregion
 
         #region Timers
-/*
-        private IDispatcherTimer _locationRefreshTimer;
-        private IDispatcherTimer _countdownTimer;
-*/
+        /*
+                private IDispatcherTimer _locationRefreshTimer;
+                private IDispatcherTimer _countdownTimer;
+        */
         #endregion
 
         #region Constructor
 
         public DashboardViewModel(
-            LocationService locationService
+            LocationService locationService,
+            WeatherService weatherService
             //DatabaseService databaseService,
-            //WeatherService weatherService,
             //AIRecommendationService aiService
         )
         {
             _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
+            _weatherService = weatherService ?? throw new ArgumentNullException(nameof(weatherService));
             //_databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
-            //_weatherService = weatherService ?? throw new ArgumentNullException(nameof(weatherService));
             //_aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
 
             Title = "Dashboard";
 
-            // Initialize weather data to prevent null reference
-            //WeatherData = new WeatherData
-            //{
-            //    Temperature = 0,
-            //    WindSpeed = 0,
-            //    WindDirection = "N/A",
-            //    Conditions = "Loading...",
-            //    Sunrise = DateTime.Now,
-            //    Sunset = DateTime.Now,
-            //    Pressure = 0,
-            //    Humidity = 0
-            //};
-
             // Initialize auto-refresh timers
             //InitializeTimers();
 
-            // Start initialization in background
-            _ = Task.Run(async () => await InitializeAsync());
+            // Check API configuration status
+            CheckApiConfiguration();
+
+            // Load data when ViewModel is created
+            _ = InitializeAsync();
+        }
+
+        private void CheckApiConfiguration()
+        {
+            IsWeatherApiConfigured = ConfigurationService.IsWeatherApiConfigured();
+            var (isValid, message) = ConfigurationService.GetWeatherApiKeyStatus();
+            WeatherApiStatusMessage = message;
         }
 
         #endregion
 
         #region Initialization
 
+        /// <summary>
+        /// Initialize the data needed for the dashboard (Location, Weather, etc.)
+        /// </summary>
+        /// <returns></returns>
         private async Task InitializeAsync()
+        {
+            await ExecuteSafelyAsync(async () =>
+            {
+                Debug.WriteLine("Starting dashboard initialization...");
+                IsInitializing = true;
+
+                // Set default location first
+                CurrentLatitude = AppConfig.Constants.DefaultLatitude;
+                CurrentLongitude = AppConfig.Constants.DefaultLongitude;
+                LocationName = "Default Location (Great Lakes)";
+
+                // Try to get actual location
+                await UpdateLocationAndWeatherAsync();
+
+                // Update Title
+                Title = "Dashboard";
+            }, "Initializing dashboard...", showErrorAlert: false);        
+        }
+
+        [RelayCommand]
+        private async Task RefreshDashboard()
         {
             try
             {
-                Debug.WriteLine("Starting dashboard initialization...");
-
-                // Check and request location permission
-                await RequestLocationPermissionAsync();
-
-                // Get location and weather
-                await UpdateLocationAndWeatherAsync();
-
-/*
-                // Initialize database first
-                await _databaseService.InitializeAsync();
-                Debug.WriteLine("Database initialized");
-
-                // Load initial data
-                await LoadDashboardDataAsync();
-
-
-                // Load AI recommendations
-                await RefreshRecommendationsAsync();
-
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    IsInitializing = false;
-                    UpdateLastUpdatedTime();
-                    StartAutoRefresh(); // Start auto-refresh after initialization
-                });
-*/
-                Debug.WriteLine("Dashboard initialization completed");
+                await UpdateLocationAsync();
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"Dashboard initialization error: {ex.Message}");
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    IsInitializing = false;
-                    LocationStatus = "Initialization failed";
-                    WeatherStatus = "Weather unavailable";
-                });
+                Debug.WriteLine($"Dashboard refresh error: {ex.Message}");
+                await ShowAlertAsync("Error", "Failed to refresh dashboard data.");
             }
+            finally
+            {
+            }
+
+            //await UpdateLocationAsync();
+
+            //// Load weather data if API is configured and lat/long are set
+            //if (IsWeatherApiConfigured && (CurrentLatitude != 0 && CurrentLongitude != 0))
+            //{
+            //    await LoadWeatherDataAsync();
+            //}
+            //else
+            //{
+            //    WeatherSummary = "Weather API not configured";
+            //    FishingConditions = "Configure your WeatherAPI.com key in Settings to see fishing conditions";
+            //}
         }
 
+
+        /// <summary>
+        /// Update location and weather data
+        /// </summary>
+        /// <returns></returns>
+        private async Task UpdateLocationAndWeatherAsync()
+        {
+            await UpdateLocationAsync();
+
+            // Load weather data if API is configured and lat/long are set
+            if (IsWeatherApiConfigured && (CurrentLatitude != 0 && CurrentLongitude != 0))
+            {
+                await LoadWeatherDataAsync();
+            }
+            else
+            {
+                WeatherSummary = "Weather API not configured";
+                FishingConditions = "Configure your WeatherAPI.com key in Settings to see fishing conditions";
+            }
+
+        }
+
+        /// <summary>
+        /// Request permissions for obtaining GPS coordinates
+        /// </summary>
+        /// <returns></returns>
         private async Task RequestLocationPermissionAsync()
         {
             try
@@ -175,7 +224,7 @@ namespace TrollTrack.MVVM.ViewModels
                     HasLocationPermission = hasPermission;
                     if (!hasPermission)
                     {
-                        LocationStatus = "Location permission denied";
+                        RefreshStatus = "Location permission denied";
                     }
                 });
             }
@@ -185,7 +234,7 @@ namespace TrollTrack.MVVM.ViewModels
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     HasLocationPermission = false;
-                    LocationStatus = "Permission error";
+                    RefreshStatus = "Location permission error";
                 });
             }
         }
@@ -304,12 +353,10 @@ namespace TrollTrack.MVVM.ViewModels
         [RelayCommand]
         private async Task UpdateLocationAsync()
         {
-            if (IsBusy) return;
-
             try
             {
                 IsBusy = true;
-                LocationStatus = "Getting location...";
+                RefreshStatus = "Getting location...";
 
                 if (!HasLocationPermission)
                 {
@@ -327,7 +374,7 @@ namespace TrollTrack.MVVM.ViewModels
                 {
                     CurrentLatitude = Math.Round(location.Latitude, 6);
                     CurrentLongitude = Math.Round(location.Longitude, 6);
-                    LocationStatus = "Location updated";
+                    RefreshStatus = LocationLastUpdatedFormatted;
 
                     Debug.WriteLine($"Location updated: {CurrentLatitude}, {CurrentLongitude}");
 
@@ -337,18 +384,18 @@ namespace TrollTrack.MVVM.ViewModels
                     //    AutoRefreshCountdown = 30;
                     //}
 
-                    //// Update weather with new location
-                    //_ = Task.Run(async () => await LoadWeatherDataAsync());
+                    // Update weather with new location
+                    _ = Task.Run(async () => await LoadWeatherDataAsync());
                 }
                 else
                 {
-                    LocationStatus = "Unable to get location";
+                    RefreshStatus = "Unable to get location";
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Location update error: {ex.Message}");
-                LocationStatus = "Location error";
+                RefreshStatus = "Location error";
                 await ShowAlertAsync("Error", $"Failed to get location: {ex.Message}");
             }
             finally
@@ -357,20 +404,16 @@ namespace TrollTrack.MVVM.ViewModels
             }
         }
 
-        private async Task UpdateLocationAndWeatherAsync()
-        {
-            await UpdateLocationAsync();
 
-            //if (CurrentLatitude != 0 && CurrentLongitude != 0)
-            //{
-            //    await LoadWeatherDataAsync();
-            //}
-        }
 
         #endregion
 
         #region Weather Commands
-/*
+
+        /// <summary>
+        /// Refresh weather command
+        /// </summary>
+        /// <returns></returns>
         [RelayCommand]
         private async Task RefreshWeatherAsync()
         {
@@ -390,34 +433,36 @@ namespace TrollTrack.MVVM.ViewModels
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     IsWeatherLoading = true;
-                    WeatherStatus = "Loading weather...";
+                    WeatherSummary = "Loading weather...";
                 });
 
                 if (CurrentLatitude != 0 && CurrentLongitude != 0)
                 {
-                    var weather = await _weatherService.GetWeatherDataAsync(CurrentLatitude, CurrentLongitude);
+                    var weather = await _weatherService.GetCurrentWeatherAsync(CurrentLatitude, CurrentLongitude);
 
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
                         if (weather != null)
                         {
                             WeatherData = weather;
-                            WeatherStatus = "Weather updated";
-                            Debug.WriteLine($"Weather loaded: {weather.Temperature}°F, {weather.Conditions}");
+                            WeatherSummary = "Weather updated";
+                            Debug.WriteLine($"Weather loaded: {weather.Temperature}°F, {weather.WeatherCondition}");
                         }
                         else
                         {
-                            WeatherStatus = "Weather unavailable";
+                            WeatherSummary = "Weather unavailable";
                         }
                         IsWeatherLoading = false;
                         UpdateLastUpdatedTime();
                     });
 
-                    // Refresh recommendations with new weather data
-                    if (weather != null)
-                    {
-                        _ = Task.Run(async () => await RefreshRecommendationsAsync());
-                    }
+                    LocationName = weather.LocationName;
+
+                    // TODO: Refresh recommendations with new weather data
+                    //if (weather != null)
+                    //{
+                    //    _ = Task.Run(async () => await RefreshRecommendationsAsync());
+                    //}
                 }
             }
             catch (Exception ex)
@@ -426,11 +471,12 @@ namespace TrollTrack.MVVM.ViewModels
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     IsWeatherLoading = false;
-                    WeatherStatus = "Weather error";
+                    WeatherSummary = "Weather error";
+                    LocationName = "Unknown location";
                 });
             }
         }
-*/
+
         #endregion
 
         #region AI Recommendations
@@ -633,8 +679,8 @@ namespace TrollTrack.MVVM.ViewModels
 
         private void UpdateLastUpdatedTime()
         {
-            LastUpdated = DateTime.Now;
-            FormattedLastUpdated = $"Last updated: {LastUpdated:HH:mm:ss}";
+            LocationLastUpdated = DateTime.Now;
+            LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
         }
 
         private static async Task ShowAlertAsync(string title, string message)
@@ -694,7 +740,7 @@ namespace TrollTrack.MVVM.ViewModels
             if (value != 0)
             {
                 FormattedLatitude = ConvertToDegreesMinutesSeconds(value, true);
-                LocationStatus = "Location updated";
+                RefreshStatus = "Location updated";
             }
         }
 

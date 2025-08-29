@@ -76,3 +76,12 @@ $tf/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Android keystores
+*.keystore
+*.jks
+Keys/
+android-signing/
+
+# Don't commit keystore passwords
+keystore.properties
