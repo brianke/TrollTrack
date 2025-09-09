@@ -6,8 +6,8 @@ namespace TrollTrack.MVVM.ViewModels
 {
     public partial class DashboardViewModel : BaseViewModel
     {
-        private readonly LocationService _locationService;
-        private readonly WeatherService _weatherService;
+        internal readonly LocationService _locationService;
+        internal readonly WeatherService _weatherService;
         //private readonly DatabaseService _databaseService;
         //private readonly AIRecommendationService _aiService;
 
@@ -54,7 +54,7 @@ namespace TrollTrack.MVVM.ViewModels
         #region WeatherProperties
 
         [ObservableProperty]
-        private WeatherData weatherData;
+        private WeatherData? weatherData;
 
         [ObservableProperty]
         private bool isWeatherLoading;
@@ -99,7 +99,7 @@ namespace TrollTrack.MVVM.ViewModels
 
         #region Constructor
 
-        public DashboardViewModel(
+        internal DashboardViewModel(
             LocationService locationService,
             WeatherService weatherService
             //DatabaseService databaseService,

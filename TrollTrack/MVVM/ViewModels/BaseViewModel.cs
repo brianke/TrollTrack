@@ -90,7 +90,7 @@ namespace TrollTrack.MVVM.ViewModels
         /// </summary>
         /// <param name="busy">Whether the ViewModel is busy</param>
         /// <param name="busyTitle">Optional title to show while busy</param>
-        protected virtual void SetBusy(bool busy, string busyTitle = null)
+        protected virtual void SetBusy(bool busy, string busyTitle = "")
         {
             IsBusy = busy;
 
@@ -139,7 +139,7 @@ namespace TrollTrack.MVVM.ViewModels
         /// <param name="busyMessage">Message to show while busy</param>
         /// <param name="showErrorAlert">Whether to show error alerts to user</param>
         /// <returns>True if operation succeeded, false if it failed</returns>
-        protected async Task<bool> ExecuteSafelyAsync(Func<Task> operation, string busyMessage = null, bool showErrorAlert = true)
+        protected async Task<bool> ExecuteSafelyAsync(Func<Task> operation, string busyMessage = "", bool showErrorAlert = true)
         {
             if (IsBusy)
                 return false;
