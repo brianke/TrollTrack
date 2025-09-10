@@ -6,8 +6,15 @@ using System.Threading.Tasks;
 
 namespace TrollTrack.Services
 {
-    public class LocationService
+    public class LocationService : ILocationService
     {
+        // Required properties and events from interface
+        public bool IsLocationEnabled { get; private set; }
+        public event EventHandler<Location> LocationUpdated;
+
+        // Fields for tracking and history
+        private readonly List<Location> _locationHistory = new();
+
         public async Task<Location> GetCurrentLocationAsync()
         {
             try
@@ -20,10 +27,19 @@ namespace TrollTrack.Services
 
                 var location = await Geolocation.GetLocationAsync(request);
 
-                //TODO: remove before release, just for testing
-                var (town, coords) = LocationData.GetRandomLocation();
-                location.Latitude = coords.Latitude;
-                location.Longitude = coords.Longitude;
+
+                // Set enabled flag and fire event
+                if (location != null)
+                {
+                    IsLocationEnabled = true;
+                    await SaveLocationAsync(location);
+                    LocationUpdated?.Invoke(this, location);
+
+                    //TODO: remove before release, just for testing
+                    var (town, coords) = LocationData.GetRandomLocation();
+                    location.Latitude = coords.Latitude;
+                    location.Longitude = coords.Longitude;
+                }
 
                 return location;
             }
@@ -31,22 +47,58 @@ namespace TrollTrack.Services
             {
                 // Handle location errors
                 System.Diagnostics.Debug.WriteLine($"Location error: {ex.Message}");
+                IsLocationEnabled = false;
                 return null;
             }
         }
 
         public async Task<bool> RequestLocationPermissionAsync()
         {
-            var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
-
-            if (status != PermissionStatus.Granted)
+            try
             {
-                status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                var status = await Permissions.CheckStatusAsync<Permissions.LocationWhenInUse>();
+
+                if (status != PermissionStatus.Granted)
+                {
+                    status = await Permissions.RequestAsync<Permissions.LocationWhenInUse>();
+                }
+
+                IsLocationEnabled = status == PermissionStatus.Granted;
+                return IsLocationEnabled;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Permission error: {ex.Message}");
+                IsLocationEnabled = false;
+                return false;
+            }
+        }
+
+        // ✅ ADD: Implement missing interface methods
+        public async Task<List<Location>> GetLocationHistoryAsync()
+        {
+            return await Task.FromResult(_locationHistory.ToList());
+        }
+
+        public async Task SaveLocationAsync(Location location)
+        {
+            if (location != null)
+            {
+                _locationHistory.Add(location);
+
+                // Keep only last 100 locations to prevent memory issues
+                if (_locationHistory.Count > 100)
+                {
+                    _locationHistory.RemoveAt(0);
+                }
             }
 
-            return status == PermissionStatus.Granted;
+            await Task.CompletedTask;
         }
+
+        
     }
+
 
     public enum LocationReference
     {
@@ -84,7 +136,6 @@ namespace TrollTrack.Services
             { LocationReference.BainbridgeMD, new LocationCoordinates(39.6101, -76.1336) }
         };
 
-
         private static readonly Random _random = new();
 
         public static (LocationReference location, LocationCoordinates coords) GetRandomLocation()
@@ -93,6 +144,5 @@ namespace TrollTrack.Services
             var randomLocation = (LocationReference)values.GetValue(_random.Next(values.Length))!;
             return (randomLocation, Locations[randomLocation]);
         }
-
     }
 }

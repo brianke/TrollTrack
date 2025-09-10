@@ -2,7 +2,6 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>TrollTrack</RootNamespace>
@@ -52,7 +51,7 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
+		<MauiIcon Include="Resources\AppIcon\trolltrack_icon.svg" Color="#2E8BC0" />
 
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
@@ -85,10 +84,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="MVVM\Models\" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<Compile Update="MVVM\Views\Analytics.xaml.cs">
 			<DependentUpon>Analytics.xaml</DependentUpon>
 		</Compile>
@@ -111,5 +106,6 @@
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>
+
 
 </Project>

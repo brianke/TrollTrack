@@ -7,7 +7,7 @@ namespace TrollTrack.Services
     /// <summary>
     /// Service for fetching weather data from WeatherAPI.com
     /// </summary>
-    public class WeatherService
+    public class WeatherService : IWeatherService
     {
         private readonly HttpClient _httpClient;
 
@@ -22,7 +22,7 @@ namespace TrollTrack.Services
         /// <summary>
         /// Gets current weather data for specified coordinates
         /// </summary>
-        public async Task<WeatherData?> GetCurrentWeatherAsync(double latitude, double longitude)
+        public async Task<WeatherData> GetCurrentWeatherAsync(double latitude, double longitude)
         {
             var apiKey = AppConfig.Runtime.WeatherApiKey;
 
@@ -196,7 +196,7 @@ namespace TrollTrack.Services
         /// <summary>
         /// Test the API key by making a simple request
         /// </summary>
-        public async Task<bool> TestApiKeyAsync()
+        private async Task<bool> TestApiKeyAsync()
         {
             try
             {

@@ -10,7 +10,7 @@
 
         #region Constructor
 
-        public ProgramsViewModel()
+        public ProgramsViewModel(ILocationService locationService) : base(locationService)
         {
             Title = "Programs Page";
 

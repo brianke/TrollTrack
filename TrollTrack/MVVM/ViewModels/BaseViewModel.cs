@@ -8,11 +8,25 @@ namespace TrollTrack.MVVM.ViewModels
     /// </summary>
     public partial class BaseViewModel : ObservableObject
     {
+        #region Private Fields - Services injected via constructor
+        protected readonly ILocationService _locationService;
+        #endregion
+
+        #region Protected Properties - Access services through these
+        protected ILocationService LocationService => _locationService;
+        #endregion
+
         #region Properties
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsNotBusy))]
-        private bool isBusy;
+        private bool isBusy = false;
+        private bool _disposed = false;
+
+        /// <summary>
+        /// Inverse of IsBusy for binding to UI elements that should be enabled when not busy
+        /// </summary>
+        public bool IsNotBusy => !IsBusy;
 
         [ObservableProperty]
         private string title = string.Empty;
@@ -24,6 +38,9 @@ namespace TrollTrack.MVVM.ViewModels
         private bool isRefreshing;
 
         [ObservableProperty]
+        private string refreshStatus = "Refreshing data...";
+
+        [ObservableProperty]
         private bool hasError;
 
         [ObservableProperty]
@@ -32,10 +49,36 @@ namespace TrollTrack.MVVM.ViewModels
         [ObservableProperty]
         private bool isInitializing;
 
-        /// <summary>
-        /// Inverse of IsBusy for binding to UI elements that should be enabled when not busy
-        /// </summary>
-        public bool IsNotBusy => !IsBusy;
+        #region Location Properties
+
+        [ObservableProperty]
+        private Location currentLocation;
+
+        [ObservableProperty]
+        private double currentLatitude;
+
+        [ObservableProperty]
+        private double currentLongitude;
+
+        [ObservableProperty]
+        private string formattedLatitude = "0° 0' 0\" N";
+
+        [ObservableProperty]
+        private string formattedLongitude = "0° 0' 0\" W";
+
+        [ObservableProperty]
+        private string locationName = "Unknown Location";
+
+        [ObservableProperty]
+        private bool hasLocationPermission;
+
+        [ObservableProperty]
+        private DateTime locationLastUpdated;
+
+        [ObservableProperty]
+        private string locationLastUpdatedFormatted = "Never Updated";
+
+        #endregion
 
         #endregion
 
@@ -55,10 +98,184 @@ namespace TrollTrack.MVVM.ViewModels
 
         #region Constructor
 
-        public BaseViewModel()
+        public BaseViewModel(ILocationService locationService)
         {
-            // Subscribe to property changes to raise events
-            PropertyChanged += OnPropertyChanged;
+            _locationService = locationService;
+
+            // Subscribe to location updates
+            _locationService.LocationUpdated += OnLocationServiceUpdated;
+        }
+
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _locationService.LocationUpdated -= OnLocationServiceUpdated;
+            }
+        }
+
+        #endregion
+
+        #region Location Commands
+
+        [RelayCommand]
+        public async Task UpdateLocationAsync()
+        {
+            if (IsBusy)
+            {
+                Debug.WriteLine("Location update already in progress, skipping...");
+                return;
+            }
+
+            try
+            {
+                SetBusy(true, "Getting location...");
+                RefreshStatus = "Getting location...";
+
+                // Check permission first
+                if (!HasLocationPermission)
+                {
+                    await RequestLocationPermissionAsync();
+                    if (!HasLocationPermission)
+                    {
+                        await ShowAlertAsync("Permission Required",
+                            "Location permission is required for this app to work properly.");
+                        RefreshStatus = "Location permission denied";
+                        return;
+                    }
+                }
+
+                Debug.WriteLine("Requesting location from GPS...");
+                var location = await _locationService.GetCurrentLocationAsync();
+
+                if (location != null)
+                {
+                    Debug.WriteLine($"Location received: {location.Latitude}, {location.Longitude}");
+
+                    // Update location properties on main thread
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        CurrentLatitude = Math.Round(location.Latitude, 6);
+                        CurrentLongitude = Math.Round(location.Longitude, 6);
+                        LocationLastUpdated = DateTime.Now;
+                        LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
+                        RefreshStatus = $"Location updated at {DateTime.Now:HH:mm:ss}";
+                    });
+                }
+                else
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        RefreshStatus = "Unable to get location";
+                    });
+
+                    await ShowAlertAsync("Location Error",
+                        "Unable to get your current location. Please check that location services are enabled.");
+                }
+            }
+            catch (PermissionException)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    RefreshStatus = "Location permission denied";
+                });
+                await ShowAlertAsync("Permission Required",
+                    "Location permission is required. Please enable location services in your device settings.");
+            }
+            catch (FeatureNotEnabledException)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    RefreshStatus = "Location services disabled";
+                });
+                await ShowAlertAsync("Location Services Disabled",
+                    "Please enable location services in your device settings.");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Location update error: {ex.Message}");
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    RefreshStatus = "Location error";
+                });
+                await ShowAlertAsync("Error", $"Failed to get location: {ex.Message}");
+            }
+            finally
+            {
+                SetBusy(false);
+            }
+        }
+
+        protected virtual async Task OnLocationUpdatedAsync(Location location)
+        {
+            await Task.CompletedTask;
+        }
+
+
+        // Internal method that doesn't set busy state (used by RefreshDashboard)
+        protected async Task UpdateLocationInternalAsync()
+        {
+            try
+            {
+                RefreshStatus = "Getting location...";
+
+                if (!HasLocationPermission)
+                {
+                    await RequestLocationPermissionAsync();
+                    if (!HasLocationPermission)
+                    {
+                        RefreshStatus = "Location permission denied";
+                        return;
+                    }
+                }
+
+                var location = await _locationService.GetCurrentLocationAsync();
+                if (location != null)
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        CurrentLatitude = Math.Round(location.Latitude, 6);
+                        CurrentLongitude = Math.Round(location.Longitude, 6);
+                        UpdateLastUpdatedTime();
+                    });
+
+                    Debug.WriteLine($"Location updated internally: {CurrentLatitude}, {CurrentLongitude}");
+                }
+                else
+                {
+                    Debug.WriteLine("Failed to get location internally");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Internal location update error: {ex.Message}");
+            }
+        }
+
+        private async Task RequestLocationPermissionAsync()
+        {
+            try
+            {
+                var hasPermission = await _locationService.RequestLocationPermissionAsync();
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    HasLocationPermission = hasPermission;
+                    if (!hasPermission)
+                    {
+                        RefreshStatus = "Location permission denied";
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Permission request error: {ex.Message}");
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    HasLocationPermission = false;
+                    RefreshStatus = "Location permission error";
+                });
+            }
         }
 
         #endregion
@@ -81,6 +298,92 @@ namespace TrollTrack.MVVM.ViewModels
             }
         }
 
+        #region Property Change Handlers
+
+        partial void OnCurrentLatitudeChanged(double value)
+        {
+            if (value != 0)
+            {
+                FormattedLatitude = ConvertToDegreesMinutesSeconds(value, true);
+                RefreshStatus = "Location updated";
+            }
+        }
+
+        partial void OnCurrentLongitudeChanged(double value)
+        {
+            if (value != 0)
+            {
+                FormattedLongitude = ConvertToDegreesMinutesSeconds(value, false);
+            }
+        }
+
+        /// <summary>
+        /// Converts decimal degrees to degrees, minutes, seconds format
+        /// </summary>
+        /// <param name="coordinate">The decimal degree coordinate</param>
+        /// <param name="isLatitude">True for latitude (N/S), false for longitude (E/W)</param>
+        /// <returns>Formatted coordinate string</returns>
+        private static string ConvertToDegreesMinutesSeconds(double coordinate, bool isLatitude)
+        {
+            if (coordinate == 0) return isLatitude ? "0° 0' 0\" N" : "0° 0' 0\" W";
+
+            // Determine direction
+            string direction;
+            if (isLatitude)
+            {
+                direction = coordinate >= 0 ? "N" : "S";
+            }
+            else
+            {
+                direction = coordinate >= 0 ? "E" : "W";
+            }
+
+            // Work with absolute value
+            coordinate = Math.Abs(coordinate);
+
+            // Extract degrees (whole number part)
+            int degrees = (int)coordinate;
+
+            // Extract minutes (whole number part of remainder * 60)
+            double remainderAfterDegrees = coordinate - degrees;
+            int minutes = (int)(remainderAfterDegrees * 60);
+
+            // Extract seconds (remainder after minutes * 60)
+            double remainderAfterMinutes = (remainderAfterDegrees * 60) - minutes;
+            double seconds = remainderAfterMinutes * 60;
+
+            // Format and return
+            return $"{degrees}° {minutes}' {seconds:F1}\" {direction}";
+        }
+
+/*
+        partial void OnWeatherDataChanged(WeatherData value)
+        {
+            if (value != null)
+            {
+                UpdateLastUpdatedTime();
+            }
+        }
+*/
+        #endregion
+
+        // The missing event handler
+        private async void OnLocationServiceUpdated(object sender, Location location)
+        {
+            try
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    CurrentLocation = location;
+                    _ = OnLocationUpdatedAsync(location); // Fire and forget
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error handling location update: {ex.Message}");
+            }
+        }
+
         #endregion
 
         #region Protected Methods
@@ -90,7 +393,7 @@ namespace TrollTrack.MVVM.ViewModels
         /// </summary>
         /// <param name="busy">Whether the ViewModel is busy</param>
         /// <param name="busyTitle">Optional title to show while busy</param>
-        protected virtual void SetBusy(bool busy, string busyTitle = null)
+        protected virtual void SetBusy(bool busy, string busyTitle = "")
         {
             IsBusy = busy;
 
@@ -139,7 +442,7 @@ namespace TrollTrack.MVVM.ViewModels
         /// <param name="busyMessage">Message to show while busy</param>
         /// <param name="showErrorAlert">Whether to show error alerts to user</param>
         /// <returns>True if operation succeeded, false if it failed</returns>
-        protected async Task<bool> ExecuteSafelyAsync(Func<Task> operation, string busyMessage = null, bool showErrorAlert = true)
+        protected async Task<bool> ExecuteSafelyAsync(Func<Task> operation, string busyMessage = "", bool showErrorAlert = true)
         {
             if (IsBusy)
                 return false;
@@ -179,7 +482,7 @@ namespace TrollTrack.MVVM.ViewModels
         /// <param name="busyMessage">Message to show while busy</param>
         /// <param name="showErrorAlert">Whether to show error alerts to user</param>
         /// <returns>Operation result or default value</returns>
-        protected async Task<T> ExecuteSafelyAsync<T>(Func<Task<T>> operation, T defaultValue = default, string busyMessage = null, bool showErrorAlert = true)
+        protected async Task<T> ExecuteSafelyAsync<T>(Func<Task<T>> operation, T defaultValue = default, string busyMessage = "", bool showErrorAlert = true)
         {
             if (IsBusy)
                 return defaultValue;
@@ -322,6 +625,65 @@ namespace TrollTrack.MVVM.ViewModels
 
         #endregion
 
+        #region Helper Methods
+
+        public void UpdateLastUpdatedTime()
+        {
+            LocationLastUpdated = DateTime.Now;
+            LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
+        }
+
+        public static async Task ShowAlertAsync(string title, string message)
+        {
+            try
+            {
+                var page = GetCurrentPage();
+                if (page != null)
+                {
+                    await page.DisplayAlert(title, message, "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Alert display error: {ex.Message}");
+            }
+        }
+
+        ///// <summary>
+        ///// Gets the current page using the modern .NET MAUI approach
+        ///// </summary>
+        ///// <returns>Current page or null if not available</returns>
+        //private static Page GetCurrentPage()
+        //{
+        //    try
+        //    {
+        //        // Try to get the current page from Shell first
+        //        if (Shell.Current?.CurrentPage != null)
+        //        {
+        //            return Shell.Current.CurrentPage;
+        //        }
+
+        //        // Fall back to the main window's page
+        //        var mainWindow = Application.Current?.Windows?.FirstOrDefault();
+        //        if (mainWindow?.Page != null)
+        //        {
+        //            return mainWindow.Page;
+        //        }
+
+        //        // Last resort: try to find any available window with a page
+        //        var windowWithPage = Application.Current?.Windows?.FirstOrDefault(w => w.Page != null);
+        //        return windowWithPage?.Page;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Debug.WriteLine($"Failed to get current page: {ex.Message}");
+        //        return null;
+        //    }
+        //}
+
+        #endregion
+
+
         #region Validation Support
 
         private readonly Dictionary<string, List<string>> _validationErrors = new();
@@ -393,29 +755,5 @@ namespace TrollTrack.MVVM.ViewModels
 
         #endregion
 
-        #region IDisposable Support
-
-        private bool _disposed = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    PropertyChanged -= OnPropertyChanged;
-                    _validationErrors?.Clear();
-                }
-                _disposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
     }
 }

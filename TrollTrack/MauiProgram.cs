@@ -21,13 +21,17 @@ namespace TrollTrack
                 });
 
             // Register HTTP client and services
-            builder.Services.AddSingleton(() => new HttpClient());
+            builder.Services.AddSingleton<HttpClient>();
 
-            // Register Services
-            builder.Services.AddSingleton<LocationService>();
-            builder.Services.AddSingleton<WeatherService>();
-            //builder.Services.AddSingleton<DatabaseService>();
-            //builder.Services.AddSingleton<AIRecommendationService>();
+            // Register services as singletons
+            builder.Services.AddSingleton<ILocationService, LocationService>();
+
+            // Register WeatherService with HttpClient dependency
+            builder.Services.AddSingleton<IWeatherService>(serviceProvider =>
+            {
+                var httpClient = serviceProvider.GetRequiredService<HttpClient>();
+                return (IWeatherService)new WeatherService(httpClient);
+            });
 
             // Register ViewModels
             builder.Services.AddTransient<DashboardViewModel>();
