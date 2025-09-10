@@ -15,8 +15,6 @@ namespace TrollTrack.MVVM.ViewModels
         [ObservableProperty]
         private bool isInitializing = true;
 
-        [ObservableProperty]
-        private string refreshStatus = "Refreshing data...";
 
 
         #region WeatherProperties
@@ -114,91 +112,66 @@ namespace TrollTrack.MVVM.ViewModels
                 LocationName = "Default Location (Great Lakes)";
 
                 // Try to get actual location
-                await UpdateLocationAndWeatherAsync();
+                await UpdateLocationAsync();
+                await LoadWeatherDataAsync();
 
                 // Update Title
                 Title = "Dashboard";
             }, "Initializing dashboard...", showErrorAlert: false);        
         }
 
+        #endregion
+
+        #region Location Commands
+
         [RelayCommand]
-        private async Task RefreshDashboard()
+        public async Task RefreshDashboard()
         {
+            if (IsBusy)
+            {
+                Debug.WriteLine("Dashboard refresh already in progress, skipping...");
+                return;
+            }
+
             try
             {
-                await UpdateLocationAsync();
+                SetBusy(true, "Refreshing dashboard...");
+                RefreshStatus = "Refreshing dashboard...";
+
+                // Update location first
+                await UpdateLocationInternalAsync();
+
+                // Load weather data if we have a valid location and API is configured
+                if (IsWeatherApiConfigured && CurrentLatitude != 0 && CurrentLongitude != 0)
+                {
+                    await LoadWeatherDataAsync();
+                }
+                else if (!IsWeatherApiConfigured)
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        WeatherSummary = "Weather API not configured";
+                        FishingConditions = "Configure your WeatherAPI.com key in Settings to see fishing conditions";
+                    });
+                }
+
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    RefreshStatus = $"Dashboard updated at {DateTime.Now:HH:mm:ss}";
+                });
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Dashboard refresh error: {ex.Message}");
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    RefreshStatus = "Dashboard refresh failed";
+                });
                 await ShowAlertAsync("Error", "Failed to refresh dashboard data.");
             }
             finally
             {
-            }
-
-            //await UpdateLocationAsync();
-
-            //// Load weather data if API is configured and lat/long are set
-            //if (IsWeatherApiConfigured && (CurrentLatitude != 0 && CurrentLongitude != 0))
-            //{
-            //    await LoadWeatherDataAsync();
-            //}
-            //else
-            //{
-            //    WeatherSummary = "Weather API not configured";
-            //    FishingConditions = "Configure your WeatherAPI.com key in Settings to see fishing conditions";
-            //}
-        }
-
-
-        /// <summary>
-        /// Update location and weather data
-        /// </summary>
-        /// <returns></returns>
-        private async Task UpdateLocationAndWeatherAsync()
-        {
-            await UpdateLocationAsync();
-
-            // Load weather data if API is configured and lat/long are set
-            if (IsWeatherApiConfigured && (CurrentLatitude != 0 && CurrentLongitude != 0))
-            {
-                await LoadWeatherDataAsync();
-            }
-            else
-            {
-                WeatherSummary = "Weather API not configured";
-                FishingConditions = "Configure your WeatherAPI.com key in Settings to see fishing conditions";
-            }
-
-        }
-
-        /// <summary>
-        /// Request permissions for obtaining GPS coordinates
-        /// </summary>
-        /// <returns></returns>
-        private async Task RequestLocationPermissionAsync()
-        {
-            try
-            {
-                var hasPermission = await _locationService.RequestLocationPermissionAsync();
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    HasLocationPermission = hasPermission;
-                    if (!hasPermission)
-                    {
-                        RefreshStatus = "Location permission denied";
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Permission request error: {ex.Message}");
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    HasLocationPermission = false;
-                    RefreshStatus = "Location permission error";
-                });
+                SetBusy(false);
             }
         }
 
@@ -579,63 +552,6 @@ namespace TrollTrack.MVVM.ViewModels
 
         #endregion
 
-        #region Helper Methods
-
-        private void UpdateLastUpdatedTime()
-        {
-            LocationLastUpdated = DateTime.Now;
-            LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
-        }
-
-        private static async Task ShowAlertAsync(string title, string message)
-        {
-            try
-            {
-                var page = GetCurrentPage();
-                if (page != null)
-                {
-                    await page.DisplayAlert(title, message, "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Alert display error: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Gets the current page using the modern .NET MAUI approach
-        /// </summary>
-        /// <returns>Current page or null if not available</returns>
-        private static Page GetCurrentPage()
-        {
-            try
-            {
-                // Try to get the current page from Shell first
-                if (Shell.Current?.CurrentPage != null)
-                {
-                    return Shell.Current.CurrentPage;
-                }
-
-                // Fall back to the main window's page
-                var mainWindow = Application.Current?.Windows?.FirstOrDefault();
-                if (mainWindow?.Page != null)
-                {
-                    return mainWindow.Page;
-                }
-
-                // Last resort: try to find any available window with a page
-                var windowWithPage = Application.Current?.Windows?.FirstOrDefault(w => w.Page != null);
-                return windowWithPage?.Page;
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Failed to get current page: {ex.Message}");
-                return null;
-            }
-        }
-
-        #endregion
 
         #region Public Methods for External Updates
 /*

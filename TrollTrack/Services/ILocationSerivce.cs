@@ -9,19 +9,10 @@ namespace TrollTrack.Services
     public interface ILocationService
     {
         Task<Location> GetCurrentLocationAsync();
-
         Task<bool> RequestLocationPermissionAsync();
-        
+        Task<List<Location>> GetLocationHistoryAsync();
         Task SaveLocationAsync(Location location);
-        
-        //Task<List<Location>> GetLocationHistoryAsync();
-        
         event EventHandler<Location> LocationUpdated;
-        
         bool IsLocationEnabled { get; }
-        
-        //Task StartLocationTracking();
-        
-        //Task StopLocationTracking();
     }
 }

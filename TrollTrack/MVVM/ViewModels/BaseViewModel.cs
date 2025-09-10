@@ -38,6 +38,9 @@ namespace TrollTrack.MVVM.ViewModels
         private bool isRefreshing;
 
         [ObservableProperty]
+        private string refreshStatus = "Refreshing data...";
+
+        [ObservableProperty]
         private bool hasError;
 
         [ObservableProperty]
@@ -74,9 +77,6 @@ namespace TrollTrack.MVVM.ViewModels
 
         [ObservableProperty]
         private string locationLastUpdatedFormatted = "Never Updated";
-
-        [ObservableProperty]
-        private bool isLocationEnabled;
 
         #endregion
 
@@ -115,57 +115,166 @@ namespace TrollTrack.MVVM.ViewModels
             }
         }
 
+        #endregion
 
-        // Common command that all ViewModels can use
+        #region Location Commands
+
         [RelayCommand]
         public async Task UpdateLocationAsync()
         {
-            await ExecuteSafelyAsync(async () =>
+            if (IsBusy)
             {
-                CurrentLocation = await _locationService.GetCurrentLocationAsync();
-                HasLocationPermission = _locationService.IsLocationEnabled;
-
-                if (CurrentLocation != null)
-                {
-                    await OnLocationUpdatedAsync(CurrentLocation);
-                }
-            }, "Updating location...");
-        }
-
-        // Virtual method that derived ViewModels can override
-        protected virtual async Task OnLocationUpdatedAsync(Location location)
-        {
-            // Override in derived classes for specific behavior
-            await Task.CompletedTask;
-        }
-
-        // Event handler for service location updates
-        private async void OnLocationServiceUpdated(object sender, Location location)
-        {
-            await MainThread.InvokeOnMainThreadAsync(() =>
-            {
-                CurrentLocation = location;
-                OnLocationUpdatedAsync(location);
-            });
-        }
-
-        protected async Task<bool> ExecuteSafelyAsync(Func<Task> operation, string busyMessage = null)
-        {
-            if (IsBusy) return false;
+                Debug.WriteLine("Location update already in progress, skipping...");
+                return;
+            }
 
             try
             {
-                IsBusy = true;
-                await operation();
-                return true;
+                SetBusy(true, "Getting location...");
+                RefreshStatus = "Getting location...";
+
+                // Check permission first
+                if (!HasLocationPermission)
+                {
+                    await RequestLocationPermissionAsync();
+                    if (!HasLocationPermission)
+                    {
+                        await ShowAlertAsync("Permission Required",
+                            "Location permission is required for this app to work properly.");
+                        RefreshStatus = "Location permission denied";
+                        return;
+                    }
+                }
+
+                Debug.WriteLine("Requesting location from GPS...");
+                var location = await _locationService.GetCurrentLocationAsync();
+
+                if (location != null)
+                {
+                    Debug.WriteLine($"Location received: {location.Latitude}, {location.Longitude}");
+
+                    // Update location properties on main thread
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        CurrentLatitude = Math.Round(location.Latitude, 6);
+                        CurrentLongitude = Math.Round(location.Longitude, 6);
+                        LocationLastUpdated = DateTime.Now;
+                        LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
+                        RefreshStatus = $"Location updated at {DateTime.Now:HH:mm:ss}";
+                    });
+                }
+                else
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        RefreshStatus = "Unable to get location";
+                    });
+
+                    await ShowAlertAsync("Location Error",
+                        "Unable to get your current location. Please check that location services are enabled.");
+                }
+            }
+            catch (PermissionException)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    RefreshStatus = "Location permission denied";
+                });
+                await ShowAlertAsync("Permission Required",
+                    "Location permission is required. Please enable location services in your device settings.");
+            }
+            catch (FeatureNotEnabledException)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    RefreshStatus = "Location services disabled";
+                });
+                await ShowAlertAsync("Location Services Disabled",
+                    "Please enable location services in your device settings.");
             }
             catch (Exception ex)
             {
-                return false;
+                Debug.WriteLine($"Location update error: {ex.Message}");
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    RefreshStatus = "Location error";
+                });
+                await ShowAlertAsync("Error", $"Failed to get location: {ex.Message}");
             }
             finally
             {
-                IsBusy = false;
+                SetBusy(false);
+            }
+        }
+
+        protected virtual async Task OnLocationUpdatedAsync(Location location)
+        {
+            await Task.CompletedTask;
+        }
+
+
+        // Internal method that doesn't set busy state (used by RefreshDashboard)
+        protected async Task UpdateLocationInternalAsync()
+        {
+            try
+            {
+                RefreshStatus = "Getting location...";
+
+                if (!HasLocationPermission)
+                {
+                    await RequestLocationPermissionAsync();
+                    if (!HasLocationPermission)
+                    {
+                        RefreshStatus = "Location permission denied";
+                        return;
+                    }
+                }
+
+                var location = await _locationService.GetCurrentLocationAsync();
+                if (location != null)
+                {
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        CurrentLatitude = Math.Round(location.Latitude, 6);
+                        CurrentLongitude = Math.Round(location.Longitude, 6);
+                        UpdateLastUpdatedTime();
+                    });
+
+                    Debug.WriteLine($"Location updated internally: {CurrentLatitude}, {CurrentLongitude}");
+                }
+                else
+                {
+                    Debug.WriteLine("Failed to get location internally");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Internal location update error: {ex.Message}");
+            }
+        }
+
+        private async Task RequestLocationPermissionAsync()
+        {
+            try
+            {
+                var hasPermission = await _locationService.RequestLocationPermissionAsync();
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    HasLocationPermission = hasPermission;
+                    if (!hasPermission)
+                    {
+                        RefreshStatus = "Location permission denied";
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Permission request error: {ex.Message}");
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    HasLocationPermission = false;
+                    RefreshStatus = "Location permission error";
+                });
             }
         }
 
@@ -189,6 +298,22 @@ namespace TrollTrack.MVVM.ViewModels
             }
         }
 
+        // ✅ ADDED: The missing event handler
+        private async void OnLocationServiceUpdated(object sender, Location location)
+        {
+            try
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    CurrentLocation = location;
+                    _ = OnLocationUpdatedAsync(location); // Fire and forget
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error handling location update: {ex.Message}");
+            }
+        }
         #endregion
 
         #region Protected Methods
@@ -429,6 +554,65 @@ namespace TrollTrack.MVVM.ViewModels
         }
 
         #endregion
+
+        #region Helper Methods
+
+        public void UpdateLastUpdatedTime()
+        {
+            LocationLastUpdated = DateTime.Now;
+            LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
+        }
+
+        public static async Task ShowAlertAsync(string title, string message)
+        {
+            try
+            {
+                var page = GetCurrentPage();
+                if (page != null)
+                {
+                    await page.DisplayAlert(title, message, "OK");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Alert display error: {ex.Message}");
+            }
+        }
+
+        ///// <summary>
+        ///// Gets the current page using the modern .NET MAUI approach
+        ///// </summary>
+        ///// <returns>Current page or null if not available</returns>
+        //private static Page GetCurrentPage()
+        //{
+        //    try
+        //    {
+        //        // Try to get the current page from Shell first
+        //        if (Shell.Current?.CurrentPage != null)
+        //        {
+        //            return Shell.Current.CurrentPage;
+        //        }
+
+        //        // Fall back to the main window's page
+        //        var mainWindow = Application.Current?.Windows?.FirstOrDefault();
+        //        if (mainWindow?.Page != null)
+        //        {
+        //            return mainWindow.Page;
+        //        }
+
+        //        // Last resort: try to find any available window with a page
+        //        var windowWithPage = Application.Current?.Windows?.FirstOrDefault(w => w.Page != null);
+        //        return windowWithPage?.Page;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Debug.WriteLine($"Failed to get current page: {ex.Message}");
+        //        return null;
+        //    }
+        //}
+
+        #endregion
+
 
         #region Validation Support
 
