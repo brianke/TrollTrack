@@ -55,7 +55,7 @@ namespace TrollTrack
 
             // Initialize configuration on app startup
             _ = Task.Run(async () =>
-            {
+            { 
                 // TODO: Remove before deploying
                 // Replace "your-actual-api-key-here" with your real key
                 await SecureStorage.SetAsync("WeatherApiKey", "c94ed9868e9447c2b2e145937252508");

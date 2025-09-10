@@ -16,7 +16,6 @@ namespace TrollTrack.MVVM.ViewModels
         private bool isInitializing = true;
 
 
-
         #region WeatherProperties
 
         [ObservableProperty]
@@ -125,54 +124,44 @@ namespace TrollTrack.MVVM.ViewModels
         #region Location Commands
 
         [RelayCommand]
-        public async Task RefreshDashboard()
+        private async Task RefreshDashboard()
         {
-            if (IsBusy)
+            await ExecuteSafelyAsync(async () =>
             {
-                Debug.WriteLine("Dashboard refresh already in progress, skipping...");
-                return;
-            }
-
-            try
-            {
-                SetBusy(true, "Refreshing dashboard...");
                 RefreshStatus = "Refreshing dashboard...";
 
-                // Update location first
-                await UpdateLocationInternalAsync();
-
-                // Load weather data if we have a valid location and API is configured
-                if (IsWeatherApiConfigured && CurrentLatitude != 0 && CurrentLongitude != 0)
+                // Don't call UpdateLocationAsync directly since it manages its own busy state
+                // Instead, call the core logic without the busy state management
+                if (!HasLocationPermission)
                 {
-                    await LoadWeatherDataAsync();
-                }
-                else if (!IsWeatherApiConfigured)
-                {
-                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    await RequestLocationPermissionAsync();
+                    if (!HasLocationPermission)
                     {
-                        WeatherSummary = "Weather API not configured";
-                        FishingConditions = "Configure your WeatherAPI.com key in Settings to see fishing conditions";
-                    });
+                        RefreshStatus = "Location permission required";
+                        return;
+                    }
                 }
 
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                var location = await _locationService.GetCurrentLocationAsync();
+                if (location != null)
                 {
-                    RefreshStatus = $"Dashboard updated at {DateTime.Now:HH:mm:ss}";
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Dashboard refresh error: {ex.Message}");
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                    CurrentLatitude = Math.Round(location.Latitude, 6);
+                    CurrentLongitude = Math.Round(location.Longitude, 6);
+
+                    // Load weather with new location
+                    if (IsWeatherApiConfigured && (CurrentLatitude != 0 && CurrentLongitude != 0))
+                    {
+                        await LoadWeatherDataAsync();
+                    }
+
+                    RefreshStatus = "Dashboard updated";
+                    UpdateLastUpdatedTime();
+                }
+                else
                 {
-                    RefreshStatus = "Dashboard refresh failed";
-                });
-                await ShowAlertAsync("Error", "Failed to refresh dashboard data.");
-            }
-            finally
-            {
-                SetBusy(false);
-            }
+                    RefreshStatus = "Unable to get location";
+                }
+            }, "Refreshing dashboard...", showErrorAlert: true);
         }
 
         #endregion

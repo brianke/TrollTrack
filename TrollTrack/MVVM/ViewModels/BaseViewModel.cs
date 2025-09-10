@@ -23,6 +23,17 @@ namespace TrollTrack.MVVM.ViewModels
         private bool isBusy = false;
         private bool _disposed = false;
 
+        [ObservableProperty]
+        private bool isRefreshing;
+
+        [ObservableProperty]
+        private string refreshStatus = "Refreshing data...";
+
+        partial void OnIsBusyChanged(bool value)
+        {
+            IsRefreshing = value;
+        }
+
         /// <summary>
         /// Inverse of IsBusy for binding to UI elements that should be enabled when not busy
         /// </summary>
@@ -33,12 +44,6 @@ namespace TrollTrack.MVVM.ViewModels
 
         [ObservableProperty]
         private string subtitle = string.Empty;
-
-        [ObservableProperty]
-        private bool isRefreshing;
-
-        [ObservableProperty]
-        private string refreshStatus = "Refreshing data...";
 
         [ObservableProperty]
         private bool hasError;
@@ -253,7 +258,7 @@ namespace TrollTrack.MVVM.ViewModels
             }
         }
 
-        private async Task RequestLocationPermissionAsync()
+        public async Task RequestLocationPermissionAsync()
         {
             try
             {

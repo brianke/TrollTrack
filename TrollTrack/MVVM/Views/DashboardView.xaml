@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:TrollTrack.MVVM.ViewModels"
              x:DataType="vm:DashboardViewModel">
 
-    <RefreshView IsRefreshing="{Binding IsBusy}"
+    <RefreshView IsRefreshing="{Binding IsRefreshing}"
                  Command="{Binding RefreshDashboardCommand}" >
 
         <ScrollView>
