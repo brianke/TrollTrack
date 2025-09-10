@@ -10,7 +10,7 @@
 
         #region Constructor
 
-        public LuresViewModel()
+        public LuresViewModel(ILocationService locationService) : base(locationService)
         {
             Title = "Lures Page";
 

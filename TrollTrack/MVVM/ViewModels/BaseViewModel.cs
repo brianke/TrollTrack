@@ -8,11 +8,25 @@ namespace TrollTrack.MVVM.ViewModels
     /// </summary>
     public partial class BaseViewModel : ObservableObject
     {
+        #region Private Fields - Services injected via constructor
+        protected readonly ILocationService _locationService;
+        #endregion
+
+        #region Protected Properties - Access services through these
+        protected ILocationService LocationService => _locationService;
+        #endregion
+
         #region Properties
 
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsNotBusy))]
-        private bool isBusy;
+        private bool isBusy = false;
+        private bool _disposed = false;
+
+        /// <summary>
+        /// Inverse of IsBusy for binding to UI elements that should be enabled when not busy
+        /// </summary>
+        public bool IsNotBusy => !IsBusy;
 
         [ObservableProperty]
         private string title = string.Empty;
@@ -32,10 +46,39 @@ namespace TrollTrack.MVVM.ViewModels
         [ObservableProperty]
         private bool isInitializing;
 
-        /// <summary>
-        /// Inverse of IsBusy for binding to UI elements that should be enabled when not busy
-        /// </summary>
-        public bool IsNotBusy => !IsBusy;
+        #region Location Properties
+
+        [ObservableProperty]
+        private Location currentLocation;
+
+        [ObservableProperty]
+        private double currentLatitude;
+
+        [ObservableProperty]
+        private double currentLongitude;
+
+        [ObservableProperty]
+        private string formattedLatitude = "0° 0' 0\" N";
+
+        [ObservableProperty]
+        private string formattedLongitude = "0° 0' 0\" W";
+
+        [ObservableProperty]
+        private string locationName = "Unknown Location";
+
+        [ObservableProperty]
+        private bool hasLocationPermission;
+
+        [ObservableProperty]
+        private DateTime locationLastUpdated;
+
+        [ObservableProperty]
+        private string locationLastUpdatedFormatted = "Never Updated";
+
+        [ObservableProperty]
+        private bool isLocationEnabled;
+
+        #endregion
 
         #endregion
 
@@ -55,10 +98,75 @@ namespace TrollTrack.MVVM.ViewModels
 
         #region Constructor
 
-        public BaseViewModel()
+        public BaseViewModel(ILocationService locationService)
         {
-            // Subscribe to property changes to raise events
-            PropertyChanged += OnPropertyChanged;
+            _locationService = locationService;
+
+            // Subscribe to location updates
+            _locationService.LocationUpdated += OnLocationServiceUpdated;
+        }
+
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _locationService.LocationUpdated -= OnLocationServiceUpdated;
+            }
+        }
+
+
+        // Common command that all ViewModels can use
+        [RelayCommand]
+        public async Task UpdateLocationAsync()
+        {
+            await ExecuteSafelyAsync(async () =>
+            {
+                CurrentLocation = await _locationService.GetCurrentLocationAsync();
+                HasLocationPermission = _locationService.IsLocationEnabled;
+
+                if (CurrentLocation != null)
+                {
+                    await OnLocationUpdatedAsync(CurrentLocation);
+                }
+            }, "Updating location...");
+        }
+
+        // Virtual method that derived ViewModels can override
+        protected virtual async Task OnLocationUpdatedAsync(Location location)
+        {
+            // Override in derived classes for specific behavior
+            await Task.CompletedTask;
+        }
+
+        // Event handler for service location updates
+        private async void OnLocationServiceUpdated(object sender, Location location)
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                CurrentLocation = location;
+                OnLocationUpdatedAsync(location);
+            });
+        }
+
+        protected async Task<bool> ExecuteSafelyAsync(Func<Task> operation, string busyMessage = null)
+        {
+            if (IsBusy) return false;
+
+            try
+            {
+                IsBusy = true;
+                await operation();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         #endregion
@@ -179,7 +287,7 @@ namespace TrollTrack.MVVM.ViewModels
         /// <param name="busyMessage">Message to show while busy</param>
         /// <param name="showErrorAlert">Whether to show error alerts to user</param>
         /// <returns>Operation result or default value</returns>
-        protected async Task<T> ExecuteSafelyAsync<T>(Func<Task<T>> operation, T defaultValue = default, string busyMessage = null, bool showErrorAlert = true)
+        protected async Task<T> ExecuteSafelyAsync<T>(Func<Task<T>> operation, T defaultValue = default, string busyMessage = "", bool showErrorAlert = true)
         {
             if (IsBusy)
                 return defaultValue;
@@ -393,29 +501,5 @@ namespace TrollTrack.MVVM.ViewModels
 
         #endregion
 
-        #region IDisposable Support
-
-        private bool _disposed = false;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    PropertyChanged -= OnPropertyChanged;
-                    _validationErrors?.Clear();
-                }
-                _disposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        #endregion
     }
 }

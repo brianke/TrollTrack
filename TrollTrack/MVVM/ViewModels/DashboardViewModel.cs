@@ -6,8 +6,7 @@ namespace TrollTrack.MVVM.ViewModels
 {
     public partial class DashboardViewModel : BaseViewModel
     {
-        internal readonly LocationService _locationService;
-        internal readonly WeatherService _weatherService;
+        private readonly IWeatherService _weatherService;
         //private readonly DatabaseService _databaseService;
         //private readonly AIRecommendationService _aiService;
 
@@ -19,37 +18,6 @@ namespace TrollTrack.MVVM.ViewModels
         [ObservableProperty]
         private string refreshStatus = "Refreshing data...";
 
-
-        #region Location Properties
-
-        [ObservableProperty]
-        private double currentLatitude;
-
-        [ObservableProperty]
-        private double currentLongitude;
-
-        [ObservableProperty]
-        private string formattedLatitude = "0° 0' 0\" N";
-
-        [ObservableProperty]
-        private string formattedLongitude = "0° 0' 0\" W";
-
-        [ObservableProperty]
-        private string locationName = "Unknown Location";
-
-        [ObservableProperty]
-        private bool hasLocationPermission;
-
-        [ObservableProperty]
-        private DateTime locationLastUpdated;
-
-        [ObservableProperty]
-        private string locationLastUpdatedFormatted;
-
-        [ObservableProperty]
-        private bool isLocationEnabled;
-
-        #endregion
 
         #region WeatherProperties
 
@@ -99,15 +67,10 @@ namespace TrollTrack.MVVM.ViewModels
 
         #region Constructor
 
-        internal DashboardViewModel(
-            LocationService locationService,
-            WeatherService weatherService
-            //DatabaseService databaseService,
-            //AIRecommendationService aiService
-        )
+        public DashboardViewModel(ILocationService locationService, IWeatherService weatherService) : base(locationService)
         {
-            _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
-            _weatherService = weatherService ?? throw new ArgumentNullException(nameof(weatherService));
+            //_locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
+            _weatherService = weatherService;
             //_databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
             //_aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
 
@@ -138,7 +101,7 @@ namespace TrollTrack.MVVM.ViewModels
         /// Initialize the data needed for the dashboard (Location, Weather, etc.)
         /// </summary>
         /// <returns></returns>
-        private async Task InitializeAsync()
+        public async Task InitializeAsync()
         {
             await ExecuteSafelyAsync(async () =>
             {
@@ -348,66 +311,6 @@ namespace TrollTrack.MVVM.ViewModels
         */
         #endregion
 
-        #region Location Commands
-
-        [RelayCommand]
-        private async Task UpdateLocationAsync()
-        {
-            try
-            {
-                IsBusy = true;
-                RefreshStatus = "Getting location...";
-
-                if (!HasLocationPermission)
-                {
-                    await RequestLocationPermissionAsync();
-                    if (!HasLocationPermission)
-                    {
-                        await ShowAlertAsync("Permission Required",
-                            "Location permission is required for this app to work properly.");
-                        return;
-                    }
-                }
-
-                var location = await _locationService.GetCurrentLocationAsync();
-                if (location != null)
-                {
-                    CurrentLatitude = Math.Round(location.Latitude, 6);
-                    CurrentLongitude = Math.Round(location.Longitude, 6);
-                    RefreshStatus = LocationLastUpdatedFormatted;
-
-                    Debug.WriteLine($"Location updated: {CurrentLatitude}, {CurrentLongitude}");
-
-                    //// Reset auto-refresh countdown
-                    //if (IsAutoRefreshEnabled)
-                    //{
-                    //    AutoRefreshCountdown = 30;
-                    //}
-
-                    // Update weather with new location
-                    _ = Task.Run(async () => await LoadWeatherDataAsync());
-                }
-                else
-                {
-                    RefreshStatus = "Unable to get location";
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Location update error: {ex.Message}");
-                RefreshStatus = "Location error";
-                await ShowAlertAsync("Error", $"Failed to get location: {ex.Message}");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-
-
-
-        #endregion
-
         #region Weather Commands
 
         /// <summary>
@@ -446,17 +349,18 @@ namespace TrollTrack.MVVM.ViewModels
                         {
                             WeatherData = weather;
                             WeatherSummary = "Weather updated";
+                            LocationName = weather.LocationName;
                             Debug.WriteLine($"Weather loaded: {weather.Temperature}°F, {weather.WeatherCondition}");
                         }
                         else
                         {
                             WeatherSummary = "Weather unavailable";
+                            LocationName = "Location unvailable";
                         }
                         IsWeatherLoading = false;
                         UpdateLastUpdatedTime();
                     });
 
-                    LocationName = weather.LocationName;
 
                     // TODO: Refresh recommendations with new weather data
                     //if (weather != null)
@@ -472,7 +376,7 @@ namespace TrollTrack.MVVM.ViewModels
                 {
                     IsWeatherLoading = false;
                     WeatherSummary = "Weather error";
-                    LocationName = "Unknown location";
+                    LocationName = "Location error";
                 });
             }
         }
@@ -733,74 +637,6 @@ namespace TrollTrack.MVVM.ViewModels
 
         #endregion
 
-        #region Property Change Handlers
-
-        partial void OnCurrentLatitudeChanged(double value)
-        {
-            if (value != 0)
-            {
-                FormattedLatitude = ConvertToDegreesMinutesSeconds(value, true);
-                RefreshStatus = "Location updated";
-            }
-        }
-
-        partial void OnCurrentLongitudeChanged(double value)
-        {
-            if (value != 0)
-            {
-                FormattedLongitude = ConvertToDegreesMinutesSeconds(value, false);
-            }
-        }
-
-        /// <summary>
-        /// Converts decimal degrees to degrees, minutes, seconds format
-        /// </summary>
-        /// <param name="coordinate">The decimal degree coordinate</param>
-        /// <param name="isLatitude">True for latitude (N/S), false for longitude (E/W)</param>
-        /// <returns>Formatted coordinate string</returns>
-        private static string ConvertToDegreesMinutesSeconds(double coordinate, bool isLatitude)
-        {
-            if (coordinate == 0) return isLatitude ? "0° 0' 0\" N" : "0° 0' 0\" W";
-
-            // Determine direction
-            string direction;
-            if (isLatitude)
-            {
-                direction = coordinate >= 0 ? "N" : "S";
-            }
-            else
-            {
-                direction = coordinate >= 0 ? "E" : "W";
-            }
-
-            // Work with absolute value
-            coordinate = Math.Abs(coordinate);
-
-            // Extract degrees (whole number part)
-            int degrees = (int)coordinate;
-
-            // Extract minutes (whole number part of remainder * 60)
-            double remainderAfterDegrees = coordinate - degrees;
-            int minutes = (int)(remainderAfterDegrees * 60);
-
-            // Extract seconds (remainder after minutes * 60)
-            double remainderAfterMinutes = (remainderAfterDegrees * 60) - minutes;
-            double seconds = remainderAfterMinutes * 60;
-
-            // Format and return
-            return $"{degrees}° {minutes}' {seconds:F1}\" {direction}";
-        }
-/*
-        partial void OnWeatherDataChanged(WeatherData value)
-        {
-            if (value != null)
-            {
-                UpdateLastUpdatedTime();
-            }
-        }
-*/
-        #endregion
-
         #region Public Methods for External Updates
 /*
         public async Task OnCatchAddedAsync()
@@ -837,13 +673,6 @@ namespace TrollTrack.MVVM.ViewModels
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing)
-            {
-                //StopAutoRefresh();
-                //_locationRefreshTimer = null;
-                //_countdownTimer = null;
-                //Debug.WriteLine("🗑️ Timers disposed");
-            }
             base.Dispose(disposing);
         }
 
