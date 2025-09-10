@@ -117,7 +117,7 @@ namespace TrollTrack.MVVM.ViewModels
 
                 // Update Title
                 Title = "Dashboard";
-            }, "Initializing dashboard...", showErrorAlert: false);        
+            }, "Initializing dashboard...", showErrorAlert: false);
         }
 
         #endregion
@@ -306,190 +306,175 @@ namespace TrollTrack.MVVM.ViewModels
         {
             try
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    IsWeatherLoading = true;
-                    WeatherSummary = "Loading weather...";
-                });
+                IsWeatherLoading = true;
+                WeatherSummary = "Loading weather...";
 
                 if (CurrentLatitude != 0 && CurrentLongitude != 0)
                 {
                     var weather = await _weatherService.GetCurrentWeatherAsync(CurrentLatitude, CurrentLongitude);
 
-                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    if (weather != null)
                     {
-                        if (weather != null)
-                        {
-                            WeatherData = weather;
-                            WeatherSummary = "Weather updated";
-                            LocationName = weather.LocationName;
-                            Debug.WriteLine($"Weather loaded: {weather.Temperature}°F, {weather.WeatherCondition}");
-                        }
-                        else
-                        {
-                            WeatherSummary = "Weather unavailable";
-                            LocationName = "Location unvailable";
-                        }
-                        IsWeatherLoading = false;
-                        UpdateLastUpdatedTime();
-                    });
-
-
-                    // TODO: Refresh recommendations with new weather data
-                    //if (weather != null)
-                    //{
-                    //    _ = Task.Run(async () => await RefreshRecommendationsAsync());
-                    //}
+                        WeatherData = weather;
+                        LocationName = weather.LocationName ?? "Location Unavailable";
+                        WeatherSummary = "Weather updated";
+                        Debug.WriteLine($"Weather loaded: {weather.Temperature}°F, {weather.WeatherCondition}");
+                    }
+                    else
+                    {
+                        WeatherSummary = "Weather unavailable";
+                        LocationName = "Unknown location";
+                    }
                 }
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Weather loading error: {ex.Message}");
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    IsWeatherLoading = false;
-                    WeatherSummary = "Weather error";
-                    LocationName = "Location error";
-                });
+                WeatherSummary = "Weather error";
+                LocationName = "Unknown location";
+            }
+            finally
+            {
+                IsWeatherLoading = false;
             }
         }
 
         #endregion
 
         #region AI Recommendations
-/*
-        [RelayCommand]
-        private async Task RefreshRecommendationsAsync()
-        {
-            try
-            {
-                Debug.WriteLine("Refreshing AI recommendations...");
-
-                // Use default values if weather data is not available
-                var weather = WeatherData ?? new WeatherData
+        /*
+                [RelayCommand]
+                private async Task RefreshRecommendationsAsync()
                 {
-                    Temperature = 70,
-                    WindSpeed = 5,
-                    WindDirection = "N"
-                };
-
-                var recommendations = await _aiService.GetRecommendationsAsync(weather, 20, 2.5);
-
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    AIRecommendations.Clear();
-                    foreach (var recommendation in recommendations)
+                    try
                     {
-                        AIRecommendations.Add(recommendation);
+                        Debug.WriteLine("Refreshing AI recommendations...");
+
+                        // Use default values if weather data is not available
+                        var weather = WeatherData ?? new WeatherData
+                        {
+                            Temperature = 70,
+                            WindSpeed = 5,
+                            WindDirection = "N"
+                        };
+
+                        var recommendations = await _aiService.GetRecommendationsAsync(weather, 20, 2.5);
+
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            AIRecommendations.Clear();
+                            foreach (var recommendation in recommendations)
+                            {
+                                AIRecommendations.Add(recommendation);
+                            }
+                            Debug.WriteLine($"Added {recommendations.Count} recommendations");
+                        });
                     }
-                    Debug.WriteLine($"Added {recommendations.Count} recommendations");
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"AI recommendations error: {ex.Message}");
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    AIRecommendations.Clear();
-                    AIRecommendations.Add("Unable to load recommendations");
-                });
-            }
-        }
-*/
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"AI recommendations error: {ex.Message}");
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            AIRecommendations.Clear();
+                            AIRecommendations.Add("Unable to load recommendations");
+                        });
+                    }
+                }
+        */
         #endregion
 
         #region Dashboard Data
-/*
-        private async Task LoadDashboardDataAsync()
-        {
-            try
-            {
-                Debug.WriteLine("Loading dashboard data...");
-
-                var today = DateTime.Today;
-                var catches = await _databaseService.GetCatchRecordsAsync();
-                var todayCatches = catches.Where(c => c.CatchDateTime.Date == today).ToList();
-                var recentCatches = catches.OrderByDescending(c => c.CatchDateTime).Take(5).ToList();
-
-                // Get active trolling method
-                var trollingMethods = await _databaseService.GetTrollingMethodsAsync();
-                var activeMethod = trollingMethods.FirstOrDefault(t => t.IsActive);
-
-                await MainThread.InvokeOnMainThreadAsync(() =>
+        /*
+                private async Task LoadDashboardDataAsync()
                 {
-                    TodaysCatches = todayCatches.Count;
-
-                    // Update recent catches
-                    RecentCatches.Clear();
-                    foreach (var catchRecord in recentCatches)
+                    try
                     {
-                        RecentCatches.Add(catchRecord);
-                    }
+                        Debug.WriteLine("Loading dashboard data...");
 
-                    // Calculate best catch and fishing time
-                    if (todayCatches.Any())
+                        var today = DateTime.Today;
+                        var catches = await _databaseService.GetCatchRecordsAsync();
+                        var todayCatches = catches.Where(c => c.CatchDateTime.Date == today).ToList();
+                        var recentCatches = catches.OrderByDescending(c => c.CatchDateTime).Take(5).ToList();
+
+                        // Get active trolling method
+                        var trollingMethods = await _databaseService.GetTrollingMethodsAsync();
+                        var activeMethod = trollingMethods.FirstOrDefault(t => t.IsActive);
+
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            TodaysCatches = todayCatches.Count;
+
+                            // Update recent catches
+                            RecentCatches.Clear();
+                            foreach (var catchRecord in recentCatches)
+                            {
+                                RecentCatches.Add(catchRecord);
+                            }
+
+                            // Calculate best catch and fishing time
+                            if (todayCatches.Any())
+                            {
+                                var best = todayCatches.OrderByDescending(c => c.FishWeight).First();
+                                BestCatch = $"{best.FishSpecies} - {best.FishWeight:F1} lbs";
+
+                                var firstCatch = todayCatches.OrderBy(c => c.CatchDateTime).First().CatchDateTime;
+                                var lastCatch = todayCatches.OrderByDescending(c => c.CatchDateTime).First().CatchDateTime;
+                                var timeSpan = lastCatch - firstCatch;
+                                TotalFishingTime = $"{timeSpan.Hours}h {timeSpan.Minutes}m";
+                            }
+                            else
+                            {
+                                BestCatch = "No catches today";
+                                TotalFishingTime = "0h 0m";
+                            }
+
+                            // Update current trolling method
+                            CurrentTrollingMethod = activeMethod?.Name ?? "None active";
+
+                            Debug.WriteLine($"Dashboard data loaded: {TodaysCatches} catches today");
+                        });
+                    }
+                    catch (Exception ex)
                     {
-                        var best = todayCatches.OrderByDescending(c => c.FishWeight).First();
-                        BestCatch = $"{best.FishSpecies} - {best.FishWeight:F1} lbs";
-
-                        var firstCatch = todayCatches.OrderBy(c => c.CatchDateTime).First().CatchDateTime;
-                        var lastCatch = todayCatches.OrderByDescending(c => c.CatchDateTime).First().CatchDateTime;
-                        var timeSpan = lastCatch - firstCatch;
-                        TotalFishingTime = $"{timeSpan.Hours}h {timeSpan.Minutes}m";
+                        Debug.WriteLine($"Dashboard data loading error: {ex.Message}");
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            TodaysCatches = 0;
+                            BestCatch = "Error loading data";
+                            TotalFishingTime = "N/A";
+                            CurrentTrollingMethod = "Error";
+                        });
                     }
-                    else
-                    {
-                        BestCatch = "No catches today";
-                        TotalFishingTime = "0h 0m";
-                    }
+                }
 
-                    // Update current trolling method
-                    CurrentTrollingMethod = activeMethod?.Name ?? "None active";
-
-                    Debug.WriteLine($"Dashboard data loaded: {TodaysCatches} catches today");
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Dashboard data loading error: {ex.Message}");
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                [RelayCommand]
+                private async Task RefreshDashboardAsync()
                 {
-                    TodaysCatches = 0;
-                    BestCatch = "Error loading data";
-                    TotalFishingTime = "N/A";
-                    CurrentTrollingMethod = "Error";
-                });
-            }
-        }
+                    if (IsBusy) return;
 
-        [RelayCommand]
-        private async Task RefreshDashboardAsync()
-        {
-            if (IsBusy) return;
+                    try
+                    {
+                        IsBusy = true;
+                        await LoadDashboardDataAsync();
+                        await UpdateLocationAndWeatherAsync();
+                        await RefreshRecommendationsAsync();
 
-            try
-            {
-                IsBusy = true;
-                await LoadDashboardDataAsync();
-                await UpdateLocationAndWeatherAsync();
-                await RefreshRecommendationsAsync();
-
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    UpdateLastUpdatedTime();
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Dashboard refresh error: {ex.Message}");
-                await ShowAlertAsync("Error", "Failed to refresh dashboard data.");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-*/
+                        await MainThread.InvokeOnMainThreadAsync(() =>
+                        {
+                            UpdateLastUpdatedTime();
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Dashboard refresh error: {ex.Message}");
+                        await ShowAlertAsync("Error", "Failed to refresh dashboard data.");
+                    }
+                    finally
+                    {
+                        IsBusy = false;
+                    }
+                }
+        */
         #endregion
 
         #region Navigation Commands
@@ -554,35 +539,35 @@ namespace TrollTrack.MVVM.ViewModels
 
 
         #region Public Methods for External Updates
-/*
-        public async Task OnCatchAddedAsync()
-        {
-            // Called when a new catch is added from another view
-            await LoadDashboardDataAsync();
-            await RefreshRecommendationsAsync();
-        }
+        /*
+                public async Task OnCatchAddedAsync()
+                {
+                    // Called when a new catch is added from another view
+                    await LoadDashboardDataAsync();
+                    await RefreshRecommendationsAsync();
+                }
 
-        public async Task OnTrollingMethodChangedAsync()
-        {
-            // Called when trolling method is changed from another view
-            await LoadDashboardDataAsync();
-        }
+                public async Task OnTrollingMethodChangedAsync()
+                {
+                    // Called when trolling method is changed from another view
+                    await LoadDashboardDataAsync();
+                }
 
-        public void PauseAutoRefresh()
-        {
-            // Called when app goes to background or user navigates away
-            StopAutoRefresh();
-        }
+                public void PauseAutoRefresh()
+                {
+                    // Called when app goes to background or user navigates away
+                    StopAutoRefresh();
+                }
 
-        public void ResumeAutoRefresh()
-        {
-            // Called when app comes to foreground or user returns to dashboard
-            if (IsAutoRefreshEnabled && HasLocationPermission)
-            {
-                StartAutoRefresh();
-            }
-        }
-*/
+                public void ResumeAutoRefresh()
+                {
+                    // Called when app comes to foreground or user returns to dashboard
+                    if (IsAutoRefreshEnabled && HasLocationPermission)
+                    {
+                        StartAutoRefresh();
+                    }
+                }
+        */
         #endregion
 
         #region IDisposable
