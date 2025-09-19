@@ -32,6 +32,9 @@ namespace TrollTrack.MVVM.ViewModels
         partial void OnIsBusyChanged(bool value)
         {
             IsRefreshing = value;
+
+            Debug.WriteLine($"=== IsBusy changed to: {value} ===");
+            Debug.WriteLine($"Stack trace: {Environment.StackTrace}");
         }
 
         /// <summary>
@@ -127,12 +130,6 @@ namespace TrollTrack.MVVM.ViewModels
         [RelayCommand]
         public async Task UpdateLocationAsync()
         {
-            if (IsBusy)
-            {
-                Debug.WriteLine("Location update already in progress, skipping...");
-                return;
-            }
-
             try
             {
                 SetBusy(true, "Getting location...");
@@ -161,6 +158,7 @@ namespace TrollTrack.MVVM.ViewModels
                     // Update location properties on main thread
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
+                        CurrentLocation = location;
                         CurrentLatitude = Math.Round(location.Latitude, 6);
                         CurrentLongitude = Math.Round(location.Longitude, 6);
                         LocationLastUpdated = DateTime.Now;

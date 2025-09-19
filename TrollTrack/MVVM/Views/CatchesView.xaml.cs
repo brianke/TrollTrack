@@ -13,6 +13,8 @@ public partial class CatchesView : ContentPage
         BindingContext = viewModel;
         _viewModel = viewModel;
     }
+
+
     protected override async void OnAppearing()
     {
         base.OnAppearing();

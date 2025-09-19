@@ -13,6 +13,8 @@ public partial class DashboardView : ContentPage
         BindingContext = viewModel;
         _viewModel = viewModel;
     }
+
+
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -29,6 +31,7 @@ public partial class DashboardView : ContentPage
             await DisplayAlert("Error", "Failed to load dashboard data. Please try again.", "OK");
         }
     }
+
 
     protected override void OnDisappearing()
     {

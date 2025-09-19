@@ -8,13 +8,30 @@ namespace TrollTrack.Services
 {
     public class LocationService : ILocationService
     {
+        // set default locaiton which will be used as a return value if actual position cannot be obtained
+        private static Location defaultLocation = new Location(0.00, 0.00);
+
         // Required properties and events from interface
+
+        /// <summary>
+        /// Indicates if location is enabled on the device
+        /// </summary>
         public bool IsLocationEnabled { get; private set; }
+
+        /// <summary>
+        /// Event that is fired whenever the locaiton is updated
+        /// This event can be subscribed to by other classes/models when needing to do something when location is updated
+        /// </summary>
         public event EventHandler<Location> LocationUpdated;
 
-        // Fields for tracking and history
+
+        // List for tracking location history
         private readonly List<Location> _locationHistory = new();
 
+        /// <summary>
+        /// Get the current location asynchronously
+        /// </summary>
+        /// <returns></returns>
         public async Task<Location> GetCurrentLocationAsync()
         {
             try
@@ -39,19 +56,26 @@ namespace TrollTrack.Services
                     var (town, coords) = LocationData.GetRandomLocation();
                     location.Latitude = coords.Latitude;
                     location.Longitude = coords.Longitude;
+
+                    return location;
                 }
 
-                return location;
+                return defaultLocation; 
             }
             catch (Exception ex)
             {
                 // Handle location errors
                 System.Diagnostics.Debug.WriteLine($"Location error: {ex.Message}");
                 IsLocationEnabled = false;
-                return null;
+                return defaultLocation;
             }
         }
 
+        /// <summary>
+        /// Request location permission asynchronously
+        /// This is a request to the device to allow the app access to the device location
+        /// </summary>
+        /// <returns></returns>
         public async Task<bool> RequestLocationPermissionAsync()
         {
             try
@@ -74,12 +98,20 @@ namespace TrollTrack.Services
             }
         }
 
-        // ✅ ADD: Implement missing interface methods
+        /// <summary>
+        /// Retrieve a list of historical locations asynchronously
+        /// </summary>
+        /// <returns></returns>
         public async Task<List<Location>> GetLocationHistoryAsync()
         {
             return await Task.FromResult(_locationHistory.ToList());
         }
 
+        /// <summary>
+        /// Save the current location to the list of historical locations asynchronously
+        /// </summary>
+        /// <param name="location"></param>
+        /// <returns></returns>
         public async Task SaveLocationAsync(Location location)
         {
             if (location != null)
@@ -100,16 +132,6 @@ namespace TrollTrack.Services
     }
 
 
-    public enum LocationReference
-    {
-        CatawbaOH = 1,
-        LudingtonMI = 2,
-        TraverseCityMI = 3,
-        ConneautOH = 4,
-        FortMyersFL = 5,
-        NagsHeadNC = 6,
-        BainbridgeMD = 7
-    }
 
     public struct LocationCoordinates
     {
@@ -121,6 +143,20 @@ namespace TrollTrack.Services
             Latitude = lat;
             Longitude = lng;
         }
+    }
+
+
+    // Following enum, class, methods are for testing only
+
+    public enum LocationReference
+    {
+        CatawbaOH = 1,
+        LudingtonMI = 2,
+        TraverseCityMI = 3,
+        ConneautOH = 4,
+        FortMyersFL = 5,
+        NagsHeadNC = 6,
+        BainbridgeMD = 7
     }
 
     public static class LocationData

@@ -71,7 +71,6 @@ namespace TrollTrack.MVVM.ViewModels
             //_databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
             //_aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
 
-            Title = "Dashboard";
 
             // Initialize auto-refresh timers
             //InitializeTimers();

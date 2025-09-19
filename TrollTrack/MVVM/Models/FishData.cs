@@ -18,7 +18,7 @@ namespace TrollTrack.MVVM.Models
 
     public static class FishData
     {
-        private static readonly Dictionary<FishCommonName, FishInfo> FishDictionary = new()
+        public static readonly Dictionary<FishCommonName, FishInfo> FishDictionary = new()
         {
             { FishCommonName.Walleye, new FishInfo(FishCommonName.Walleye.ToString(), "Sander vitreus", "Freshwater lakes") },
             { FishCommonName.Perch, new FishInfo(FishCommonName.Perch.ToString(), "Perca flavescens", "Freshwater") },
