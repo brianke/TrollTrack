@@ -174,7 +174,13 @@ namespace TrollTrack.Services
             try
             {
                 var db = await GetDatabaseAsync();
-                return await db.DeleteAsync<CatchDataEntity>(id, recursive: true);
+                var entityToDelete = await db.GetWithChildrenAsync<CatchDataEntity>(id);
+                if (entityToDelete != null)
+                {
+                    await db.DeleteAsync(entityToDelete, recursive: true);
+                    return 1;
+                }
+                return 0;
             }
             catch (Exception ex)
             {
