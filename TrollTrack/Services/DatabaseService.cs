@@ -1,4 +1,4 @@
-﻿using SQLite;
+using SQLite;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +11,7 @@ namespace TrollTrack.Services
     /// <summary>
     /// SQLite database service for managing catch data and other app data
     /// </summary>
-    public class DatabaseService : IDatabaseService
+    public class DatabaseService : IDatabaseService, IDisposable
     {
         private SQLiteAsyncConnection? _database;
         private readonly string _databasePath;
@@ -205,15 +205,25 @@ namespace TrollTrack.Services
             try
             {
                 var db = await GetDatabaseAsync();
-                var catches = await db.Table<CatchDataEntity>().ToListAsync();
+                var today = DateTime.Today;
+                var tomorrow = today.AddDays(1);
+                var weekAgo = today.AddDays(-7);
+                var monthAgo = today.AddDays(-30);
+
+                var totalCatches = await db.Table<CatchDataEntity>().CountAsync();
+                var todaysCatches = await db.Table<CatchDataEntity>().Where(c => c.Timestamp >= today && c.Timestamp < tomorrow).CountAsync();
+                var weekCatches = await db.Table<CatchDataEntity>().Where(c => c.Timestamp >= weekAgo).CountAsync();
+                var monthCatches = await db.Table<CatchDataEntity>().Where(c => c.Timestamp >= monthAgo).CountAsync();
+
+                var lastCatch = await db.Table<CatchDataEntity>().OrderByDescending(c => c.Timestamp).FirstOrDefaultAsync();
 
                 var stats = new CatchStatistics
                 {
-                    TotalCatches = catches.Count,
-                    TodaysCatches = catches.Count(c => c.Timestamp.Date == DateTime.Today),
-                    WeekCatches = catches.Count(c => c.Timestamp >= DateTime.Today.AddDays(-7)),
-                    MonthCatches = catches.Count(c => c.Timestamp >= DateTime.Today.AddDays(-30)),
-                    LastCatchDate = catches.Any() ? catches.Max(c => c.Timestamp) : DateTime.MinValue
+                    TotalCatches = totalCatches,
+                    TodaysCatches = todaysCatches,
+                    WeekCatches = weekCatches,
+                    MonthCatches = monthCatches,
+                    LastCatchDate = lastCatch?.Timestamp ?? DateTime.MinValue
                 };
 
                 return stats;
@@ -231,6 +241,7 @@ namespace TrollTrack.Services
 
         private async Task<CatchDataEntity> ConvertToEntityAsync(CatchData catchData)
         {
+            var db = await GetDatabaseAsync();
             var entity = new CatchDataEntity
             {
                 Id = catchData.Id,
@@ -252,7 +263,6 @@ namespace TrollTrack.Services
                     Timestamp = catchData.Location.Timestamp
                 };
 
-                var db = await GetDatabaseAsync();
                 await db.InsertOrReplaceAsync(locationEntity);
                 entity.LocationId = locationEntity.Id;
             }
@@ -260,17 +270,32 @@ namespace TrollTrack.Services
             // Handle ProgramData
             if (catchData.CatchProgram != null)
             {
-                // You'll need to implement ProgramData to entity conversion
-                // based on your ProgramData model structure
-                entity.ProgramDataId = Guid.NewGuid(); // Placeholder
+                // TODO: The ProgramData model is incomplete. It needs Name and Description properties
+                // to be fully implemented here.
+                // For now, we will just create a placeholder entity.
+                var programEntity = new ProgramDataEntity
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Placeholder Program",
+                    Description = "Placeholder Description"
+                };
+                await db.InsertOrReplaceAsync(programEntity);
+                entity.ProgramDataId = programEntity.Id;
             }
 
             // Handle FishInfo
-            if (catchData.FishCaught != null)
+            if (catchData.FishCaught.HasValue)
             {
-                // You'll need to implement FishInfo to entity conversion
-                // based on your FishInfo model structure
-                entity.FishCommonNameId = Guid.NewGuid(); // Placeholder
+                var fishInfo = FishData.GetInfo(catchData.FishCaught.Value);
+                var fishEntity = new FishInfoEntity
+                {
+                    Id = fishInfo.Id,
+                    CommonName = fishInfo.CommonName,
+                    ScientificName = fishInfo.ScientificName,
+                    Habitat = fishInfo.Habitat
+                };
+                await db.InsertOrReplaceAsync(fishEntity);
+                entity.FishCommonNameId = fishEntity.Id;
             }
 
             return entity;
@@ -311,15 +336,25 @@ namespace TrollTrack.Services
             // Retrieve ProgramData
             if (entity.ProgramDataId.HasValue)
             {
-                // You'll need to implement entity to ProgramData conversion
-                // catchData.CatchProgram = await GetProgramDataAsync(entity.ProgramDataId.Value);
+                // TODO: The ProgramData model is incomplete.
+                // var programEntity = await db.Table<ProgramDataEntity>().FirstOrDefaultAsync(p => p.Id == entity.ProgramDataId.Value);
+                // if (programEntity != null)
+                // {
+                //     catchData.CatchProgram = new ProgramData { ... };
+                // }
             }
 
             // Retrieve FishCommonName
             if (entity.FishCommonNameId.HasValue)
             {
-                // You'll need to implement entity to FishCommonName conversion
-                // catchData.FishCaught = await GetFishCommonNameAsync(entity.FishCommonNameId.Value);
+                var fishEntity = await db.Table<FishInfoEntity>().FirstOrDefaultAsync(f => f.Id == entity.FishCommonNameId.Value);
+                if (fishEntity != null && !string.IsNullOrEmpty(fishEntity.CommonName))
+                {
+                    if (Enum.TryParse<FishCommonName>(fishEntity.CommonName, out var fishCommonName))
+                    {
+                        catchData.FishCaught = fishCommonName;
+                    }
+                }
             }
 
             return catchData;
@@ -354,20 +389,20 @@ namespace TrollTrack.Services
         /// <summary>
         /// Get database file size
         /// </summary>
-        public async Task<long> GetDatabaseSizeAsync()
+        public Task<long> GetDatabaseSizeAsync()
         {
             try
             {
                 if (File.Exists(_databasePath))
                 {
                     var fileInfo = new FileInfo(_databasePath);
-                    return fileInfo.Length;
+                    return Task.FromResult(fileInfo.Length);
                 }
-                return 0;
+                return Task.FromResult(0L);
             }
             catch
             {
-                return 0;
+                return Task.FromResult(0L);
             }
         }
 
@@ -393,7 +428,7 @@ namespace TrollTrack.Services
 
         public void Dispose()
         {
-            _database?.CloseAsync();
+            _database?.CloseAsync().GetAwaiter().GetResult();
         }
     }
 
@@ -412,8 +447,13 @@ namespace TrollTrack.Services
         public DateTime Timestamp { get; set; }
 
         // Foreign Keys
+        [ForeignKey(typeof(LocationEntity))]
         public Guid? LocationId { get; set; }
+
+        [ForeignKey(typeof(ProgramDataEntity))]
         public Guid? ProgramDataId { get; set; }
+
+        [ForeignKey(typeof(FishInfoEntity))]
         public Guid? FishCommonNameId { get; set; }
     }
 

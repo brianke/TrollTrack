@@ -15,6 +15,10 @@
             public const string WeatherApiBaseUrl = "https://api.weatherapi.com/v1";
             public const int WeatherApiTimeoutSeconds = 30;
             public const int WeatherCacheExpirationMinutes = 15;
+            public const int MaxForecastDays = 3;
+            public const string ImperialTemperatureUnit = "F";
+            public const string ImperialSpeedUnit = "mph";
+            public const double InHgToHpaConversionFactor = 33.8639;
             
             // Location and GPS configuration
             public const double DefaultLatitude = 41.2033; // Columbus, Ohio (Great Lakes region)
