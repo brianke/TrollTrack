@@ -447,13 +447,13 @@ namespace TrollTrack.Services
         public DateTime Timestamp { get; set; }
 
         // Foreign Keys
-        [ForeignKey(typeof(LocationEntity))]
+        [SQLite.ForeignKey(typeof(LocationEntity))]
         public Guid? LocationId { get; set; }
 
-        [ForeignKey(typeof(ProgramDataEntity))]
+        [SQLite.ForeignKey(typeof(ProgramDataEntity))]
         public Guid? ProgramDataId { get; set; }
 
-        [ForeignKey(typeof(FishInfoEntity))]
+        [SQLite.ForeignKey(typeof(FishInfoEntity))]
         public Guid? FishCommonNameId { get; set; }
     }
 
