@@ -10,7 +10,7 @@
 
         #region Constructor
 
-        public AnalyticsViewModel(ILocationService locationService) : base(locationService)
+        public AnalyticsViewModel(ILocationService locationService, IDatabaseService databaseService) : base(locationService, databaseService)
         {
             Title = "Analytics Page";
 

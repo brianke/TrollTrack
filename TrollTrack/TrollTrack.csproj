@@ -76,6 +76,7 @@
 		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.100" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 	</ItemGroup>
 
 	<!-- Platform specific configurations -->

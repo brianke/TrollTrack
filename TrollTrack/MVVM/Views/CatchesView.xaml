@@ -56,7 +56,7 @@
                     TextColor="White"
                     HorizontalOptions="Center"
                     VerticalOptions="Center"
-                    Command="{Binding AddCatchCommand}"
+                    Command="{Binding AddNewCatchCommand}"
                     Grid.Row="2"/>
         </Grid>
     </ScrollView>

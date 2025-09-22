@@ -10,10 +10,12 @@ namespace TrollTrack.MVVM.ViewModels
     {
         #region Private Fields - Services injected via constructor
         protected readonly ILocationService _locationService;
+        protected readonly IDatabaseService _databaseService;
         #endregion
 
         #region Protected Properties - Access services through these
         protected ILocationService LocationService => _locationService;
+        protected IDatabaseService DatabaseService => _databaseService;
         #endregion
 
         #region Properties
@@ -33,8 +35,8 @@ namespace TrollTrack.MVVM.ViewModels
         {
             IsRefreshing = value;
 
-            Debug.WriteLine($"=== IsBusy changed to: {value} ===");
-            Debug.WriteLine($"Stack trace: {Environment.StackTrace}");
+            //Debug.WriteLine($"=== IsBusy changed to: {value} ===");
+            //Debug.WriteLine($"Stack trace: {Environment.StackTrace}");
         }
 
         /// <summary>
@@ -106,9 +108,10 @@ namespace TrollTrack.MVVM.ViewModels
 
         #region Constructor
 
-        public BaseViewModel(ILocationService locationService)
+        public BaseViewModel(ILocationService locationService, IDatabaseService databaseService)
         {
             _locationService = locationService;
+            _databaseService = databaseService;
 
             // Subscribe to location updates
             _locationService.LocationUpdated += OnLocationServiceUpdated;

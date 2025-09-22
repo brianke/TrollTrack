@@ -5,7 +5,6 @@ namespace TrollTrack.MVVM.ViewModels
 {
     public partial class CatchesViewModel : BaseViewModel
     {
-
         #region Observable Properties
 
         [ObservableProperty]
@@ -14,23 +13,36 @@ namespace TrollTrack.MVVM.ViewModels
         [ObservableProperty]
         private FishCommonName selectedFishOption;
 
-        private ObservableCollection<CatchData> catchDataCollection = new ObservableCollection<CatchData>();
-
         partial void OnSelectedFishOptionChanged(FishCommonName value)
         {
             // Use the enum value
             Debug.WriteLine($"Selected fish: {value}");
         }
-    
-        
+
+        [ObservableProperty]
+        private CatchData? selectedCatch;
+
+        [ObservableProperty]
+        private bool isLoading;
+
+        [ObservableProperty]
+        private ObservableCollection<CatchData> catches = new();
+
+        [ObservableProperty]
+        private int totalCatches;
+
+        [ObservableProperty]
+        private int todaysCatches;
+
         #endregion
 
         #region Constructor
 
-        public CatchesViewModel(ILocationService locationService) : base(locationService)
+        public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService) : base(locationService, databaseService)
         {
             // Load data when ViewModel is created
             _ = InitializeAsync();
+
         }
 
         #endregion
@@ -51,8 +63,12 @@ namespace TrollTrack.MVVM.ViewModels
                 // Load fish names for ItemPicker
                 FishOptions = Enum.GetValues<FishCommonName>().ToList();
 
-                // Get current location - ADD THIS
+                // Get current location
                 await UpdateLocationAsync();
+
+                // Load catches when ViewModel is created
+                _ = LoadCatchesAsync();
+
 
                 // Update Title
                 Title = "Catches";
@@ -64,20 +80,77 @@ namespace TrollTrack.MVVM.ViewModels
         #region Commands
 
         [RelayCommand]
-        private void AddCatch()
+        private async Task LoadCatchesAsync()
         {
-            // Handle button press
-            catchDataCollection.Add(new CatchData
+            await ExecuteSafelyAsync(async () =>
             {
-                Id = new Guid(),
-                Timestamp = DateTime.Now,
-                CatchProgram = null,
-                Location = CurrentLocation,
-                FishCaught = SelectedFishOption
-            });
+                IsLoading = true;
 
-            // TODO: testing only, updating location
-            CurrentLocation = new Location(CurrentLocation.Latitude + 0.001, CurrentLocation.Longitude + 0.001);
+                var allCatches = await _databaseService.GetCatchDataAsync();
+                var todaysCatchList = await _databaseService.GetTodaysCatchesAsync();
+
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    Catches.Clear();
+                    foreach (var catchData in allCatches)
+                    {
+                        Catches.Add(catchData);
+                    }
+
+                    TotalCatches = allCatches.Count;
+                    TodaysCatches = todaysCatchList.Count;
+                });
+
+                System.Diagnostics.Debug.WriteLine($"Loaded {allCatches.Count} catch records");
+            }, "Loading catches...", showErrorAlert: false);
+        }
+        
+        //[RelayCommand]
+        //private void AddCatch()
+        //{
+        //    // Handle button press
+        //    catches.Add(new CatchData
+        //    {
+        //        Id = new Guid(),
+        //        Timestamp = DateTime.Now,
+        //        CatchProgram = null,
+        //        Location = CurrentLocation,
+        //        FishCaught = SelectedFishOption
+        //    });
+
+        //    // TODO: testing only, updating location
+        //    CurrentLocation = new Location(CurrentLocation.Latitude + 0.001, CurrentLocation.Longitude + 0.001);
+        //}
+
+        [RelayCommand]
+        private async Task AddNewCatchAsync()
+        {
+            await ExecuteSafelyAsync(async () =>
+            {
+                // Get current location
+                var currentLocation = await _locationService.GetCurrentLocationAsync();
+
+                var newCatch = new CatchData
+                {
+                    Id = Guid.NewGuid(),
+                    Timestamp = DateTime.Now,
+                    Location = currentLocation
+                };
+
+                // Save to database
+                await _databaseService.SaveCatchAsync(newCatch);
+
+                // Add to collection
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    Catches.Insert(0, newCatch);
+                    TotalCatches++;
+                    if (newCatch.Timestamp.Date == DateTime.Today)
+                        TodaysCatches++;
+                });
+
+                System.Diagnostics.Debug.WriteLine($"Added new catch at {newCatch.Timestamp}");
+            }, "Adding catch...");
         }
 
         #endregion

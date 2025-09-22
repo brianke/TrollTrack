@@ -8,7 +8,7 @@ namespace TrollTrack.MVVM.Models
     public class WeatherData
     {
         [Key]
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 

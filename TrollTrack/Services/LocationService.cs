@@ -56,6 +56,7 @@ namespace TrollTrack.Services
                     var (town, coords) = LocationData.GetRandomLocation();
                     location.Latitude = coords.Latitude;
                     location.Longitude = coords.Longitude;
+                    //TODO
 
                     return location;
                 }
