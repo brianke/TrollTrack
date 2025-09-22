@@ -10,10 +10,12 @@ namespace TrollTrack.MVVM.ViewModels
     {
         #region Private Fields - Services injected via constructor
         protected readonly ILocationService _locationService;
+        protected readonly IDatabaseService _databaseService;
         #endregion
 
         #region Protected Properties - Access services through these
         protected ILocationService LocationService => _locationService;
+        protected IDatabaseService DatabaseService => _databaseService;
         #endregion
 
         #region Properties
@@ -32,6 +34,9 @@ namespace TrollTrack.MVVM.ViewModels
         partial void OnIsBusyChanged(bool value)
         {
             IsRefreshing = value;
+
+            //Debug.WriteLine($"=== IsBusy changed to: {value} ===");
+            //Debug.WriteLine($"Stack trace: {Environment.StackTrace}");
         }
 
         /// <summary>
@@ -103,9 +108,10 @@ namespace TrollTrack.MVVM.ViewModels
 
         #region Constructor
 
-        public BaseViewModel(ILocationService locationService)
+        public BaseViewModel(ILocationService locationService, IDatabaseService databaseService)
         {
             _locationService = locationService;
+            _databaseService = databaseService;
 
             // Subscribe to location updates
             _locationService.LocationUpdated += OnLocationServiceUpdated;
@@ -127,12 +133,6 @@ namespace TrollTrack.MVVM.ViewModels
         [RelayCommand]
         public async Task UpdateLocationAsync()
         {
-            if (IsBusy)
-            {
-                Debug.WriteLine("Location update already in progress, skipping...");
-                return;
-            }
-
             try
             {
                 SetBusy(true, "Getting location...");
@@ -161,6 +161,7 @@ namespace TrollTrack.MVVM.ViewModels
                     // Update location properties on main thread
                     await MainThread.InvokeOnMainThreadAsync(() =>
                     {
+                        CurrentLocation = location;
                         CurrentLatitude = Math.Round(location.Latitude, 6);
                         CurrentLongitude = Math.Round(location.Longitude, 6);
                         LocationLastUpdated = DateTime.Now;

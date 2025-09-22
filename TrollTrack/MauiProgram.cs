@@ -25,6 +25,7 @@ namespace TrollTrack
 
             // Register services as singletons
             builder.Services.AddSingleton<ILocationService, LocationService>();
+            builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
 
             // Register WeatherService with HttpClient dependency
             builder.Services.AddSingleton<IWeatherService>(serviceProvider =>

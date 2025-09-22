@@ -7,8 +7,6 @@ namespace TrollTrack.MVVM.ViewModels
     public partial class DashboardViewModel : BaseViewModel
     {
         private readonly IWeatherService _weatherService;
-        //private readonly DatabaseService _databaseService;
-        //private readonly AIRecommendationService _aiService;
 
         #region Observable Properties
 
@@ -38,43 +36,14 @@ namespace TrollTrack.MVVM.ViewModels
 
         #endregion
 
-
-        //[ObservableProperty]
-        //private bool isAutoRefreshEnabled = true;
-
-        //[ObservableProperty]
-        //private int autoRefreshCountdown = 30;
-
-
         #endregion
 
-        #region Collections
-
-        //public ObservableCollection<string> AIRecommendations { get; } = new();
-        //public ObservableCollection<CatchRecord> RecentCatches { get; } = new();
-
-        #endregion
-
-        #region Timers
-        /*
-                private IDispatcherTimer _locationRefreshTimer;
-                private IDispatcherTimer _countdownTimer;
-        */
-        #endregion
 
         #region Constructor
 
-        public DashboardViewModel(ILocationService locationService, IWeatherService weatherService) : base(locationService)
+        public DashboardViewModel(ILocationService locationService, IDatabaseService databaseService, IWeatherService weatherService) : base(locationService, databaseService)
         {
-            //_locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
             _weatherService = weatherService;
-            //_databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
-            //_aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
-
-            Title = "Dashboard";
-
-            // Initialize auto-refresh timers
-            //InitializeTimers();
 
             // Check API configuration status
             CheckApiConfiguration();
@@ -166,112 +135,6 @@ namespace TrollTrack.MVVM.ViewModels
 
         #endregion
 
-        #region Auto Refresh Timer Management
-
-        /* Not doing the refresh as it will drain battery, but keeping the code should I want to use it in the future
-        private void InitializeTimers()
-        {
-            // Location refresh timer (30 seconds)
-            _locationRefreshTimer = Application.Current.Dispatcher.CreateTimer();
-            _locationRefreshTimer.Interval = TimeSpan.FromSeconds(30);
-            _locationRefreshTimer.Tick += async (sender, e) => await OnLocationRefreshTimerElapsed();
-            _locationRefreshTimer.IsRepeating = true;
-
-            // Countdown timer (1 second intervals)
-            _countdownTimer = Application.Current.Dispatcher.CreateTimer();
-            _countdownTimer.Interval = TimeSpan.FromSeconds(1);
-            _countdownTimer.Tick += OnCountdownTimerElapsed;
-            _countdownTimer.IsRepeating = true;
-
-            Debug.WriteLine("🔧 Timers initialized");
-        }
-
-        private async Task OnLocationRefreshTimerElapsed()
-        {
-            try
-            {
-                if (IsAutoRefreshEnabled && !IsBusy && HasLocationPermission)
-                {
-                    Debug.WriteLine("🔄 Auto-refreshing location...");
-                    await UpdateLocationAndWeatherAsync();
-
-                    // Reset countdown
-                    AutoRefreshCountdown = 30;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"❌ Auto-refresh error: {ex.Message}");
-            }
-        }
-
-        private void OnCountdownTimerElapsed(object sender, EventArgs e)
-        {
-            if (IsAutoRefreshEnabled && AutoRefreshCountdown > 0)
-            {
-                AutoRefreshCountdown--;
-                if (AutoRefreshCountdown <= 0)
-                {
-                    AutoRefreshCountdown = 30; // Reset for next cycle
-                }
-                Debug.WriteLine($"⏰ Countdown: {AutoRefreshCountdown}");
-            }
-        }
-
-        [RelayCommand]
-        private void ToggleAutoRefresh()
-        {
-            IsAutoRefreshEnabled = !IsAutoRefreshEnabled;
-
-            Debug.WriteLine($"🔄 Auto-refresh toggled: {IsAutoRefreshEnabled}");
-
-            if (IsAutoRefreshEnabled)
-            {
-                StartAutoRefresh();
-                Debug.WriteLine("✅ Auto-refresh enabled");
-            }
-            else
-            {
-                StopAutoRefresh();
-                Debug.WriteLine("⏹️ Auto-refresh disabled");
-            }
-        }
-
-        [RelayCommand]
-        private async Task TestTimerAsync()
-        {
-            Debug.WriteLine("🧪 Testing timer functionality...");
-            await ShowAlertAsync("Timer Test", $"Auto-refresh enabled: {IsAutoRefreshEnabled}\nCountdown: {AutoRefreshCountdown}\nLocation timer running: {_locationRefreshTimer?.IsRunning}\nCountdown timer running: {_countdownTimer?.IsRunning}");
-        }
-
-        private void StartAutoRefresh()
-        {
-            if (HasLocationPermission)
-            {
-                AutoRefreshCountdown = 30;
-                _locationRefreshTimer?.Start();
-                _countdownTimer?.Start();
-                Debug.WriteLine("🔄 Auto-refresh started (30 second intervals)");
-                Debug.WriteLine($"🔧 Location timer running: {_locationRefreshTimer?.IsRunning}");
-                Debug.WriteLine($"🔧 Countdown timer running: {_countdownTimer?.IsRunning}");
-            }
-            else
-            {
-                Debug.WriteLine("⚠️ Cannot start auto-refresh: No location permission");
-            }
-        }
-
-        private void StopAutoRefresh()
-        {
-            _locationRefreshTimer?.Stop();
-            _countdownTimer?.Stop();
-            AutoRefreshCountdown = 30;
-            Debug.WriteLine("⏹️ Auto-refresh stopped");
-            Debug.WriteLine($"🔧 Location timer running: {_locationRefreshTimer?.IsRunning}");
-            Debug.WriteLine($"🔧 Countdown timer running: {_countdownTimer?.IsRunning}");
-        }
-        */
-        #endregion
 
         #region Weather Commands
 
@@ -473,7 +336,7 @@ namespace TrollTrack.MVVM.ViewModels
         {
             try
             {
-                await Shell.Current.GoToAsync("//catch");
+                await Shell.Current.GoToAsync(RouteConstants.Catch);
             }
             catch (Exception ex)
             {
@@ -487,7 +350,7 @@ namespace TrollTrack.MVVM.ViewModels
         {
             try
             {
-                await Shell.Current.GoToAsync("//trolling");
+                await Shell.Current.GoToAsync(RouteConstants.Trolling);
             }
             catch (Exception ex)
             {
@@ -501,7 +364,7 @@ namespace TrollTrack.MVVM.ViewModels
         {
             try
             {
-                await Shell.Current.GoToAsync("//history");
+                await Shell.Current.GoToAsync(RouteConstants.History);
             }
             catch (Exception ex)
             {
@@ -515,7 +378,7 @@ namespace TrollTrack.MVVM.ViewModels
         {
             try
             {
-                await Shell.Current.GoToAsync("//lures");
+                await Shell.Current.GoToAsync(RouteConstants.Lures);
             }
             catch (Exception ex)
             {
@@ -528,35 +391,7 @@ namespace TrollTrack.MVVM.ViewModels
 
 
         #region Public Methods for External Updates
-        /*
-                public async Task OnCatchAddedAsync()
-                {
-                    // Called when a new catch is added from another view
-                    await LoadDashboardDataAsync();
-                    await RefreshRecommendationsAsync();
-                }
-
-                public async Task OnTrollingMethodChangedAsync()
-                {
-                    // Called when trolling method is changed from another view
-                    await LoadDashboardDataAsync();
-                }
-
-                public void PauseAutoRefresh()
-                {
-                    // Called when app goes to background or user navigates away
-                    StopAutoRefresh();
-                }
-
-                public void ResumeAutoRefresh()
-                {
-                    // Called when app comes to foreground or user returns to dashboard
-                    if (IsAutoRefreshEnabled && HasLocationPermission)
-                    {
-                        StartAutoRefresh();
-                    }
-                }
-        */
+       
         #endregion
 
         #region IDisposable

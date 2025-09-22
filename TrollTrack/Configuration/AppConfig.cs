@@ -23,7 +23,7 @@
             
             // Fishing data constants
             public const double MinTrollingSpeed = 0.5;
-            public const double MaxTrollingSpeed = 8.0;
+            public const double MaxTrollingSpeed = 12.0;
             public const double OptimalTrollingSpeed = 2.5;
             
             // Depth ranges (feet)
