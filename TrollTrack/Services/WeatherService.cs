@@ -1,5 +1,4 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json;
 using TrollTrack.MVVM.Models;
 using TrollTrack.Configuration;
 
@@ -11,17 +10,13 @@ namespace TrollTrack.Services
     public class WeatherService : IWeatherService
     {
         private readonly HttpClient _httpClient;
-        private readonly JsonSerializerOptions _jsonSerializerOptions;
 
         public WeatherService(HttpClient httpClient)
         {
             _httpClient = httpClient;
+
+            // Set timeout for weather requests
             _httpClient.Timeout = TimeSpan.FromSeconds(AppConfig.Constants.WeatherApiTimeoutSeconds);
-            _jsonSerializerOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-            };
         }
 
         /// <summary>
@@ -40,27 +35,27 @@ namespace TrollTrack.Services
             try
             {
                 // Current weather and air quality endpoint
-                var currentWeatherUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json?key={apiKey}&q={latitude},{longitude}&aqi=yes";
+                var currentWeatherUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json" +
+                    $"?key={apiKey}" +
+                    $"&q={latitude},{longitude}" +
+                    $"&aqi=yes"; // Include air quality data
+
                 var currentResponse = await _httpClient.GetStringAsync(currentWeatherUrl);
-                var weatherApiResponse = JsonSerializer.Deserialize<WeatherApiResponse>(currentResponse, _jsonSerializerOptions);
+                var currentJson = JsonDocument.Parse(currentResponse);
 
-                if (weatherApiResponse == null)
-                {
-                    throw new Exception("Failed to deserialize weather data.");
-                }
-
-                var weather = ParseCurrentWeatherData(weatherApiResponse, latitude, longitude);
+                var weather = ParseCurrentWeatherData(currentJson, latitude, longitude);
 
                 // Try to get astronomy data (optional)
                 try
                 {
-                    var astronomyUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/astronomy.json?key={apiKey}&q={latitude},{longitude}&dt={DateTime.Now:yyyy-MM-dd}";
+                    var astronomyUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/astronomy.json" +
+                        $"?key={apiKey}" +
+                        $"&q={latitude},{longitude}" +
+                        $"&dt={DateTime.Now:yyyy-MM-dd}";
+
                     var astronomyResponse = await _httpClient.GetStringAsync(astronomyUrl);
-                    var astronomyApiResponse = JsonSerializer.Deserialize<AstronomyApiResponse>(astronomyResponse, _jsonSerializerOptions);
-                    if (astronomyApiResponse != null)
-                    {
-                        AddAstronomyData(weather, astronomyApiResponse);
-                    }
+                    var astronomyJson = JsonDocument.Parse(astronomyResponse);
+                    AddAstronomyData(weather, astronomyJson);
                 }
                 catch (Exception ex)
                 {
@@ -73,6 +68,8 @@ namespace TrollTrack.Services
             catch (HttpRequestException ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Weather API HTTP error: {ex.Message}");
+
+                // Provide more specific error messages based on HTTP status
                 if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
                 {
                     throw new UnauthorizedAccessException("Invalid weather API key. Please check your API key in Settings.");
@@ -85,6 +82,7 @@ namespace TrollTrack.Services
                 {
                     throw new InvalidOperationException("Too many weather API requests. Please try again in a few minutes.");
                 }
+
                 throw new Exception("Unable to fetch weather data. Please check your internet connection.", ex);
             }
             catch (JsonException ex)
@@ -112,24 +110,34 @@ namespace TrollTrack.Services
             var apiKey = AppConfig.Runtime.WeatherApiKey;
 
             // WeatherAPI.com free tier supports up to 3 days forecast
-            if (days > AppConfig.Constants.MaxForecastDays) days = AppConfig.Constants.MaxForecastDays;
+            if (days > 3) days = 3;
             if (days < 1) days = 1;
 
             try
             {
-                var forecastUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/forecast.json?key={apiKey}&q={latitude},{longitude}&days={days}&aqi=no&alerts=no";
+                var forecastUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/forecast.json" +
+                    $"?key={apiKey}" +
+                    $"&q={latitude},{longitude}" +
+                    $"&days={days}" +
+                    $"&aqi=no" +  // Skip air quality for forecast to save API calls
+                    $"&alerts=no";
+
                 var response = await _httpClient.GetStringAsync(forecastUrl);
-                var forecastApiResponse = JsonSerializer.Deserialize<ForecastApiResponse>(response, _jsonSerializerOptions);
+                var json = JsonDocument.Parse(response);
 
                 var forecasts = new List<WeatherData>();
-                if (forecastApiResponse?.Forecast?.ForecastDay != null)
+
+                // Check if forecast data exists
+                if (json.RootElement.TryGetProperty("forecast", out var forecastElement) &&
+                    forecastElement.TryGetProperty("forecastday", out var forecastDays))
                 {
-                    foreach (var day in forecastApiResponse.Forecast.ForecastDay)
+                    foreach (var day in forecastDays.EnumerateArray())
                     {
                         var weather = ParseForecastDay(day, latitude, longitude);
                         forecasts.Add(weather);
                     }
                 }
+
                 return forecasts;
             }
             catch (Exception ex)
@@ -157,14 +165,21 @@ namespace TrollTrack.Services
             try
             {
                 var apiKey = AppConfig.Runtime.WeatherApiKey;
-                var currentWeatherUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json?key={apiKey}&q={Uri.EscapeDataString(cityName)}&aqi=yes";
+                var currentWeatherUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json" +
+                    $"?key={apiKey}" +
+                    $"&q={Uri.EscapeDataString(cityName)}" +
+                    $"&aqi=yes";
+
                 var response = await _httpClient.GetStringAsync(currentWeatherUrl);
-                var weatherApiResponse = JsonSerializer.Deserialize<WeatherApiResponse>(response, _jsonSerializerOptions);
+                var json = JsonDocument.Parse(response);
 
-                if (weatherApiResponse?.Location == null) return null;
+                var location = json.RootElement.GetProperty("location");
+                var lat = location.GetProperty("lat").GetDouble();
+                var lon = location.GetProperty("lon").GetDouble();
 
-                var weather = ParseCurrentWeatherData(weatherApiResponse, weatherApiResponse.Location.Lat, weatherApiResponse.Location.Lon);
-                weather.LocationName = weatherApiResponse.Location.Name;
+                var weather = ParseCurrentWeatherData(json, lat, lon);
+                weather.LocationName = location.GetProperty("name").GetString();
+
                 return weather;
             }
             catch (HttpRequestException ex) when (ex.Message.Contains("400"))
@@ -178,91 +193,145 @@ namespace TrollTrack.Services
             }
         }
 
-        private static WeatherData ParseCurrentWeatherData(WeatherApiResponse apiResponse, double latitude, double longitude)
+        /// <summary>
+        /// Test the API key by making a simple request
+        /// </summary>
+        private async Task<bool> TestApiKeyAsync()
         {
-            var current = apiResponse.Current;
-            var location = apiResponse.Location;
-            var condition = current.Condition;
+            try
+            {
+                // Use default location for testing
+                await GetCurrentWeatherAsync(
+                    AppConfig.Constants.DefaultLatitude,
+                    AppConfig.Constants.DefaultLongitude);
+                return true;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return false;
+            }
+            catch
+            {
+                // Other errors don't necessarily mean the API key is bad
+                return true;
+            }
+        }
+
+        private static WeatherData ParseCurrentWeatherData(JsonDocument json, double latitude, double longitude)
+        {
+            var root = json.RootElement;
+            var location = root.GetProperty("location");
+            var current = root.GetProperty("current");
+            var condition = current.GetProperty("condition");
 
             var weather = new WeatherData
             {
                 Timestamp = DateTime.UtcNow,
                 Latitude = latitude,
                 Longitude = longitude,
-                LocationName = location.Name,
-                Temperature = current.TempF,
-                FeelsLike = current.FeelsLikeF,
-                TemperatureUnit = AppConfig.Constants.ImperialTemperatureUnit,
-                Humidity = current.Humidity,
-                Pressure = current.PressureIn * AppConfig.Constants.InHgToHpaConversionFactor,
-                WindSpeed = current.WindMph,
-                WindDirection = current.WindDegree,
-                WindDirectionCardinal = current.WindDir ?? "",
-                WindGust = current.GustMph,
-                WindSpeedUnit = AppConfig.Constants.ImperialSpeedUnit,
-                Visibility = current.VisMiles,
-                CloudCover = current.Cloud,
-                WeatherCondition = condition.Text ?? "",
-                WeatherDescription = condition.Text ?? "",
-                UvIndex = current.Uv,
-                RainfallAmount = current.PrecipIn
+                LocationName = location.GetProperty("name").GetString(),
+
+                // Temperature data (always get Fahrenheit from API)
+                Temperature = current.GetProperty("temp_f").GetDouble(),
+                FeelsLike = current.GetProperty("feelslike_f").GetDouble(),
+                TemperatureUnit = "F",
+
+                // Humidity and Pressure
+                Humidity = current.GetProperty("humidity").GetDouble(),
+                Pressure = current.GetProperty("pressure_in").GetDouble() * 33.8639, // Convert inHg to hPa
+
+                // Wind data
+                WindSpeed = current.GetProperty("wind_mph").GetDouble(),
+                WindDirection = current.GetProperty("wind_degree").GetDouble(),
+                WindDirectionCardinal = current.GetProperty("wind_dir").GetString() ?? "",
+                WindGust = current.GetProperty("gust_mph").GetDouble(),
+                WindSpeedUnit = "mph",
+
+                // Visibility and conditions
+                Visibility = current.GetProperty("vis_miles").GetDouble(),
+                CloudCover = current.GetProperty("cloud").GetDouble(),
+                WeatherCondition = condition.GetProperty("text").GetString() ?? "",
+                WeatherDescription = condition.GetProperty("text").GetString() ?? "",
+
+                // UV Index
+                UvIndex = current.GetProperty("uv").GetDouble(),
+
+                // Precipitation
+                RainfallAmount = current.GetProperty("precip_in").GetDouble()
             };
 
-            if (current.AirQuality != null)
+            // Add air quality if available
+            if (root.TryGetProperty("current", out var currentElement) &&
+                currentElement.TryGetProperty("air_quality", out var airQuality))
             {
-                weather.AirQualityIndex = current.AirQuality.UsEpaIndex;
-                weather.AirQualityDescription = GetAirQualityDescription(current.AirQuality.UsEpaIndex);
+                if (airQuality.TryGetProperty("us-epa-index", out var epaIndex))
+                {
+                    weather.AirQualityIndex = epaIndex.GetDouble();
+                    weather.AirQualityDescription = GetAirQualityDescription(epaIndex.GetInt32());
+                }
             }
 
             return weather;
         }
 
-        private static WeatherData ParseForecastDay(ForecastDay forecastDay, double latitude, double longitude)
+        private static WeatherData ParseForecastDay(JsonElement forecastDay, double latitude, double longitude)
         {
-            var day = forecastDay.Day;
-            var astro = forecastDay.Astro;
-            var condition = day.Condition;
+            var day = forecastDay.GetProperty("day");
+            var astro = forecastDay.GetProperty("astro");
+            var condition = day.GetProperty("condition");
+            var date = DateTime.Parse(forecastDay.GetProperty("date").GetString() ?? DateTime.Now.ToString("yyyy-MM-dd"));
 
             var weather = new WeatherData
             {
-                Timestamp = DateTime.Parse(forecastDay.Date ?? DateTime.Now.ToString("yyyy-MM-dd")),
+                Timestamp = date,
                 Latitude = latitude,
                 Longitude = longitude,
-                Temperature = day.AvgTempF,
-                TemperatureMin = day.MinTempF,
-                TemperatureMax = day.MaxTempF,
-                TemperatureUnit = AppConfig.Constants.ImperialTemperatureUnit,
-                Humidity = day.AvgHumidity,
-                WindSpeed = day.MaxWindMph,
-                WindSpeedUnit = AppConfig.Constants.ImperialSpeedUnit,
-                Visibility = day.AvgVisMiles,
-                WeatherCondition = condition.Text ?? "",
-                WeatherDescription = condition.Text ?? "",
-                UvIndex = day.Uv,
-                PrecipitationChance = day.DailyChanceOfRain,
-                RainfallAmount = day.TotalPrecipIn,
-                Sunrise = ParseTimeString(astro.Sunrise),
-                Sunset = ParseTimeString(astro.Sunset),
-                Moonrise = ParseTimeString(astro.Moonrise),
-                Moonset = ParseTimeString(astro.Moonset),
-                MoonPhase = astro.MoonPhase ?? "",
-                MoonIllumination = double.Parse(astro.MoonIllumination?.Replace("%", "") ?? "0")
+
+                // Temperature data
+                Temperature = day.GetProperty("avgtemp_f").GetDouble(),
+                TemperatureMin = day.GetProperty("mintemp_f").GetDouble(),
+                TemperatureMax = day.GetProperty("maxtemp_f").GetDouble(),
+                TemperatureUnit = "F",
+
+                // Weather conditions
+                Humidity = day.GetProperty("avghumidity").GetDouble(),
+                WindSpeed = day.GetProperty("maxwind_mph").GetDouble(),
+                WindSpeedUnit = "mph",
+
+                Visibility = day.GetProperty("avgvis_miles").GetDouble(),
+                WeatherCondition = condition.GetProperty("text").GetString() ?? "",
+                WeatherDescription = condition.GetProperty("text").GetString() ?? "",
+
+                // UV and precipitation
+                UvIndex = day.GetProperty("uv").GetDouble(),
+                PrecipitationChance = day.GetProperty("daily_chance_of_rain").GetDouble(),
+                RainfallAmount = day.GetProperty("totalprecip_in").GetDouble(),
+
+                // Astronomy data
+                Sunrise = ParseTimeString(astro.GetProperty("sunrise").GetString()),
+                Sunset = ParseTimeString(astro.GetProperty("sunset").GetString()),
+                Moonrise = ParseTimeString(astro.GetProperty("moonrise").GetString()),
+                Moonset = ParseTimeString(astro.GetProperty("moonset").GetString()),
+                MoonPhase = astro.GetProperty("moon_phase").GetString() ?? "",
+                MoonIllumination = double.Parse(astro.GetProperty("moon_illumination").GetString()?.Replace("%", "") ?? "0")
             };
 
             return weather;
         }
 
-        private static void AddAstronomyData(WeatherData weather, AstronomyApiResponse astronomyApiResponse)
+        private static void AddAstronomyData(WeatherData weather, JsonDocument astronomyJson)
         {
             try
             {
-                var astro = astronomyApiResponse.Astronomy.Astro;
-                weather.Sunrise = ParseTimeString(astro.Sunrise);
-                weather.Sunset = ParseTimeString(astro.Sunset);
-                weather.Moonrise = ParseTimeString(astro.Moonrise);
-                weather.Moonset = ParseTimeString(astro.Moonset);
-                weather.MoonPhase = astro.MoonPhase ?? "";
-                var moonIllumination = astro.MoonIllumination?.Replace("%", "") ?? "0";
+                var astro = astronomyJson.RootElement.GetProperty("astronomy").GetProperty("astro");
+
+                weather.Sunrise = ParseTimeString(astro.GetProperty("sunrise").GetString());
+                weather.Sunset = ParseTimeString(astro.GetProperty("sunset").GetString());
+                weather.Moonrise = ParseTimeString(astro.GetProperty("moonrise").GetString());
+                weather.Moonset = ParseTimeString(astro.GetProperty("moonset").GetString());
+                weather.MoonPhase = astro.GetProperty("moon_phase").GetString() ?? "";
+
+                var moonIllumination = astro.GetProperty("moon_illumination").GetString()?.Replace("%", "") ?? "0";
                 weather.MoonIllumination = double.Parse(moonIllumination);
             }
             catch (Exception ex)
@@ -274,6 +343,7 @@ namespace TrollTrack.Services
         private static DateTime ParseTimeString(string? timeString)
         {
             if (string.IsNullOrEmpty(timeString)) return DateTime.MinValue;
+
             try
             {
                 var today = DateTime.Today;
@@ -303,123 +373,4 @@ namespace TrollTrack.Services
             };
         }
     }
-
-    #region Weather API Response Models
-
-    public class WeatherApiResponse
-    {
-        public LocationInfo Location { get; set; }
-        public CurrentWeather Current { get; set; }
-    }
-
-    public class ForecastApiResponse
-    {
-        public LocationInfo Location { get; set; }
-        public Forecast Forecast { get; set; }
-    }
-
-    public class AstronomyApiResponse
-    {
-        public Astronomy Astronomy { get; set; }
-    }
-
-    public class LocationInfo
-    {
-        public string Name { get; set; }
-        public double Lat { get; set; }
-        public double Lon { get; set; }
-    }
-
-    public class CurrentWeather
-    {
-        [JsonPropertyName("temp_f")]
-        public double TempF { get; set; }
-        [JsonPropertyName("feelslike_f")]
-        public double FeelsLikeF { get; set; }
-        public Condition Condition { get; set; }
-        public double Humidity { get; set; }
-        [JsonPropertyName("pressure_in")]
-        public double PressureIn { get; set; }
-        [JsonPropertyName("wind_mph")]
-        public double WindMph { get; set; }
-        [JsonPropertyName("wind_degree")]
-        public double WindDegree { get; set; }
-        [JsonPropertyName("wind_dir")]
-        public string WindDir { get; set; }
-        [JsonPropertyName("gust_mph")]
-        public double GustMph { get; set; }
-        [JsonPropertyName("vis_miles")]
-        public double VisMiles { get; set; }
-        public double Cloud { get; set; }
-        public double Uv { get; set; }
-        [JsonPropertyName("precip_in")]
-        public double PrecipIn { get; set; }
-        [JsonPropertyName("air_quality")]
-        public AirQuality AirQuality { get; set; }
-    }
-
-    public class Condition
-    {
-        public string Text { get; set; }
-    }
-
-    public class AirQuality
-    {
-        [JsonPropertyName("us-epa-index")]
-        public int UsEpaIndex { get; set; }
-    }
-
-    public class Forecast
-    {
-        [JsonPropertyName("forecastday")]
-        public List<ForecastDay> ForecastDay { get; set; }
-    }
-
-    public class ForecastDay
-    {
-        public string Date { get; set; }
-        public Day Day { get; set; }
-        public Astro Astro { get; set; }
-    }
-
-    public class Day
-    {
-        [JsonPropertyName("avgtemp_f")]
-        public double AvgTempF { get; set; }
-        [JsonPropertyName("mintemp_f")]
-        public double MinTempF { get; set; }
-        [JsonPropertyName("maxtemp_f")]
-        public double MaxTempF { get; set; }
-        [JsonPropertyName("avghumidity")]
-        public double AvgHumidity { get; set; }
-        [JsonPropertyName("maxwind_mph")]
-        public double MaxWindMph { get; set; }
-        [JsonPropertyName("avgvis_miles")]
-        public double AvgVisMiles { get; set; }
-        public Condition Condition { get; set; }
-        public double Uv { get; set; }
-        [JsonPropertyName("daily_chance_of_rain")]
-        public double DailyChanceOfRain { get; set; }
-        [JsonPropertyName("totalprecip_in")]
-        public double TotalPrecipIn { get; set; }
-    }
-
-    public class Astronomy
-    {
-        public Astro Astro { get; set; }
-    }
-
-    public class Astro
-    {
-        public string Sunrise { get; set; }
-        public string Sunset { get; set; }
-        public string Moonrise { get; set; }
-        public string Moonset { get; set; }
-        [JsonPropertyName("moon_phase")]
-        public string MoonPhase { get; set; }
-        [JsonPropertyName("moon_illumination")]
-        public string MoonIllumination { get; set; }
-    }
-
-    #endregion
 }

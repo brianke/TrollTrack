@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,10 +8,10 @@ namespace TrollTrack.Services
 {
     public interface ILocationService
     {
-        Task<Location?> GetCurrentLocationAsync();
+        Task<Location> GetCurrentLocationAsync();
         Task<bool> RequestLocationPermissionAsync();
         Task<List<Location>> GetLocationHistoryAsync();
-        void SaveLocation(Location location);
+        Task SaveLocationAsync(Location location);
         event EventHandler<Location> LocationUpdated;
         bool IsLocationEnabled { get; }
     }
