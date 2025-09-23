@@ -42,6 +42,8 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<LocationEntity>();
                 await _database.CreateTableAsync<ProgramDataEntity>();
                 await _database.CreateTableAsync<FishInfoEntity>();
+                await _database.CreateTableAsync<LureDataEntity>();
+                await _database.CreateTableAsync<LureImageEntity>();
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }
@@ -70,7 +72,7 @@ namespace TrollTrack.Services
             try
             {
                 var db = await GetDatabaseAsync();
-                var entity = ConvertToEntity(catchData);
+                var entity = ConvertToCatchEntity(catchData);
 
                 await db.InsertOrReplaceWithChildrenAsync(entity, recursive: true);
                 return 1;
@@ -95,7 +97,7 @@ namespace TrollTrack.Services
                 var catchDataList = new List<CatchData>();
                 foreach (var entity in entities.OrderByDescending(e => e.Timestamp))
                 {
-                    var catchData = ConvertFromEntity(entity);
+                    var catchData = ConvertFromCatchEntity(entity);
                     catchDataList.Add(catchData);
                 }
 
@@ -121,7 +123,7 @@ namespace TrollTrack.Services
                 var catchDataList = new List<CatchData>();
                 foreach (var entity in entities.OrderByDescending(e => e.Timestamp))
                 {
-                    var catchData = ConvertFromEntity(entity);
+                    var catchData = ConvertFromCatchEntity(entity);
                     catchDataList.Add(catchData);
                 }
 
@@ -157,7 +159,7 @@ namespace TrollTrack.Services
                 if (entity == null)
                     return null;
 
-                return ConvertFromEntity(entity);
+                return ConvertFromCatchEntity(entity);
             }
             catch (Exception ex)
             {
@@ -229,9 +231,51 @@ namespace TrollTrack.Services
 
         #endregion
 
+        #region Lure Methods
+
+        public async Task<int> SaveLureAsync(LureData lureData)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entity = ConvertToLureEntity(lureData);
+
+                await db.InsertOrReplaceWithChildrenAsync(entity, recursive: true);
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving lure: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<List<LureData>> GetAllLureDataAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
+
+                var lureDataList = new List<LureData>();
+                foreach (var entity in entities)
+                {
+                    lureDataList.Add(ConvertFromLureEntity(entity));
+                }
+                return lureDataList;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting all lures: {ex.Message}");
+                return new List<LureData>();
+            }
+        }
+
+        #endregion
+
         #region Helper Methods
 
-        private CatchDataEntity ConvertToEntity(CatchData catchData)
+        private CatchDataEntity ConvertToCatchEntity(CatchData catchData)
         {
             var entity = new CatchDataEntity
             {
@@ -283,7 +327,7 @@ namespace TrollTrack.Services
             return entity;
         }
 
-        private CatchData ConvertFromEntity(CatchDataEntity entity)
+        private CatchData ConvertFromCatchEntity(CatchDataEntity entity)
         {
             var catchData = new CatchData
             {
@@ -320,6 +364,48 @@ namespace TrollTrack.Services
             }
 
             return catchData;
+        }
+
+
+
+        private LureDataEntity ConvertToLureEntity(LureData lureData)
+        {
+            var entity = new LureDataEntity
+            {
+                Id = lureData.Id == Guid.Empty ? Guid.NewGuid() : lureData.Id,
+                Name = lureData.Name,
+                Images = new List<LureImageEntity>()
+            };
+
+            if (lureData.ImagePaths != null)
+            {
+                foreach (var imagePath in lureData.ImagePaths)
+                {
+                    entity.Images.Add(new LureImageEntity { Id = Guid.NewGuid(), ImagePath = imagePath });
+                }
+            }
+
+            return entity;
+        }
+
+        private LureData ConvertFromLureEntity(LureDataEntity entity)
+        {
+            var lureData = new LureData
+            {
+                Id = entity.Id,
+                Name = entity.Name,
+                ImagePaths = new List<string>()
+            };
+
+            if (entity.Images != null)
+            {
+                foreach (var imageEntity in entity.Images)
+                {
+                    lureData.ImagePaths.Add(imageEntity.ImagePath);
+                }
+            }
+
+            return lureData;
         }
 
         #endregion
@@ -476,6 +562,42 @@ namespace TrollTrack.Services
 
         [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<CatchDataEntity> Catches { get; set; }
+    }
+
+
+    /// <summary>
+    /// SQLite entity for LureData
+    /// </summary>
+    [Table("LureData")]
+    public class LureDataEntity
+    {
+        [PrimaryKey]
+        public Guid Id { get; set; }
+
+        public string Name { get; set; }
+
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public List<LureImageEntity> Images { get; set; }
+    }
+
+
+    /// <summary>
+    /// SQLite entity for LureData
+    /// </summary>
+    [Table("LureImages")]
+    public class LureImageEntity
+    {
+        [PrimaryKey]
+        public Guid Id { get; set; }
+
+        public string ImagePath { get; set; }
+
+        [ForeignKey(typeof(LureDataEntity))]
+        public Guid LureId { get; set; }
+
+        [ManyToOne]
+        public LureDataEntity Lure { get; set; }
+
     }
 
     #endregion

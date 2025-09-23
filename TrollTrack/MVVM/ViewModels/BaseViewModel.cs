@@ -59,6 +59,12 @@ namespace TrollTrack.MVVM.ViewModels
         [ObservableProperty]
         private bool isInitializing;
 
+        [ObservableProperty]
+        private bool isLoading;
+
+
+
+
         #region Location Properties
 
         [ObservableProperty]

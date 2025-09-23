@@ -95,23 +95,6 @@
                                    Margin="10,0,0,0" 
                                    Grid.Row="1" Grid.Column="2" />
 
-                            <!-- Refresh Location
-
-                        <Image Source="refresh.png"
-                               IsVisible="{Binding IsNotBusy}"
-                               HeightRequest="25" 
-                               Grid.Row="0" Grid.RowSpan="2" Grid.Column="3">
-                            <Image.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding UpdateLocationCommand}" />
-                            </Image.GestureRecognizers>
-                        </Image>
-
-                        <ActivityIndicator IsRunning="{Binding IsBusy}"
-                                           IsVisible="{Binding IsBusy}"
-                                           Color="Blue"
-                                           HeightRequest="25" 
-                                           Grid.Row="0" Grid.RowSpan="2" Grid.Column="3" />
-                        -->
                         </Grid>
 
                     </StackLayout>
@@ -146,8 +129,9 @@
                                        FontAttributes="Bold"
                                        HorizontalOptions="Center"/>
                                 <HorizontalStackLayout HorizontalOptions="Center" Margin="0,5,0,0">
-                                    <Label Text="{Binding WeatherData.WindSpeed,StringFormat='💨 {0:F0} mph  '}" 
+                                    <Label Text="{Binding WeatherData.WindSpeed,StringFormat='💨 {0:F0} mph'}" 
                                            FontAttributes="Bold"/>
+                                    <Label Text="  " />
                                     <Label Text="➤" Rotation="{Binding WeatherData.WindDirection}" />
                                 </HorizontalStackLayout>
                                 
@@ -174,19 +158,9 @@
                                        FontSize="16"
                                        FontAttributes="Bold"
                                        HorizontalOptions="Center"/>
-                                <!--<Label Text="{Binding WeatherData.WeatherCondition, StringFormat='☁️ {0}'}" />
-
-                                <Label Text="{Binding WeatherData.Sunset, StringFormat='🌇 {0:HH:mm}'}" />
-                                <Label Text="{Binding WeatherData.Humidity, StringFormat='💧 {0}%'}" />-->
                             </StackLayout>
                         </Grid>
 
-                        <!--<Button Text="🔄 Refresh Weather" 
-                            Command="{Binding RefreshWeatherCommand}"
-                            IsEnabled="{Binding IsNotBusy}"
-                            BackgroundColor="ForestGreen"
-                            TextColor="White"
-                            Margin="0,10,0,0" />-->
                     </StackLayout>
                 </Border>
 

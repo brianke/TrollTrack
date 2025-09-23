@@ -1,4 +1,5 @@
-﻿using TrollTrack.Configuration;
+﻿using KotlinX.Serialization;
+using TrollTrack.Configuration;
 using TrollTrack.MVVM.Models;
 
 namespace TrollTrack.MVVM.ViewModels
@@ -8,7 +9,7 @@ namespace TrollTrack.MVVM.ViewModels
         #region Observable Properties
 
         [ObservableProperty]
-        private List<FishCommonName> fishOptions;
+        private List<FishCommonName> fishOptions = new();
 
         [ObservableProperty]
         private FishCommonName selectedFishOption;
@@ -21,9 +22,6 @@ namespace TrollTrack.MVVM.ViewModels
 
         [ObservableProperty]
         private CatchData? selectedCatch;
-
-        [ObservableProperty]
-        private bool isLoading;
 
         [ObservableProperty]
         private ObservableCollection<CatchData> catches = new();
@@ -79,7 +77,7 @@ namespace TrollTrack.MVVM.ViewModels
 
         #region Commands
 
-        [RelayCommand]
+        //[RelayCommand]
         private async Task LoadCatchesAsync()
         {
             await ExecuteSafelyAsync(async () =>

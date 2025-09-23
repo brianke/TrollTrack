@@ -16,11 +16,6 @@ namespace TrollTrack.MVVM.Models
 
         // Location
         public Location Location { get; set; }
-        //public double Latitude { get; set; }
-        //public double Longitude { get; set; }
-
-        // Weather
-        //public WeatherData? CatchWeather { get; set; }
 
         // Program
         public ProgramData? CatchProgram { get; set; }
