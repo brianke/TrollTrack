@@ -1,4 +1,6 @@
-﻿namespace TrollTrack.MVVM.ViewModels
+﻿using System.Text.Json;
+
+namespace TrollTrack.MVVM.ViewModels
 {
     public partial class LuresViewModel : BaseViewModel
     {
@@ -31,10 +33,10 @@
         {
             await ExecuteSafelyAsync(async () =>
             {
-                Debug.WriteLine("Starting catches initialization...");
+                Debug.WriteLine("Starting lures initialization...");
                 IsInitializing = true;
 
-                // Load catches when ViewModel is created
+                // Load lures when ViewModel is created
                 _ = LoadLuresAsync();
 
 
@@ -46,29 +48,29 @@
         #endregion
 
         #region Commands
-        private async Task LoadCatchesAsync()
+        private async Task LoadLuresAsync()
         {
             await ExecuteSafelyAsync(async () =>
             {
                 IsLoading = true;
 
-                var allCatches = await _databaseService.GetCatchDataAsync();
-                var todaysCatchList = await _databaseService.GetTodaysCatchesAsync();
+                using var stream = await FileSystem.OpenAppPackageFileAsync("lures.json");
+                using var reader = new StreamReader(stream);
+                var json = await reader.ReadToEndAsync();
+                var lureList = JsonSerializer.Deserialize<List<LureData>>(json);
 
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
-                    Catches.Clear();
-                    foreach (var catchData in allCatches)
+                    Lures.Clear();
+                    foreach (var lure in lureList)
                     {
-                        Catches.Add(catchData);
+                        Lures.Add(lure);
                     }
 
-                    TotalCatches = allCatches.Count;
-                    TodaysCatches = todaysCatchList.Count;
                 });
 
-                System.Diagnostics.Debug.WriteLine($"Loaded {allCatches.Count} catch records");
-            }, "Loading catches...", showErrorAlert: false);
+                System.Diagnostics.Debug.WriteLine($"Loaded {lureList.Count} lures");
+            }, "Loading lures...", showErrorAlert: false);
         }
 
         #endregion

@@ -373,7 +373,11 @@ namespace TrollTrack.Services
             var entity = new LureDataEntity
             {
                 Id = lureData.Id == Guid.Empty ? Guid.NewGuid() : lureData.Id,
-                Name = lureData.Name,
+                Manufacturer = lureData.Manufacturer,
+                Color = lureData.Color,
+                Buoyancy = lureData.Buoyancy,
+                Weight = lureData.Weight,
+                Length = lureData.Length,
                 Images = new List<LureImageEntity>()
             };
 
@@ -393,7 +397,11 @@ namespace TrollTrack.Services
             var lureData = new LureData
             {
                 Id = entity.Id,
-                Name = entity.Name,
+                Manufacturer = entity.Manufacturer,
+                Color = entity.Color,
+                Buoyancy = entity.Buoyancy,
+                Weight = entity.Weight,
+                Length = entity.Length,
                 ImagePaths = new List<string>()
             };
 
@@ -574,7 +582,15 @@ namespace TrollTrack.Services
         [PrimaryKey]
         public Guid Id { get; set; }
 
-        public string Name { get; set; }
+        public String Manufacturer { get; set; }
+
+        public Double Length { get; set; }
+
+        public String Color { get; set; }
+
+        public String Buoyancy { get; set; }
+
+        public Double Weight { get; set; }
 
         [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<LureImageEntity> Images { get; set; }

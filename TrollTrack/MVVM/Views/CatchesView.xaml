@@ -35,7 +35,7 @@
                            FontSize="18"
                            FontAttributes="Bold"
                            VerticalOptions="Center" />
-                    <Picker Title="Choose Species"
+                    <Picker Title="Select"
                             ItemsSource="{Binding FishOptions}"
                             SelectedItem="{Binding SelectedFishOption, Mode=TwoWay, Converter={StaticResource EnumToStringConverter}}"
                             FontSize="18"

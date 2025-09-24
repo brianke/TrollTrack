@@ -92,6 +92,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiAsset Update="Resources\Raw\lures.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </MauiAsset>
+	</ItemGroup>
+
+	<ItemGroup>
 		<MauiXaml Update="MVVM\Views\Catches.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>

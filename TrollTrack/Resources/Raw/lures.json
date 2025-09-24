@@ -1,0 +1,50 @@
+[
+  {
+    "Manufacturer": "Bandit",
+    "Color": "Blue Shiner",
+    "ImagePaths": [ "bandit_blueshiner.png" ],
+    "Buoyancy": "Floating",
+    "Length": "4-3/4\"",
+    "Weight": "5/8 oz"
+  },
+  {
+    "Manufacturer": "Bandit",
+    "Color": "Chrome Black Back",
+    "ImagePaths": [ "bandit_chromeblackback.png" ],
+    "Buoyancy": "Floating",
+    "Length": "4-3/4\"",
+    "Weight": "5/8 oz"
+  },
+  {
+    "Manufacturer": "Bandit",
+    "Color": "Chrome Blue Back",
+    "ImagePaths": [ "bandit_chromeblueback.png" ],
+    "Buoyancy": "Floating",
+    "Length": "4-3/4\"",
+    "Weight": "5/8 oz"
+  },
+  {
+    "Manufacturer": "Bandit",
+    "Color": "Coconut Candy",
+    "ImagePaths": [ "bandit_coconutcandy.png" ],
+    "Buoyancy": "Floating",
+    "Length": "4-3/4\"",
+    "Weight": "5/8 oz"
+  },
+  {
+    "Manufacturer": "Bandit",
+    "Color": "Humble Bee",
+    "ImagePaths": [ "bandit_humblebee.png" ],
+    "Buoyancy": "Floating",
+    "Length": "4-3/4\"",
+    "Weight": "5/8 oz"
+  },
+  {
+    "Manufacturer": "Bandit",
+    "Color": "Purple Mist",
+    "ImagePaths": [ "bandit_purplemist.png" ],
+    "Buoyancy": "Floating",
+    "Length": "4-3/4\"",
+    "Weight": "5/8 oz"
+  }
+]

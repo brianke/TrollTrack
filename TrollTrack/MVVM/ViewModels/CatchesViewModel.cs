@@ -1,5 +1,4 @@
-﻿using KotlinX.Serialization;
-using TrollTrack.Configuration;
+﻿using TrollTrack.Configuration;
 using TrollTrack.MVVM.Models;
 
 namespace TrollTrack.MVVM.ViewModels

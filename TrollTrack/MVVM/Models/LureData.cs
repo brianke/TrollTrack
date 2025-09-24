@@ -12,8 +12,18 @@ namespace TrollTrack.MVVM.Models
         [Key]
         public Guid Id { get; set; }
 
-        public String Name { get; set; }
+        public String Manufacturer { get; set; }
 
-        public List<Image> Images { get; set; }
+        public String Color { get; set; }
+
+        public String Buoyancy { get; set; }
+
+        public Double Weight { get; set; }
+
+        public Double Length { get; set; }
+
+        public List<string> ImagePaths { get; set; } = new List<string>();
+
+        public string PrimaryImagePath => ImagePaths?.FirstOrDefault();
     }
 }
