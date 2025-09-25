@@ -52,8 +52,8 @@ namespace TrollTrack.MVVM.ViewModels
         /// <returns></returns>
         public async Task InitializeAsync()
         {
-            await ExecuteSafelyAsync(async () =>
-            {
+            //await ExecuteSafelyAsync(async () =>
+            //{
                 Debug.WriteLine("Starting catches initialization...");
                 IsInitializing = true;
 
@@ -64,12 +64,11 @@ namespace TrollTrack.MVVM.ViewModels
                 await UpdateLocationAsync();
 
                 // Load catches when ViewModel is created
-                _ = LoadCatchesAsync();
-
+                await LoadCatchesAsync();
 
                 // Update Title
                 Title = "Catches";
-            }, "Initializing dashboard...", showErrorAlert: false);
+            //}, "Initializing dashboard...", showErrorAlert: false);
         }
 
         #endregion

@@ -31,18 +31,17 @@ namespace TrollTrack.MVVM.ViewModels
         /// <returns></returns>
         public async Task InitializeAsync()
         {
-            await ExecuteSafelyAsync(async () =>
-            {
+            //await ExecuteSafelyAsync(async () =>
+            //{
                 Debug.WriteLine("Starting lures initialization...");
                 IsInitializing = true;
 
                 // Load lures when ViewModel is created
-                _ = LoadLuresAsync();
-
+                await LoadLuresAsync();
 
                 // Update Title
                 Title = "Lures";
-            }, "Initializing lures...", showErrorAlert: false);
+            //}, "Initializing lures...", showErrorAlert: false);
         }
 
         #endregion

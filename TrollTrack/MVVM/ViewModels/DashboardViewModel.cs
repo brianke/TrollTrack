@@ -69,8 +69,8 @@ namespace TrollTrack.MVVM.ViewModels
         /// <returns></returns>
         public async Task InitializeAsync()
         {
-            await ExecuteSafelyAsync(async () =>
-            {
+            //await ExecuteSafelyAsync(async () =>
+            //{
                 Debug.WriteLine("Starting dashboard initialization...");
                 IsInitializing = true;
 
@@ -85,7 +85,7 @@ namespace TrollTrack.MVVM.ViewModels
 
                 // Update Title
                 Title = "Dashboard";
-            }, "Initializing dashboard...", showErrorAlert: false);
+            //}, "Initializing dashboard...", showErrorAlert: false);
         }
 
         #endregion
