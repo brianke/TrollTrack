@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Windows.Input;
 
 namespace TrollTrack.MVVM.ViewModels
 {
@@ -9,6 +10,13 @@ namespace TrollTrack.MVVM.ViewModels
         [ObservableProperty]
         public ObservableCollection<LureData> lures = new ();
 
+        // Modal properties
+        [ObservableProperty]
+        private bool isImageModalVisible;
+
+        [ObservableProperty]
+        private string selectedImagePath;
+
         #endregion
 
 
@@ -16,6 +24,9 @@ namespace TrollTrack.MVVM.ViewModels
 
         public LuresViewModel(ILocationService locationService, IDatabaseService databaseService) : base(locationService, databaseService)
         {
+            OpenImageCommand = new RelayCommand<string>(OpenImage);
+            CloseImageCommand = new RelayCommand(CloseImage);
+
             // Load data when ViewModel is created
             _ = InitializeAsync();
 
@@ -47,6 +58,10 @@ namespace TrollTrack.MVVM.ViewModels
         #endregion
 
         #region Commands
+
+        public ICommand OpenImageCommand { get; }
+        public ICommand CloseImageCommand { get; }
+
         private async Task LoadLuresAsync()
         {
             await ExecuteSafelyAsync(async () =>
@@ -72,6 +87,19 @@ namespace TrollTrack.MVVM.ViewModels
             }, "Loading lures...", showErrorAlert: false);
         }
 
+        private void OpenImage(string imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath)) return;
+
+            SelectedImagePath = imagePath;
+            IsImageModalVisible = true;
+        }
+
+        private void CloseImage()
+        {
+            IsImageModalVisible = false;
+            SelectedImagePath = null;
+        }
         #endregion
 
     }

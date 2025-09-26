@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TrollTrack.Converters
 {
@@ -94,6 +96,42 @@ namespace TrollTrack.Converters
                 }
             }
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Convert string value to double
+    /// </summary>
+    public class StringToDoubleConverter : JsonConverter<double>
+    {
+        public override double Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.String:
+                    string stringValue = reader.GetString();
+                    if (string.IsNullOrWhiteSpace(stringValue))
+                        return 0.0; // or throw new JsonException("Empty string cannot be converted to double");
+
+                    if (double.TryParse(stringValue, out double result))
+                        return result;
+
+                    throw new JsonException($"Unable to convert '{stringValue}' to double");
+
+                case JsonTokenType.Number:
+                    return reader.GetDouble();
+
+                case JsonTokenType.Null:
+                    return 0.0; // or throw new JsonException("Null cannot be converted to double");
+
+                default:
+                    throw new JsonException($"Unexpected token type: {reader.TokenType}");
+            }
+        }
+
+        public override void Write(Utf8JsonWriter writer, double value, JsonSerializerOptions options)
+        {
+            writer.WriteNumberValue(value);
         }
     }
 }

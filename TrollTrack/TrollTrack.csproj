@@ -68,6 +68,36 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\Images\Lures\bandit_blueshiner.png" />
+	  <None Remove="Resources\Images\Lures\bandit_chromeblackback.png" />
+	  <None Remove="Resources\Images\Lures\bandit_chromeblueback.png" />
+	  <None Remove="Resources\Images\Lures\bandit_coconutcandy.png" />
+	  <None Remove="Resources\Images\Lures\bandit_humblebee.png" />
+	  <None Remove="Resources\Images\Lures\bandit_purplemist.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <MauiImage Include="Resources\Images\Lures\bandit_blueshiner.png">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </MauiImage>
+	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblackback.png">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </MauiImage>
+	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblueback.png">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </MauiImage>
+	  <MauiImage Include="Resources\Images\Lures\bandit_coconutcandy.png">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </MauiImage>
+	  <MauiImage Include="Resources\Images\Lures\bandit_humblebee.png">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </MauiImage>
+	  <MauiImage Include="Resources\Images\Lures\bandit_purplemist.png">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </MauiImage>
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
