@@ -1,4 +1,4 @@
-namespace TrollTrack.MVVM.Views;
+namespace TrollTrack.Features.Dashboard;
 
 public partial class DashboardView : ContentPage
 {

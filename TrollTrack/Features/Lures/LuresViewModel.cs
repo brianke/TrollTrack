@@ -1,14 +1,16 @@
 ﻿using System.Text.Json;
 using System.Windows.Input;
+using TrollTrack.Fetures.Shared;
+using TrollTrack.Shared.Models.Entities;
 
-namespace TrollTrack.MVVM.ViewModels
+namespace TrollTrack.Features.Lures
 {
     public partial class LuresViewModel : BaseViewModel
     {
         #region Observable Properties
 
         [ObservableProperty]
-        public ObservableCollection<LureData> lures = new ();
+        public ObservableCollection<LureDataEntity> lures = new ();
 
         // Modal properties
         [ObservableProperty]
@@ -71,7 +73,7 @@ namespace TrollTrack.MVVM.ViewModels
                 using var stream = await FileSystem.OpenAppPackageFileAsync("lures.json");
                 using var reader = new StreamReader(stream);
                 var json = await reader.ReadToEndAsync();
-                var lureList = JsonSerializer.Deserialize<List<LureData>>(json);
+                var lureList = JsonSerializer.Deserialize<List<LureDataEntity>>(json);
 
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {

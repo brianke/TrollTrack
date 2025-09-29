@@ -1,10 +1,12 @@
-namespace TrollTrack.MVVM.Views;
+using TrollTrack.Features.Analyics;
 
-public partial class CatchesView : ContentPage
+namespace TrollTrack.Features.Analytics;
+
+public partial class AnalyticsView : ContentPage
 {
-    private readonly CatchesViewModel _viewModel;
+    private readonly AnalyticsViewModel _viewModel;
 
-    public CatchesView(CatchesViewModel viewModel)
+    public AnalyticsView(AnalyticsViewModel viewModel)
     {
         InitializeComponent();
 
@@ -26,9 +28,9 @@ public partial class CatchesView : ContentPage
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error initializing Dashboard ViewModel: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error initializing Analytics ViewModel: {ex.Message}");
             // Optionally show error message to user
-            await DisplayAlert("Error", "Failed to load dashboard data. Please try again.", "OK");
+            await DisplayAlert("Error", "Failed to load analytics data. Please try again.", "OK");
         }
     }
 

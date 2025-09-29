@@ -68,33 +68,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Remove="Resources\Images\Lures\bandit_blueshiner.png" />
-	  <None Remove="Resources\Images\Lures\bandit_chromeblackback.png" />
-	  <None Remove="Resources\Images\Lures\bandit_chromeblueback.png" />
-	  <None Remove="Resources\Images\Lures\bandit_coconutcandy.png" />
-	  <None Remove="Resources\Images\Lures\bandit_humblebee.png" />
-	  <None Remove="Resources\Images\Lures\bandit_purplemist.png" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <MauiImage Include="Resources\Images\Lures\bandit_blueshiner.png">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </MauiImage>
-	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblackback.png">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </MauiImage>
-	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblueback.png">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </MauiImage>
-	  <MauiImage Include="Resources\Images\Lures\bandit_coconutcandy.png">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </MauiImage>
-	  <MauiImage Include="Resources\Images\Lures\bandit_humblebee.png">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </MauiImage>
-	  <MauiImage Include="Resources\Images\Lures\bandit_purplemist.png">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </MauiImage>
+	  <Compile Remove="Features\Catches\CatchData.cs" />
+	  <Compile Remove="Features\Lures\LureData.cs" />
+	  <Compile Remove="Features\Programs\ProgramData.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -103,7 +79,6 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
 		
 		<!-- Essential packages for your fishing app -->
-		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.100" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
@@ -116,31 +91,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="MVVM\Views\Analytics.xaml.cs">
-			<DependentUpon>Analytics.xaml</DependentUpon>
-		</Compile>
-	</ItemGroup>
-
-	<ItemGroup>
-	  <MauiAsset Update="Resources\Raw\lures.json">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </MauiAsset>
-	</ItemGroup>
-
-	<ItemGroup>
-		<MauiXaml Update="MVVM\Views\Catches.xaml">
+		<MauiXaml Update="Views\Catches.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="MVVM\Views\Dashboard.xaml">
+		<MauiXaml Update="Views\Dashboard.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="MVVM\Views\Lures.xaml">
+		<MauiXaml Update="Views\Lures.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="MVVM\Views\Analytics.xaml">
+		<MauiXaml Update="Views\Analytics.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="MVVM\Views\Program.xaml">
+		<MauiXaml Update="Views\Programs.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>

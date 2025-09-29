@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TrollTrack.MVVM.Models
+namespace TrollTrack.Features.Shared.Models
 {
     /// <summary>
     /// Weather data model for fishing conditions

@@ -1,12 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.ComponentModel;
-
-namespace TrollTrack.MVVM.ViewModels
+﻿namespace TrollTrack.Fetures.Shared
 {
     /// <summary>
     /// Base class for all ViewModels providing common functionality
     /// </summary>
-    public partial class BaseViewModel : ObservableObject
+    public partial class BaseViewModel : ObservableValidator
     {
         #region Private Fields - Services injected via constructor
         protected readonly ILocationService _locationService;
@@ -23,7 +20,6 @@ namespace TrollTrack.MVVM.ViewModels
         [ObservableProperty]
         [NotifyPropertyChangedFor(nameof(IsNotBusy))]
         private bool isBusy = false;
-        private bool _disposed = false;
 
         [ObservableProperty]
         private bool isRefreshing;
@@ -34,9 +30,6 @@ namespace TrollTrack.MVVM.ViewModels
         partial void OnIsBusyChanged(bool value)
         {
             IsRefreshing = value;
-
-            //Debug.WriteLine($"=== IsBusy changed to: {value} ===");
-            //Debug.WriteLine($"Stack trace: {Environment.StackTrace}");
         }
 
         /// <summary>
@@ -139,84 +132,7 @@ namespace TrollTrack.MVVM.ViewModels
         [RelayCommand]
         public async Task UpdateLocationAsync()
         {
-            try
-            {
-                SetBusy(true, "Getting location...");
-                RefreshStatus = "Getting location...";
-
-                // Check permission first
-                if (!HasLocationPermission)
-                {
-                    await RequestLocationPermissionAsync();
-                    if (!HasLocationPermission)
-                    {
-                        await ShowAlertAsync("Permission Required",
-                            "Location permission is required for this app to work properly.");
-                        RefreshStatus = "Location permission denied";
-                        return;
-                    }
-                }
-
-                Debug.WriteLine("Requesting location from GPS...");
-                var location = await _locationService.GetCurrentLocationAsync();
-
-                if (location != null)
-                {
-                    Debug.WriteLine($"Location received: {location.Latitude}, {location.Longitude}");
-
-                    // Update location properties on main thread
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        CurrentLocation = location;
-                        CurrentLatitude = Math.Round(location.Latitude, 6);
-                        CurrentLongitude = Math.Round(location.Longitude, 6);
-                        LocationLastUpdated = DateTime.Now;
-                        LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
-                        RefreshStatus = $"Location updated at {DateTime.Now:HH:mm:ss}";
-                    });
-                }
-                else
-                {
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        RefreshStatus = "Unable to get location";
-                    });
-
-                    await ShowAlertAsync("Location Error",
-                        "Unable to get your current location. Please check that location services are enabled.");
-                }
-            }
-            catch (PermissionException)
-            {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    RefreshStatus = "Location permission denied";
-                });
-                await ShowAlertAsync("Permission Required",
-                    "Location permission is required. Please enable location services in your device settings.");
-            }
-            catch (FeatureNotEnabledException)
-            {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    RefreshStatus = "Location services disabled";
-                });
-                await ShowAlertAsync("Location Services Disabled",
-                    "Please enable location services in your device settings.");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Location update error: {ex.Message}");
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    RefreshStatus = "Location error";
-                });
-                await ShowAlertAsync("Error", $"Failed to get location: {ex.Message}");
-            }
-            finally
-            {
-                SetBusy(false);
-            }
+            await ExecuteSafelyAsync(() => GetAndSetLocationAsync(showAlerts: true), "Getting location...");
         }
 
         protected virtual async Task OnLocationUpdatedAsync(Location location)
@@ -224,44 +140,62 @@ namespace TrollTrack.MVVM.ViewModels
             await Task.CompletedTask;
         }
 
-
         // Internal method that doesn't set busy state (used by RefreshDashboard)
         protected async Task UpdateLocationInternalAsync()
         {
             try
             {
-                RefreshStatus = "Getting location...";
-
-                if (!HasLocationPermission)
-                {
-                    await RequestLocationPermissionAsync();
-                    if (!HasLocationPermission)
-                    {
-                        RefreshStatus = "Location permission denied";
-                        return;
-                    }
-                }
-
-                var location = await _locationService.GetCurrentLocationAsync();
-                if (location != null)
-                {
-                    await MainThread.InvokeOnMainThreadAsync(() =>
-                    {
-                        CurrentLatitude = Math.Round(location.Latitude, 6);
-                        CurrentLongitude = Math.Round(location.Longitude, 6);
-                        UpdateLastUpdatedTime();
-                    });
-
-                    Debug.WriteLine($"Location updated internally: {CurrentLatitude}, {CurrentLongitude}");
-                }
-                else
-                {
-                    Debug.WriteLine("Failed to get location internally");
-                }
+                await GetAndSetLocationAsync(showAlerts: false);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Internal location update error: {ex.Message}");
+            }
+        }
+
+        private async Task<bool> GetAndSetLocationAsync(bool showAlerts)
+        {
+            if (!HasLocationPermission)
+            {
+                await RequestLocationPermissionAsync();
+                if (!HasLocationPermission)
+                {
+                    RefreshStatus = "Location permission denied";
+                    if (showAlerts)
+                    {
+                        await ShowAlertAsync("Permission Required", "Location permission is required for this app to work properly.");
+                    }
+                    return false;
+                }
+            }
+
+            Debug.WriteLine("Requesting location from GPS...");
+            var location = await _locationService.GetCurrentLocationAsync();
+
+            if (location != null)
+            {
+                Debug.WriteLine($"Location received: {location.Latitude}, {location.Longitude}");
+
+                // Update location properties on main thread
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    CurrentLocation = location;
+                    CurrentLatitude = Math.Round(location.Latitude, 6);
+                    CurrentLongitude = Math.Round(location.Longitude, 6);
+                    UpdateLastUpdatedTime(); // This also updates formatted time
+                    RefreshStatus = $"Location updated at {DateTime.Now:HH:mm:ss}";
+                });
+                return true;
+            }
+            else
+            {
+                Debug.WriteLine("Failed to get location");
+                RefreshStatus = "Unable to get location";
+                if (showAlerts)
+                {
+                    await ShowAlertAsync("Location Error", "Unable to get your current location. Please check that location services are enabled.");
+                }
+                return false;
             }
         }
 
@@ -368,15 +302,6 @@ namespace TrollTrack.MVVM.ViewModels
             return $"{degrees}° {minutes}' {seconds:F1}\" {direction}";
         }
 
-/*
-        partial void OnWeatherDataChanged(WeatherData value)
-        {
-            if (value != null)
-            {
-                UpdateLastUpdatedTime();
-            }
-        }
-*/
         #endregion
 
         // The missing event handler
@@ -645,125 +570,6 @@ namespace TrollTrack.MVVM.ViewModels
             LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
         }
 
-        public static async Task ShowAlertAsync(string title, string message)
-        {
-            try
-            {
-                var page = GetCurrentPage();
-                if (page != null)
-                {
-                    await page.DisplayAlert(title, message, "OK");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Alert display error: {ex.Message}");
-            }
-        }
-
-        ///// <summary>
-        ///// Gets the current page using the modern .NET MAUI approach
-        ///// </summary>
-        ///// <returns>Current page or null if not available</returns>
-        //private static Page GetCurrentPage()
-        //{
-        //    try
-        //    {
-        //        // Try to get the current page from Shell first
-        //        if (Shell.Current?.CurrentPage != null)
-        //        {
-        //            return Shell.Current.CurrentPage;
-        //        }
-
-        //        // Fall back to the main window's page
-        //        var mainWindow = Application.Current?.Windows?.FirstOrDefault();
-        //        if (mainWindow?.Page != null)
-        //        {
-        //            return mainWindow.Page;
-        //        }
-
-        //        // Last resort: try to find any available window with a page
-        //        var windowWithPage = Application.Current?.Windows?.FirstOrDefault(w => w.Page != null);
-        //        return windowWithPage?.Page;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Debug.WriteLine($"Failed to get current page: {ex.Message}");
-        //        return null;
-        //    }
-        //}
-
-        #endregion
-
-
-        #region Validation Support
-
-        private readonly Dictionary<string, List<string>> _validationErrors = new();
-
-        /// <summary>
-        /// Gets whether the ViewModel has any validation errors
-        /// </summary>
-        public bool HasValidationErrors => _validationErrors.Any(x => x.Value?.Count > 0);
-
-        /// <summary>
-        /// Gets all validation errors as a formatted string
-        /// </summary>
-        public string ValidationErrorsText =>
-            string.Join(Environment.NewLine, _validationErrors.SelectMany(x => x.Value));
-
-        /// <summary>
-        /// Adds a validation error for a property
-        /// </summary>
-        /// <param name="propertyName">Property name</param>
-        /// <param name="error">Error message</param>
-        protected void AddValidationError(string propertyName, string error)
-        {
-            if (!_validationErrors.ContainsKey(propertyName))
-                _validationErrors[propertyName] = new List<string>();
-
-            if (!_validationErrors[propertyName].Contains(error))
-            {
-                _validationErrors[propertyName].Add(error);
-                OnPropertyChanged(nameof(HasValidationErrors));
-                OnPropertyChanged(nameof(ValidationErrorsText));
-            }
-        }
-
-        /// <summary>
-        /// Removes all validation errors for a property
-        /// </summary>
-        /// <param name="propertyName">Property name</param>
-        protected void ClearValidationErrors(string propertyName)
-        {
-            if (_validationErrors.ContainsKey(propertyName))
-            {
-                _validationErrors[propertyName].Clear();
-                OnPropertyChanged(nameof(HasValidationErrors));
-                OnPropertyChanged(nameof(ValidationErrorsText));
-            }
-        }
-
-        /// <summary>
-        /// Clears all validation errors
-        /// </summary>
-        protected void ClearAllValidationErrors()
-        {
-            _validationErrors.Clear();
-            OnPropertyChanged(nameof(HasValidationErrors));
-            OnPropertyChanged(nameof(ValidationErrorsText));
-        }
-
-        /// <summary>
-        /// Gets validation errors for a specific property
-        /// </summary>
-        /// <param name="propertyName">Property name</param>
-        /// <returns>List of errors for the property</returns>
-        protected List<string> GetValidationErrors(string propertyName)
-        {
-            return _validationErrors.ContainsKey(propertyName)
-                ? _validationErrors[propertyName]
-                : new List<string>();
-        }
 
         #endregion
 

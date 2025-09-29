@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
-using TrollTrack.MVVM.Models;
 using TrollTrack.Configuration;
+using TrollTrack.Features.Shared.Models;
 
 namespace TrollTrack.Services
 {

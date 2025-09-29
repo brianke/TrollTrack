@@ -1,8 +1,9 @@
 ﻿
 using TrollTrack.Configuration;
-using TrollTrack.MVVM.Models;
+using TrollTrack.Features.Shared.Models;
+using TrollTrack.Fetures.Shared;
 
-namespace TrollTrack.MVVM.ViewModels
+namespace TrollTrack.Features.Dashboard
 {
     public partial class DashboardViewModel : BaseViewModel
     {

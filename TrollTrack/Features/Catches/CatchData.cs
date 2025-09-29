@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using TrollTrack.Features.Programs;
+using TrollTrack.Features.Shared.Models;
 
-namespace TrollTrack.MVVM.Models
+namespace TrollTrack.Features.Catches
 {
     public class CatchData
     {

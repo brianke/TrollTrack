@@ -1,4 +1,6 @@
-﻿namespace TrollTrack.MVVM.ViewModels
+﻿using TrollTrack.Fetures.Shared;
+
+namespace TrollTrack.Features.Programs
 {
     public partial class ProgramsViewModel : BaseViewModel
     {        

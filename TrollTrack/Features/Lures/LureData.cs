@@ -1,30 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using TrollTrack.Converters;
 
-namespace TrollTrack.MVVM.Models
+namespace TrollTrack.Features.Lures
 {
     public class LureData
     {
         [Key]
         public Guid Id { get; set; }
 
-        public String Manufacturer { get; set; }
+        public string Manufacturer { get; set; }
 
-        public String Color { get; set; }
+        public string Color { get; set; }
 
-        public String Buoyancy { get; set; }
-
-        [JsonConverter(typeof(StringToDoubleConverter))] 
-        public Double Weight { get; set; }
+        public string Buoyancy { get; set; }
 
         [JsonConverter(typeof(StringToDoubleConverter))] 
-        public Double Length { get; set; }
+        public double Weight { get; set; }
+
+        [JsonConverter(typeof(StringToDoubleConverter))] 
+        public double Length { get; set; }
 
         public List<string> ImagePaths { get; set; } = new List<string>();
 
@@ -34,7 +29,7 @@ namespace TrollTrack.MVVM.Models
             get
             {
                 var path = ImagePaths?.FirstOrDefault();
-                System.Diagnostics.Debug.WriteLine($"PrimaryImagePath: {path}");
+                Debug.WriteLine($"PrimaryImagePath: {path}");
                 return path;
             }
         }

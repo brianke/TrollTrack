@@ -1,3 +1,5 @@
+using TrollTrack.Features.Lures;
+
 namespace TrollTrack.MVVM.Views;
 
 public partial class LuresView : ContentPage

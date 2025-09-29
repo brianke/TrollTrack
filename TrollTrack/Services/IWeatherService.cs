@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using TrollTrack.MVVM.Models;
+using TrollTrack.Features.Shared.Models;
 
 namespace TrollTrack.Services
 {

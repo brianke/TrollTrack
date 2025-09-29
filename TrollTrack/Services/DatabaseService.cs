@@ -1,23 +1,22 @@
-using SQLite;
-using SQLiteNetExtensions.Attributes;
 using SQLiteNetExtensionsAsync.Extensions;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using TrollTrack.Configuration;
-using TrollTrack.MVVM.Models;
+using TrollTrack.Features.Catches;
+using TrollTrack.Features.Shared.Models;
+using TrollTrack.Features.Shared.Models.Entities;
+using TrollTrack.Models.Entities;
+using TrollTrack.Shared.Models.Entities;
 
 namespace TrollTrack.Services
 {
     /// <summary>
     /// SQLite database service for managing catch data and other app data
     /// </summary>
-    public class DatabaseService : IDatabaseService, IDisposable
+    public class DatabaseService : IDatabaseService, IAsyncDisposable
     {
         private SQLiteAsyncConnection? _database;
         private readonly string _databasePath;
+        private bool _isInitialized;
+        private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
 
         public DatabaseService()
         {
@@ -27,24 +26,26 @@ namespace TrollTrack.Services
         /// <summary>
         /// Initialize the database connection and create tables
         /// </summary>
-        public async Task InitializeAsync()
+        private async Task InitializeAsync()
         {
-            if (_database != null)
-                return;
-
+            await _initializationSemaphore.WaitAsync();
             try
             {
+                if (_isInitialized)
+                    return;
+
                 _database = new SQLiteAsyncConnection(_databasePath);
                 await _database.ExecuteAsync("PRAGMA foreign_keys = ON;");
 
                 // Create tables for your existing models
                 await _database.CreateTableAsync<CatchDataEntity>();
-                await _database.CreateTableAsync<LocationEntity>();
+                await _database.CreateTableAsync<LocationDataEntity>();
                 await _database.CreateTableAsync<ProgramDataEntity>();
                 await _database.CreateTableAsync<FishInfoEntity>();
                 await _database.CreateTableAsync<LureDataEntity>();
                 await _database.CreateTableAsync<LureImageEntity>();
 
+                _isInitialized = true;
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }
             catch (Exception ex)
@@ -52,13 +53,18 @@ namespace TrollTrack.Services
                 System.Diagnostics.Debug.WriteLine($"Database initialization error: {ex.Message}");
                 throw;
             }
+            finally
+            {
+                _initializationSemaphore.Release();
+            }
         }
 
         private async Task<SQLiteAsyncConnection> GetDatabaseAsync()
         {
-            if (_database == null)
+            if (!_isInitialized)
+            {
                 await InitializeAsync();
-
+            }
             return _database!;
         }
 
@@ -67,7 +73,7 @@ namespace TrollTrack.Services
         /// <summary>
         /// Save a new catch record
         /// </summary>
-        public async Task<int> SaveCatchAsync(CatchData catchData)
+        public async Task<int> SaveCatchAsync(CatchDataEntity catchData)
         {
             try
             {
@@ -87,59 +93,49 @@ namespace TrollTrack.Services
         /// <summary>
         /// Get all catch records
         /// </summary>
-        public async Task<List<CatchData>> GetCatchDataAsync()
+        public async Task<List<CatchDataEntity>> GetCatchDataAsync()
         {
             try
             {
                 var db = await GetDatabaseAsync();
                 var entities = await db.GetAllWithChildrenAsync<CatchDataEntity>(recursive: true);
 
-                var catchDataList = new List<CatchData>();
-                foreach (var entity in entities.OrderByDescending(e => e.Timestamp))
-                {
-                    var catchData = ConvertFromCatchEntity(entity);
-                    catchDataList.Add(catchData);
-                }
-
-                return catchDataList;
+                return entities.OrderByDescending(e => e.Timestamp)
+                               .Select(ConvertFromCatchEntity)
+                               .ToList();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error getting catch data: {ex.Message}");
-                return new List<CatchData>();
+                return new List<CatchDataEntity>();
             }
         }
 
         /// <summary>
         /// Get catch records for a specific date range
         /// </summary>
-        public async Task<List<CatchData>> GetCatchDataByDateRangeAsync(DateTime startDate, DateTime endDate)
+        public async Task<List<CatchDataEntity>> GetCatchDataByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
             try
             {
                 var db = await GetDatabaseAsync();
                 var entities = await db.GetAllWithChildrenAsync<CatchDataEntity>(c => c.Timestamp >= startDate && c.Timestamp <= endDate, recursive: true);
 
-                var catchDataList = new List<CatchData>();
-                foreach (var entity in entities.OrderByDescending(e => e.Timestamp))
-                {
-                    var catchData = ConvertFromCatchEntity(entity);
-                    catchDataList.Add(catchData);
-                }
-
-                return catchDataList;
+                return entities.OrderByDescending(e => e.Timestamp)
+                               .Select(ConvertFromCatchEntity)
+                               .ToList();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error getting catch data by date range: {ex.Message}");
-                return new List<CatchData>();
+                return new List<CatchDataEntity>();
             }
         }
 
         /// <summary>
         /// Get today's catches
         /// </summary>
-        public async Task<List<CatchData>> GetTodaysCatchesAsync()
+        public async Task<List<CatchDataEntity>> GetTodaysCatchesAsync()
         {
             var today = DateTime.Today;
             var tomorrow = today.AddDays(1);
@@ -149,7 +145,7 @@ namespace TrollTrack.Services
         /// <summary>
         /// Get a specific catch by ID
         /// </summary>
-        public async Task<CatchData?> GetCatchByIdAsync(Guid id)
+        public async Task<CatchDataEntity?> GetCatchByIdAsync(Guid id)
         {
             try
             {
@@ -233,7 +229,7 @@ namespace TrollTrack.Services
 
         #region Lure Methods
 
-        public async Task<int> SaveLureAsync(LureData lureData)
+        public async Task<int> SaveLureAsync(LureDataEntity lureData)
         {
             try
             {
@@ -250,24 +246,19 @@ namespace TrollTrack.Services
             }
         }
 
-        public async Task<List<LureData>> GetAllLureDataAsync()
+        public async Task<List<LureDataEntity>> GetAllLureDataAsync()
         {
             try
             {
                 var db = await GetDatabaseAsync();
                 var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
 
-                var lureDataList = new List<LureData>();
-                foreach (var entity in entities)
-                {
-                    lureDataList.Add(ConvertFromLureEntity(entity));
-                }
-                return lureDataList;
+                return entities.Select(ConvertFromLureEntity).ToList();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error getting all lures: {ex.Message}");
-                return new List<LureData>();
+                return new List<LureDataEntity>();
             }
         }
 
@@ -275,7 +266,7 @@ namespace TrollTrack.Services
 
         #region Helper Methods
 
-        private CatchDataEntity ConvertToCatchEntity(CatchData catchData)
+        private CatchDataEntity ConvertToCatchEntity(CatchDataEntity catchData)
         {
             var entity = new CatchDataEntity
             {
@@ -285,7 +276,7 @@ namespace TrollTrack.Services
 
             if (catchData.Location != null)
             {
-                entity.Location = new LocationEntity
+                entity.Location = new LocationDataEntity
                 {
                     Id = Guid.NewGuid(),
                     Latitude = catchData.Location.Latitude,
@@ -299,7 +290,7 @@ namespace TrollTrack.Services
                 entity.LocationId = entity.Location.Id;
             }
 
-            if (catchData.CatchProgram != null)
+            if (catchData.ProgramData != null)
             {
                 // TODO: The ProgramData model is incomplete.
                 entity.ProgramData = new ProgramDataEntity
@@ -311,25 +302,23 @@ namespace TrollTrack.Services
                 entity.ProgramDataId = entity.ProgramData.Id;
             }
 
-            if (catchData.FishCaught.HasValue)
+            var fishInfo = FishData.GetInfo(catchData.FishInfo);
+            entity.FishInfo = new FishInfoEntity
             {
-                var fishInfo = FishData.GetInfo(catchData.FishCaught.Value);
-                entity.FishInfo = new FishInfoEntity
-                {
-                    Id = fishInfo.Id,
-                    CommonName = fishInfo.CommonName,
-                    ScientificName = fishInfo.ScientificName,
-                    Habitat = fishInfo.Habitat
-                };
-                entity.FishInfoId = entity.FishInfo.Id;
-            }
+                Id = fishInfo.Id,
+                CommonName = fishInfo.CommonName,
+                ScientificName = fishInfo.ScientificName,
+                Habitat = fishInfo.Habitat
+            };
+            entity.FishInfoId = entity.FishInfo.Id;
+            
 
             return entity;
         }
 
-        private CatchData ConvertFromCatchEntity(CatchDataEntity entity)
+        private CatchDataEntity ConvertFromCatchEntity(CatchDataEntity entity)
         {
-            var catchData = new CatchData
+            var catchData = new CatchDataEntity
             {
                 Id = entity.Id,
                 Timestamp = entity.Timestamp
@@ -337,7 +326,7 @@ namespace TrollTrack.Services
 
             if (entity.Location != null)
             {
-                catchData.Location = new Location
+                catchData.Location = new LocationDataEntity
                 {
                     Latitude = entity.Location.Latitude,
                     Longitude = entity.Location.Longitude,
@@ -352,15 +341,12 @@ namespace TrollTrack.Services
             if (entity.ProgramData != null)
             {
                 // TODO: The ProgramData model is incomplete.
-                catchData.CatchProgram = new ProgramData();
+                catchData.ProgramData = new ProgramDataEntity();
             }
 
-            if (entity.FishInfo != null && !string.IsNullOrEmpty(entity.FishInfo.CommonName))
+            if (entity.FishInfo != null)
             {
-                if (Enum.TryParse<FishCommonName>(entity.FishInfo.CommonName, out var fishCommonName))
-                {
-                    catchData.FishCaught = fishCommonName;
-                }
+                catchData.FishInfo = entity.FishInfo;
             }
 
             return catchData;
@@ -368,7 +354,7 @@ namespace TrollTrack.Services
 
 
 
-        private LureDataEntity ConvertToLureEntity(LureData lureData)
+        private LureDataEntity ConvertToLureEntity(LureDataEntity lureData)
         {
             var entity = new LureDataEntity
             {
@@ -381,20 +367,20 @@ namespace TrollTrack.Services
                 Images = new List<LureImageEntity>()
             };
 
-            if (lureData.ImagePaths != null)
+            if (lureData.Images != null)
             {
-                foreach (var imagePath in lureData.ImagePaths)
+                foreach (var image in lureData.Images)
                 {
-                    entity.Images.Add(new LureImageEntity { Id = Guid.NewGuid(), ImagePath = imagePath });
+                    entity.Images.Add(new LureImageEntity { Id = Guid.NewGuid(), ImagePath = image.ImagePath });
                 }
             }
 
             return entity;
         }
 
-        private LureData ConvertFromLureEntity(LureDataEntity entity)
+        private LureDataEntity ConvertFromLureEntity(LureDataEntity entity)
         {
-            var lureData = new LureData
+            var lureData = new LureDataEntity
             {
                 Id = entity.Id,
                 Manufacturer = entity.Manufacturer,
@@ -402,14 +388,14 @@ namespace TrollTrack.Services
                 Buoyancy = entity.Buoyancy,
                 Weight = entity.Weight,
                 Length = entity.Length,
-                ImagePaths = new List<string>()
+                Images = new List<LureImageEntity>()
             };
 
             if (entity.Images != null)
             {
                 foreach (var imageEntity in entity.Images)
                 {
-                    lureData.ImagePaths.Add(imageEntity.ImagePath);
+                    lureData.Images.Add(imageEntity);
                 }
             }
 
@@ -429,7 +415,7 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
                 await db.DeleteAllAsync<CatchDataEntity>();
-                await db.DeleteAllAsync<LocationEntity>();
+                await db.DeleteAllAsync<LocationDataEntity>();
                 await db.DeleteAllAsync<ProgramDataEntity>();
                 await db.DeleteAllAsync<FishInfoEntity>();
 
@@ -482,152 +468,12 @@ namespace TrollTrack.Services
 
         #endregion
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
-            _database?.CloseAsync().GetAwaiter().GetResult();
+            if (_database != null)
+            {
+                await _database.CloseAsync();
+            }
         }
     }
-
-    #region Database Entities
-
-    /// <summary>
-    /// SQLite entity for CatchData
-    /// </summary>
-    [Table("CatchData")]
-    public class CatchDataEntity
-    {
-        [PrimaryKey]
-        public Guid Id { get; set; }
-
-        [Indexed]
-        public DateTime Timestamp { get; set; }
-
-        [ForeignKey(typeof(LocationEntity))]
-        public Guid? LocationId { get; set; }
-        [ManyToOne(CascadeOperations = CascadeOperation.All)]
-        public LocationEntity Location { get; set; }
-
-        [ForeignKey(typeof(ProgramDataEntity))]
-        public Guid? ProgramDataId { get; set; }
-        [ManyToOne(CascadeOperations = CascadeOperation.All)]
-        public ProgramDataEntity ProgramData { get; set; }
-
-        [ForeignKey(typeof(FishInfoEntity))]
-        public Guid? FishInfoId { get; set; }
-        [ManyToOne(CascadeOperations = CascadeOperation.All)]
-        public FishInfoEntity FishInfo { get; set; }
-    }
-
-    /// <summary>
-    /// SQLite entity for Location
-    /// </summary>
-    [Table("Locations")]
-    public class LocationEntity
-    {
-        [PrimaryKey]
-        public Guid Id { get; set; }
-
-        public double Latitude { get; set; }
-        public double Longitude { get; set; }
-        public double? Altitude { get; set; }
-        public double? Accuracy { get; set; }
-        public double? Course { get; set; }
-        public double? Speed { get; set; }
-        public DateTimeOffset Timestamp { get; set; }
-
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<CatchDataEntity> Catches { get; set; }
-    }
-
-    /// <summary>
-    /// SQLite entity for ProgramData
-    /// </summary>
-    [Table("ProgramData")]
-    public class ProgramDataEntity
-    {
-        [PrimaryKey]
-        public Guid Id { get; set; }
-
-        public string? Name { get; set; }
-        public string? Description { get; set; }
-
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<CatchDataEntity> Catches { get; set; }
-    }
-
-    /// <summary>
-    /// SQLite entity for FishInfo
-    /// </summary>
-    [Table("FishInfo")]
-    public class FishInfoEntity
-    {
-        [PrimaryKey]
-        public Guid Id { get; set; }
-
-        public string? CommonName { get; set; }
-        public string? ScientificName { get; set; }
-        public string? Habitat { get; set; }
-
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<CatchDataEntity> Catches { get; set; }
-    }
-
-
-    /// <summary>
-    /// SQLite entity for LureData
-    /// </summary>
-    [Table("LureData")]
-    public class LureDataEntity
-    {
-        [PrimaryKey]
-        public Guid Id { get; set; }
-
-        public String Manufacturer { get; set; }
-
-        public Double Length { get; set; }
-
-        public String Color { get; set; }
-
-        public String Buoyancy { get; set; }
-
-        public Double Weight { get; set; }
-
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<LureImageEntity> Images { get; set; }
-    }
-
-
-    /// <summary>
-    /// SQLite entity for LureData
-    /// </summary>
-    [Table("LureImages")]
-    public class LureImageEntity
-    {
-        [PrimaryKey]
-        public Guid Id { get; set; }
-
-        public string ImagePath { get; set; }
-
-        [ForeignKey(typeof(LureDataEntity))]
-        public Guid LureId { get; set; }
-
-        [ManyToOne]
-        public LureDataEntity Lure { get; set; }
-
-    }
-
-    #endregion
-
-    #region Statistics Model
-
-    public class CatchStatistics
-    {
-        public int TotalCatches { get; set; }
-        public int TodaysCatches { get; set; }
-        public int WeekCatches { get; set; }
-        public int MonthCatches { get; set; }
-        public DateTime LastCatchDate { get; set; }
-    }
-
-    #endregion
 }

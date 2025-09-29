@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using TrollTrack.Configuration;
+using TrollTrack.Features.Programs;
 
 namespace TrollTrack
 {

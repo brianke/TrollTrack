@@ -1,7 +1,8 @@
-﻿using TrollTrack.Configuration;
-using TrollTrack.MVVM.Models;
+﻿using TrollTrack.Features.Shared.Models;
+using TrollTrack.Features.Shared.Models.Entities;
+using TrollTrack.Fetures.Shared;
 
-namespace TrollTrack.MVVM.ViewModels
+namespace TrollTrack.Features.Catches
 {
     public partial class CatchesViewModel : BaseViewModel
     {
@@ -20,10 +21,10 @@ namespace TrollTrack.MVVM.ViewModels
         }
 
         [ObservableProperty]
-        private CatchData? selectedCatch;
+        private CatchDataEntity? selectedCatch;
 
         [ObservableProperty]
-        private ObservableCollection<CatchData> catches = new();
+        private ObservableCollection<CatchDataEntity> catches = new();
 
         [ObservableProperty]
         private int totalCatches;
@@ -126,7 +127,7 @@ namespace TrollTrack.MVVM.ViewModels
                 // Get current location
                 var currentLocation = await _locationService.GetCurrentLocationAsync();
 
-                var newCatch = new CatchData
+                var newCatch = new CatchDataEntity
                 {
                     Id = Guid.NewGuid(),
                     Timestamp = DateTime.Now,
