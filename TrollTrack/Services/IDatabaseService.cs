@@ -1,6 +1,5 @@
 ﻿using TrollTrack.Features.Catches;
 using TrollTrack.Features.Shared.Models.Entities;
-using TrollTrack.Shared.Models.Entities;
 
 namespace TrollTrack.Services
 {

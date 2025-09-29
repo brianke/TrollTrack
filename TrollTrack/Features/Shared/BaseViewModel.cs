@@ -1,4 +1,6 @@
-﻿namespace TrollTrack.Fetures.Shared
+﻿using TrollTrack.Features.Shared.Models.Entities;
+
+namespace TrollTrack.Features.Shared
 {
     /// <summary>
     /// Base class for all ViewModels providing common functionality
@@ -61,7 +63,7 @@
         #region Location Properties
 
         [ObservableProperty]
-        private Location currentLocation;
+        private LocationDataEntity currentLocation;
 
         [ObservableProperty]
         private double currentLatitude;
@@ -135,7 +137,7 @@
             await ExecuteSafelyAsync(() => GetAndSetLocationAsync(showAlerts: true), "Getting location...");
         }
 
-        protected virtual async Task OnLocationUpdatedAsync(Location location)
+        protected virtual async Task OnLocationUpdatedAsync(LocationDataEntity location)
         {
             await Task.CompletedTask;
         }
@@ -305,7 +307,7 @@
         #endregion
 
         // The missing event handler
-        private async void OnLocationServiceUpdated(object sender, Location location)
+        private async void OnLocationServiceUpdated(object sender, LocationDataEntity location)
         {
             try
             {
@@ -570,6 +572,24 @@
             LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
         }
 
+        public async Task ShowAlertAsync(string title, string message)
+        {
+            try
+            {
+                await MainThread.InvokeOnMainThreadAsync(async () =>
+                {
+                    var currentPage = GetCurrentPage();
+                    if (currentPage != null)
+                    {
+                        await currentPage.DisplayAlert(title, message, "OK");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error showing alert: {ex.Message}");
+            }
+        }
 
         #endregion
 

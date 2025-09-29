@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TrollTrack.Features.Shared.Models
+namespace TrollTrack.Features.Shared.Models.Entities
 {
-    public class TripData
+    public class TripDataEntity
     {
         [Key]
         public Guid Id { get; set; }

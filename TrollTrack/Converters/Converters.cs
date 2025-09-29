@@ -73,7 +73,7 @@ namespace TrollTrack.Converters
     /// </summary>
     public class EnumToStringConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value == null)
                 return string.Empty;
@@ -82,7 +82,7 @@ namespace TrollTrack.Converters
             return value.ToString();
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             if (value is string stringValue && targetType.IsEnum)
             {
@@ -109,7 +109,7 @@ namespace TrollTrack.Converters
             switch (reader.TokenType)
             {
                 case JsonTokenType.String:
-                    string stringValue = reader.GetString();
+                    string? stringValue = reader.GetString(); // Use nullable string
                     if (string.IsNullOrWhiteSpace(stringValue))
                         return 0.0; // or throw new JsonException("Empty string cannot be converted to double");
 

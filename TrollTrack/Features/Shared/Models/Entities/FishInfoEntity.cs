@@ -1,15 +1,28 @@
 ﻿using SQLiteNetExtensions.Attributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("FishInfo")]
     public class FishInfoEntity
     {
-        [PrimaryKey]
         public Guid Id { get; set; }
+        
+        [Required]
+        public string CommonName { get; set; }
 
-        public string? CommonName { get; set; }
-        public string? ScientificName { get; set; }
-        public string? Habitat { get; set; }
+        [Required]
+        public string ScientificName { get; set; }
+
+        [Required]
+        public string Habitat { get; set; }
+
+        // Add a parameterless constructor to satisfy the 'new()' constraint  
+        public FishInfoEntity()
+        {
+            CommonName = string.Empty;
+            ScientificName = string.Empty;
+            Habitat = string.Empty;
+        }
     }
 }

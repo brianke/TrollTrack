@@ -1,22 +1,22 @@
-﻿using TrollTrack.Features.Shared.Models;
+﻿using TrollTrack.Features.Shared;
+using TrollTrack.Features.Shared.Models;
 using TrollTrack.Features.Shared.Models.Entities;
-using TrollTrack.Fetures.Shared;
 
 namespace TrollTrack.Features.Catches
 {
     public partial class CatchesViewModel : BaseViewModel
     {
-        #region Observable Properties
+        #region Observable Properties  
 
         [ObservableProperty]
-        private List<FishCommonName> fishOptions = new();
+        private List<string> fishOptions = new();
 
         [ObservableProperty]
-        private FishCommonName selectedFishOption;
+        private string selectedFishOption = string.Empty; // Initialize to avoid CS8618  
 
-        partial void OnSelectedFishOptionChanged(FishCommonName value)
+        partial void OnSelectedFishOptionChanged(string value)
         {
-            // Use the enum value
+            // Use the enum value  
             Debug.WriteLine($"Selected fish: {value}");
         }
 
@@ -34,49 +34,44 @@ namespace TrollTrack.Features.Catches
 
         #endregion
 
-        #region Constructor
+        #region Constructor  
 
         public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService) : base(locationService, databaseService)
         {
-            // Load data when ViewModel is created
+            // Load data when ViewModel is created  
             _ = InitializeAsync();
-
         }
 
         #endregion
 
-        #region Initialization
+        #region Initialization  
 
-        /// <summary>
-        /// Initialize the data needed for the catches 
-        /// </summary>
-        /// <returns></returns>
+        /// <summary>  
+        /// Initialize the data needed for the catches   
+        /// </summary>  
+        /// <returns></returns>  
         public async Task InitializeAsync()
         {
-            //await ExecuteSafelyAsync(async () =>
-            //{
-                Debug.WriteLine("Starting catches initialization...");
-                IsInitializing = true;
+            Debug.WriteLine("Starting catches initialization...");
+            IsInitializing = true;
 
-                // Load fish names for ItemPicker
-                FishOptions = Enum.GetValues<FishCommonName>().ToList();
+            // Load fish names for ItemPicker  
+            FishOptions = FishData.GetAllFishNames();
 
-                // Get current location
-                await UpdateLocationAsync();
+            // Get current location  
+            await UpdateLocationAsync();
 
-                // Load catches when ViewModel is created
-                await LoadCatchesAsync();
+            // Load catches when ViewModel is created  
+            await LoadCatchesAsync();
 
-                // Update Title
-                Title = "Catches";
-            //}, "Initializing dashboard...", showErrorAlert: false);
+            // Update Title  
+            Title = "Catches";
         }
 
         #endregion
 
-        #region Commands
+        #region Commands  
 
-        //[RelayCommand]
         private async Task LoadCatchesAsync()
         {
             await ExecuteSafelyAsync(async () =>
@@ -101,30 +96,13 @@ namespace TrollTrack.Features.Catches
                 System.Diagnostics.Debug.WriteLine($"Loaded {allCatches.Count} catch records");
             }, "Loading catches...", showErrorAlert: false);
         }
-        
-        //[RelayCommand]
-        //private void AddCatch()
-        //{
-        //    // Handle button press
-        //    catches.Add(new CatchData
-        //    {
-        //        Id = new Guid(),
-        //        Timestamp = DateTime.Now,
-        //        CatchProgram = null,
-        //        Location = CurrentLocation,
-        //        FishCaught = SelectedFishOption
-        //    });
-
-        //    // TODO: testing only, updating location
-        //    CurrentLocation = new Location(CurrentLocation.Latitude + 0.001, CurrentLocation.Longitude + 0.001);
-        //}
 
         [RelayCommand]
         private async Task AddNewCatchAsync()
         {
             await ExecuteSafelyAsync(async () =>
             {
-                // Get current location
+                // Get current location  
                 var currentLocation = await _locationService.GetCurrentLocationAsync();
 
                 var newCatch = new CatchDataEntity
@@ -134,10 +112,10 @@ namespace TrollTrack.Features.Catches
                     Location = currentLocation
                 };
 
-                // Save to database
+                // Save to database  
                 await _databaseService.SaveCatchAsync(newCatch);
 
-                // Add to collection
+                // Add to collection  
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     Catches.Insert(0, newCatch);
@@ -151,6 +129,5 @@ namespace TrollTrack.Features.Catches
         }
 
         #endregion
-
     }
 }

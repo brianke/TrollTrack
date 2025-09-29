@@ -1,7 +1,6 @@
-﻿
-using TrollTrack.Configuration;
+﻿using TrollTrack.Configuration;
+using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models;
-using TrollTrack.Fetures.Shared;
 
 namespace TrollTrack.Features.Dashboard
 {
@@ -18,7 +17,7 @@ namespace TrollTrack.Features.Dashboard
         #region WeatherProperties
 
         [ObservableProperty]
-        private WeatherData? weatherData;
+        private WeatherData weatherData = new();
 
         [ObservableProperty]
         private bool isWeatherLoading;
@@ -168,7 +167,7 @@ namespace TrollTrack.Features.Dashboard
 
                     if (weather != null)
                     {
-                        WeatherData = weather;
+                        WeatherData.WeatherEntity = weather;
                         LocationName = weather.LocationName ?? "Location Unavailable";
                         WeatherSummary = "Weather updated";
                         Debug.WriteLine($"Weather loaded: {weather.Temperature}°F, {weather.WeatherCondition}");

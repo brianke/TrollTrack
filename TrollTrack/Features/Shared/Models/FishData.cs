@@ -40,6 +40,11 @@ namespace TrollTrack.Features.Shared.Models
         {
             return FishList.FirstOrDefault(x => x.CommonName == fishCommonName);
         }
+
+        public static List<string> GetAllFishNames()
+        {
+            return FishList.Select(f => f.CommonName).ToList();
+        }
     }
 
 }

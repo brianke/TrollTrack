@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Windows.Input;
-using TrollTrack.Fetures.Shared;
-using TrollTrack.Shared.Models.Entities;
+using TrollTrack.Features.Shared;
+using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Features.Lures
 {
@@ -17,7 +17,7 @@ namespace TrollTrack.Features.Lures
         private bool isImageModalVisible;
 
         [ObservableProperty]
-        private string selectedImagePath;
+        private string selectedImagePath = string.Empty;
 
         #endregion
 
@@ -75,6 +75,12 @@ namespace TrollTrack.Features.Lures
                 var json = await reader.ReadToEndAsync();
                 var lureList = JsonSerializer.Deserialize<List<LureDataEntity>>(json);
 
+                if (lureList == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("No lures found in JSON.");
+                    return;
+                }
+
                 await MainThread.InvokeOnMainThreadAsync(() =>
                 {
                     Lures.Clear();
@@ -100,7 +106,7 @@ namespace TrollTrack.Features.Lures
         private void CloseImage()
         {
             IsImageModalVisible = false;
-            SelectedImagePath = null;
+            SelectedImagePath = "";
         }
         #endregion
 

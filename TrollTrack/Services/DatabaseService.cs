@@ -4,7 +4,6 @@ using TrollTrack.Features.Catches;
 using TrollTrack.Features.Shared.Models;
 using TrollTrack.Features.Shared.Models.Entities;
 using TrollTrack.Models.Entities;
-using TrollTrack.Shared.Models.Entities;
 
 namespace TrollTrack.Services
 {
@@ -43,6 +42,7 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<ProgramDataEntity>();
                 await _database.CreateTableAsync<FishInfoEntity>();
                 await _database.CreateTableAsync<LureDataEntity>();
+                await _database.CreateTableAsync<LureImageEntity>();
                 await _database.CreateTableAsync<LureImageEntity>();
 
                 _isInitialized = true;
@@ -302,7 +302,8 @@ namespace TrollTrack.Services
                 entity.ProgramDataId = entity.ProgramData.Id;
             }
 
-            var fishInfo = FishData.GetInfo(catchData.FishInfo);
+            // TODO: FishInfo should be selected from predefined list, not created new each time
+            var fishInfo = FishData.GetInfo(catchData.FishInfo.CommonName);
             entity.FishInfo = new FishInfoEntity
             {
                 Id = fishInfo.Id,

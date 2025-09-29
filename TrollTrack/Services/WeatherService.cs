@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using TrollTrack.Configuration;
 using TrollTrack.Features.Shared.Models;
+using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Services
 {
@@ -22,7 +23,7 @@ namespace TrollTrack.Services
         /// <summary>
         /// Gets current weather data for specified coordinates
         /// </summary>
-        public async Task<WeatherData> GetCurrentWeatherAsync(double latitude, double longitude)
+        public async Task<WeatherDataEntity?> GetCurrentWeatherAsync(double latitude, double longitude)
         {
             var apiKey = AppConfig.Runtime.WeatherApiKey;
 
@@ -100,7 +101,7 @@ namespace TrollTrack.Services
         /// <summary>
         /// Gets weather forecast for the next few days
         /// </summary>
-        public async Task<List<WeatherData>> GetWeatherForecastAsync(double latitude, double longitude, int days = 3)
+        public async Task<List<WeatherDataEntity>> GetWeatherForecastAsync(double latitude, double longitude, int days = 3)
         {
             if (!ConfigurationService.IsWeatherApiConfigured())
             {
@@ -125,7 +126,7 @@ namespace TrollTrack.Services
                 var response = await _httpClient.GetStringAsync(forecastUrl);
                 var json = JsonDocument.Parse(response);
 
-                var forecasts = new List<WeatherData>();
+                var forecasts = new List<WeatherDataEntity>();
 
                 // Check if forecast data exists
                 if (json.RootElement.TryGetProperty("forecast", out var forecastElement) &&
@@ -150,7 +151,7 @@ namespace TrollTrack.Services
         /// <summary>
         /// Gets weather data by city name
         /// </summary>
-        public async Task<WeatherData?> GetWeatherByCityAsync(string cityName)
+        public async Task<WeatherDataEntity?> GetWeatherByCityAsync(string cityName)
         {
             if (string.IsNullOrWhiteSpace(cityName))
             {
@@ -217,14 +218,14 @@ namespace TrollTrack.Services
             }
         }
 
-        private static WeatherData ParseCurrentWeatherData(JsonDocument json, double latitude, double longitude)
+        private static WeatherDataEntity ParseCurrentWeatherData(JsonDocument json, double latitude, double longitude)
         {
             var root = json.RootElement;
             var location = root.GetProperty("location");
             var current = root.GetProperty("current");
             var condition = current.GetProperty("condition");
 
-            var weather = new WeatherData
+            var weather = new WeatherDataEntity
             {
                 Timestamp = DateTime.UtcNow,
                 Latitude = latitude,
@@ -274,14 +275,14 @@ namespace TrollTrack.Services
             return weather;
         }
 
-        private static WeatherData ParseForecastDay(JsonElement forecastDay, double latitude, double longitude)
+        private static WeatherDataEntity ParseForecastDay(JsonElement forecastDay, double latitude, double longitude)
         {
             var day = forecastDay.GetProperty("day");
             var astro = forecastDay.GetProperty("astro");
             var condition = day.GetProperty("condition");
             var date = DateTime.Parse(forecastDay.GetProperty("date").GetString() ?? DateTime.Now.ToString("yyyy-MM-dd"));
 
-            var weather = new WeatherData
+            var weather = new WeatherDataEntity
             {
                 Timestamp = date,
                 Latitude = latitude,
@@ -319,7 +320,7 @@ namespace TrollTrack.Services
             return weather;
         }
 
-        private static void AddAstronomyData(WeatherData weather, JsonDocument astronomyJson)
+        private static void AddAstronomyData(WeatherDataEntity weather, JsonDocument astronomyJson)
         {
             try
             {

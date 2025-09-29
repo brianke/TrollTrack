@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:f="clr-namespace:TrollTrack.Features.Lures"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             xmlns:vm="clr-namespace:TrollTrack.Features.Lures"
+             x:DataType="vm:LuresViewModel"
              Title="{Binding Title}">
     <Grid>
         <CollectionView ItemsSource="{Binding Lures}">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="f:LureData">
+                <DataTemplate x:DataType="e:LureDataEntity">
                     <Border Padding="10" Margin="10">
                         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
                             <Image Grid.RowSpan="2" Source="{Binding PrimaryImagePath}" WidthRequest="100" HeightRequest="100">
@@ -30,7 +32,7 @@
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="2">
                                     <Label Text="Weight" FontSize="Small" />
-                                    <Label Text="{Binding Weight}" FontSize="Small" />
+                                    <Label Text="{Binding Weight}" FontSize="Small" x:DataType="e:LureDataEntity" />
                                 </VerticalStackLayout>
                             </Grid>
                         </Grid>
@@ -41,7 +43,8 @@
     
         <!-- Image Modal Overlay -->
         <Grid IsVisible="{Binding IsImageModalVisible}"
-                  BackgroundColor="#80000000">
+              BackgroundColor="#80000000"
+              x:DataType="vm:LuresViewModel">
 
             <!-- Semi-transparent background that closes modal when tapped -->
             <BoxView Color="Transparent">
@@ -52,27 +55,27 @@
 
             <!-- Modal content -->
             <Border BackgroundColor="White" 
-                        Margin="20"
-                        VerticalOptions="Center">
+                    Margin="20"
+                    VerticalOptions="Center">
                 <Grid>
                     <!-- Full-size image -->
                     <Image Source="{Binding SelectedImagePath}"
-                               Aspect="AspectFit"
-                               VerticalOptions="FillAndExpand"
-                               HorizontalOptions="FillAndExpand" />
+                           Aspect="AspectFit"
+                           VerticalOptions="FillAndExpand"
+                           HorizontalOptions="FillAndExpand" />
 
                     <!-- Close button -->
                     <Button Text="✕"
-                                BackgroundColor="Black"
-                                TextColor="White"
-                                WidthRequest="40"
-                                HeightRequest="40"
-                                CornerRadius="20"
-                                FontSize="18"
-                                HorizontalOptions="End"
-                                VerticalOptions="Start"
-                                Margin="10"
-                                Command="{Binding CloseImageCommand}" />
+                            BackgroundColor="Black"
+                            TextColor="White"
+                            WidthRequest="40"
+                            HeightRequest="40"
+                            CornerRadius="20"
+                            FontSize="18"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            Margin="10"
+                            Command="{Binding CloseImageCommand}" />
                 </Grid>
             </Border>
         </Grid>

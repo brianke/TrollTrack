@@ -1,6 +1,6 @@
-﻿using TrollTrack.Fetures.Shared;
+﻿using TrollTrack.Features.Shared;
 
-namespace TrollTrack.Features.Analyics
+namespace TrollTrack.Features.Analytics
 {
     public partial class AnalyticsViewModel : BaseViewModel
     {        
@@ -20,6 +20,7 @@ namespace TrollTrack.Features.Analyics
         }
 
         #endregion
+
 
         #region Initialization
 
