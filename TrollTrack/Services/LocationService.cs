@@ -3,13 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Services
 {
     public class LocationService : ILocationService
     {
         // set default locaiton which will be used as a return value if actual position cannot be obtained
-        private static Location defaultLocation = new Location(0.00, 0.00);
+        private static LocationDataEntity defaultLocation = new LocationDataEntity
+        {
+            Latitude = 0.00,
+            Longitude = 0.00,
+            Timestamp = DateTime.Now
+        };
 
         // Required properties and events from interface
 
@@ -22,17 +28,17 @@ namespace TrollTrack.Services
         /// Event that is fired whenever the locaiton is updated
         /// This event can be subscribed to by other classes/models when needing to do something when location is updated
         /// </summary>
-        public event EventHandler<Location> LocationUpdated;
+        public event EventHandler<LocationDataEntity> LocationUpdated;
 
 
         // List for tracking location history
-        private readonly List<Location> _locationHistory = new();
+        private readonly List<LocationDataEntity> _locationHistory = new();
 
         /// <summary>
         /// Get the current location asynchronously
         /// </summary>
         /// <returns></returns>
-        public async Task<Location> GetCurrentLocationAsync()
+        public async Task<LocationDataEntity> GetCurrentLocationAsync()
         {
             try
             {
@@ -49,16 +55,23 @@ namespace TrollTrack.Services
                 if (location != null)
                 {
                     IsLocationEnabled = true;
-                    await SaveLocationAsync(location);
-                    LocationUpdated?.Invoke(this, location);
+                    var locationEntity = new LocationDataEntity
+                    {
+                        Latitude = location.Latitude,
+                        Longitude = location.Longitude,
+                        Timestamp = DateTimeOffset.Now
+                    };
+
+                    await SaveLocationAsync(locationEntity);
+                    LocationUpdated?.Invoke(this, locationEntity);
 
                     //TODO: remove before release, just for testing
                     var (town, coords) = LocationData.GetRandomLocation();
-                    location.Latitude = coords.Latitude;
-                    location.Longitude = coords.Longitude;
+                    locationEntity.Latitude = coords.Latitude;
+                    locationEntity.Longitude = coords.Longitude;
                     //TODO
 
-                    return location;
+                    return locationEntity;
                 }
 
                 return defaultLocation;
@@ -103,7 +116,7 @@ namespace TrollTrack.Services
         /// Retrieve a list of historical locations asynchronously
         /// </summary>
         /// <returns></returns>
-        public async Task<List<Location>> GetLocationHistoryAsync()
+        public async Task<List<LocationDataEntity>> GetLocationHistoryAsync()
         {
             return await Task.FromResult(_locationHistory.ToList());
         }
@@ -113,7 +126,7 @@ namespace TrollTrack.Services
         /// </summary>
         /// <param name="location"></param>
         /// <returns></returns>
-        public async Task SaveLocationAsync(Location location)
+        public async Task SaveLocationAsync(LocationDataEntity location)
         {
             if (location != null)
             {

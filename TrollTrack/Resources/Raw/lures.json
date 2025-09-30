@@ -1,0 +1,56 @@
+[
+  {
+    "Id": "0725A2BF-2310-4DF2-9BE9-5AACC6ABD655",
+    "Manufacturer": "Bandit",
+    "Color": "Blue Shiner",
+    "Buoyancy": "Floating",
+    "Length": 4.75,
+    "Weight": ".625",
+    "ImagePaths": [ "bandit_blueshiner.png" ]
+  },
+  {
+    "Id": "964ED109-E28B-4BC1-801A-F5A98FDDC2E2",
+    "Manufacturer": "Bandit",
+    "Color": "Chrome Black Back",
+    "Buoyancy": "Floating",
+    "Length": 4.75,
+    "Weight": ".625",
+    "ImagePaths": [ "bandit_chromeblackback.png" ]
+  },
+  {
+    "Id": "C8A81BFB-1EED-42FF-A43E-2CFDB9CA39F4",
+    "Manufacturer": "Bandit",
+    "Color": "Chrome Blue Back",
+    "Buoyancy": "Floating",
+    "Length": 4.75,
+    "Weight": ".625",
+    "ImagePaths": [ "bandit_chromeblueback.png" ]
+  },
+  {
+    "Id": "1F2EA346-4CDF-4556-BEFB-7A7455C7EC5C",
+    "Manufacturer": "Bandit",
+    "Color": "Coconut Candy",
+    "Buoyancy": "Floating",
+    "Length": 4.75,
+    "Weight": ".625",
+    "ImagePaths": [ "bandit_coconutcandy.png" ]
+  },
+  {
+    "Id": "E934B851-DA2B-482F-ABBB-FBB9F1C0A13A",
+    "Manufacturer": "Bandit",
+    "Color": "Humble Bee",
+    "Buoyancy": "Floating",
+    "Length": 4.75,
+    "Weight": ".625",
+    "ImagePaths": [ "bandit_humblebee.png" ]
+  },
+  {
+    "Id": "E934B851-DA2B-482F-ABBB-FBB9F1C0A13A",
+    "Manufacturer": "Bandit",
+    "Color": "Purple Mist",
+    "Buoyancy": "Floating",
+    "Length": 4.75,
+    "Weight": ".625",
+    "ImagePaths": [ "bandit_purplemist.png" ]
+  }
+]
