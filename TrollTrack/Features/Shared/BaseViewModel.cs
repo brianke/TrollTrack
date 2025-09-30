@@ -115,7 +115,7 @@ namespace TrollTrack.Features.Shared
             _databaseService = databaseService;
 
             // Subscribe to location updates
-            _locationService.LocationUpdated += OnLocationServiceUpdated;
+            _locationService.LocationUpdated += async (sender, location) => await OnLocationServiceUpdated(sender, location);
         }
 
 
@@ -123,7 +123,7 @@ namespace TrollTrack.Features.Shared
         {
             if (disposing)
             {
-                _locationService.LocationUpdated -= OnLocationServiceUpdated;
+                _locationService.LocationUpdated -= async (sender, location) => await OnLocationServiceUpdated(sender, location);
             }
         }
 
@@ -155,7 +155,7 @@ namespace TrollTrack.Features.Shared
             }
         }
 
-        private async Task<bool> GetAndSetLocationAsync(bool showAlerts)
+        protected async Task<bool> GetAndSetLocationAsync(bool showAlerts)
         {
             if (!HasLocationPermission)
             {
@@ -306,15 +306,14 @@ namespace TrollTrack.Features.Shared
 
         #endregion
 
-        // The missing event handler
-        private async void OnLocationServiceUpdated(object sender, LocationDataEntity location)
+        private async Task OnLocationServiceUpdated(object sender, LocationDataEntity location)
         {
             try
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
+                await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
                     CurrentLocation = location;
-                    _ = OnLocationUpdatedAsync(location); // Fire and forget
+                    await OnLocationUpdatedAsync(location);
                 });
             }
             catch (Exception ex)
@@ -401,7 +400,7 @@ namespace TrollTrack.Features.Shared
 
                 if (showErrorAlert)
                 {
-                    await ShowErrorAlertAsync("Error", ex.Message);
+                    await ShowAlertAsync("Error", ex.Message);
                 }
 
                 return false;
@@ -440,7 +439,7 @@ namespace TrollTrack.Features.Shared
 
                 if (showErrorAlert)
                 {
-                    await ShowErrorAlertAsync("Error", ex.Message);
+                    await ShowAlertAsync("Error", ex.Message);
                 }
 
                 return defaultValue;
@@ -452,25 +451,30 @@ namespace TrollTrack.Features.Shared
         }
 
         /// <summary>
-        /// Shows an error alert to the user
+        /// Shows an alert to the user.
+        /// This can be overridden in derived classes to provide custom alert functionality.
         /// </summary>
-        /// <param name="title">Alert title</param>
-        /// <param name="message">Alert message</param>
-        protected virtual async Task ShowErrorAlertAsync(string title, string message)
+        /// <param name="title">The title of the alert.</param>
+        /// <param name="message">The message to display in the alert.</param>
+        public virtual async Task ShowAlertAsync(string title, string message)
         {
             try
             {
-                var page = GetCurrentPage();
-                if (page != null)
+                await MainThread.InvokeOnMainThreadAsync(async () =>
                 {
-                    await page.DisplayAlert(title, message, "OK");
-                }
+                    var currentPage = GetCurrentPage();
+                    if (currentPage != null)
+                    {
+                        await currentPage.DisplayAlert(title, message, "OK");
+                    }
+                });
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to show alert: {ex.Message}");
+                Debug.WriteLine($"Error showing alert: {ex.Message}");
             }
         }
+
 
         /// <summary>
         /// Shows a confirmation dialog to the user
@@ -571,26 +575,6 @@ namespace TrollTrack.Features.Shared
             LocationLastUpdated = DateTime.Now;
             LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
         }
-
-        public async Task ShowAlertAsync(string title, string message)
-        {
-            try
-            {
-                await MainThread.InvokeOnMainThreadAsync(async () =>
-                {
-                    var currentPage = GetCurrentPage();
-                    if (currentPage != null)
-                    {
-                        await currentPage.DisplayAlert(title, message, "OK");
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Error showing alert: {ex.Message}");
-            }
-        }
-
         #endregion
 
     }

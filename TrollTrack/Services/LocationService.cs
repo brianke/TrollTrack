@@ -67,8 +67,8 @@ namespace TrollTrack.Services
 
                     //TODO: remove before release, just for testing
                     var (town, coords) = LocationData.GetRandomLocation();
-                    location.Latitude = coords.Latitude;
-                    location.Longitude = coords.Longitude;
+                    locationEntity.Latitude = coords.Latitude;
+                    locationEntity.Longitude = coords.Longitude;
                     //TODO
 
                     return locationEntity;

@@ -2,7 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrollTrack.Features.Dashboard.DashboardView"
-             xmlns:f="clr-namespace:TrollTrack.Features.Dashboard">
+             xmlns:f="clr-namespace:TrollTrack.Features.Dashboard"
+             xmlns:m="clr-namespace:TrollTrack.Features.Shared.Models">
 
     <RefreshView IsRefreshing="{Binding IsRefreshing}"
                  Command="{Binding RefreshDashboardCommand}" >
@@ -13,8 +14,6 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <Label Text="{Binding RefreshStatus}" 
@@ -23,7 +22,7 @@
                        HorizontalOptions="Center"
                        Margin="0,0,0,5"
                        Grid.Row="0"/>
-                
+
                 <!-- Current Location -->
                 <Border BackgroundColor="LightBlue" 
                         Stroke="DodgerBlue"
@@ -49,11 +48,8 @@
                                 <ColumnDefinition Width=".15*" />
                                 <ColumnDefinition Width=".25*" />
                                 <ColumnDefinition Width=".15*" />
-                                <!--<ColumnDefinition Width=".1*" />-->
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                             </Grid.RowDefinitions>
@@ -112,7 +108,7 @@
                                FontSize="18" 
                                FontAttributes="Bold"
                                HorizontalOptions="Center" />
-                        <Grid Margin="5">
+                        <Grid Margin="5" x:DataType="m:WeatherData">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width=".4*" />
                                 <ColumnDefinition Width=".4*" />
@@ -120,40 +116,36 @@
                             </Grid.ColumnDefinitions>
 
                             <StackLayout Grid.Column="0" >
-                                <Label Text="{Binding WeatherData.Temperature, StringFormat='{0:F0}°'}"
+                                <Label Text="{Binding WeatherEntity.Temperature, StringFormat='{0:F0}°'}"
                                        FontSize="36"
                                        FontAttributes="Bold"
                                        HorizontalOptions="Center" />
-                                <Label Text="{Binding WeatherData.WeatherCondition, StringFormat='☁️ {0}'}"
+                                <Label Text="{Binding WeatherEntity.WeatherCondition, StringFormat='☁️ {0}'}"
                                        FontAttributes="Bold"
                                        HorizontalOptions="Center"/>
                                 <HorizontalStackLayout HorizontalOptions="Center" Margin="0,5,0,0">
-                                    <Label Text="{Binding WeatherData.WindSpeed,StringFormat='💨 {0:F0} mph'}" 
+                                    <Label Text="{Binding WeatherEntity.WindSpeed,StringFormat='💨 {0:F0} mph'}" 
                                            FontAttributes="Bold"/>
                                     <Label Text="  " />
-                                    <Label Text="➤" Rotation="{Binding WeatherData.WindDirection}" />
+                                    <Label Text="➤" Rotation="{Binding WeatherEntity.WindDirection}" />
                                 </HorizontalStackLayout>
-                                
+
                             </StackLayout>
                             <StackLayout Grid.Column="1">
                                 <Image Source="sunrise.png" 
                                        MaximumHeightRequest="70"
                                        Margin="0,0,0,10"/>
-                                <Label Text="{Binding WeatherData.Sunrise, StringFormat='{0:HH:mm tt}'}" 
+                                <Label Text="{Binding WeatherEntity.Sunrise, StringFormat='{0:HH:mm tt}'}" 
                                        FontSize="16"
                                        FontAttributes="Bold"
-                                       HorizontalOptions="Center"/>                                
-                                <!--<Label Text="{Binding WeatherData.Temperature, StringFormat='🌡️ {0:F0}°F'}" />
-                                <Label Text="{Binding WeatherData.WindSpeed, StringFormat='💨 {0:F0} mph'}" />
-                                <Label Text="{Binding WeatherData.WindDirection, StringFormat='🧭 {0}'}" />
-                                <Label Text="{Binding WeatherData.Pressure, StringFormat='📊 {0:F0} mb'}" />-->
+                                       HorizontalOptions="Center"/>
                             </StackLayout>
 
                             <StackLayout Grid.Column="2">
                                 <Image Source="sunset.png" 
                                        MaximumHeightRequest="78"
                                        Margin="0,2,0,0"/>
-                                <Label Text="{Binding WeatherData.Sunset, StringFormat='{0:HH:mm tt}'}" 
+                                <Label Text="{Binding WeatherEntity.Sunset, StringFormat='{0:HH:mm tt}'}" 
                                        FontSize="16"
                                        FontAttributes="Bold"
                                        HorizontalOptions="Center"/>
@@ -162,105 +154,6 @@
 
                     </StackLayout>
                 </Border>
-
-                <!-- Quick Stats 
-            <Frame Grid.Row="2" BackgroundColor="LightYellow" Margin="0,0,0,10">
-                <StackLayout>
-                    <Label Text="📈 Today's Summary" FontSize="18" FontAttributes="Bold" />
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <StackLayout Grid.Column="0">
-                            <Label Text="{Binding TodaysCatches, StringFormat='🎣 Catches: {0}'}" />
-                            <Label Text="{Binding TotalFishingTime, StringFormat='⏱️ Time: {0}'}" />
-                        </StackLayout>
-
-                        <StackLayout Grid.Column="1">
-                            <Label Text="{Binding BestCatch, StringFormat='🏆 Best: {0}'}" />
-                            <Label Text="{Binding CurrentTrollingMethod, StringFormat='⚙️ Method: {0}'}" />
-                        </StackLayout>
-                    </Grid>
-                </StackLayout>
-            </Frame>
--->
-                <!-- AI Recommendations 
-            <Frame Grid.Row="3" BackgroundColor="LightCoral" Margin="0,0,0,10">
-                <StackLayout>
-                    <Label Text="🤖 AI Recommendations" FontSize="18" FontAttributes="Bold" />
-                    <CollectionView ItemsSource="{Binding AIRecommendations}"
-                                    MaximumHeightRequest="150">
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate>
-                                <StackLayout Padding="5">
-                                    <Label Text="{Binding}" 
-                                           FontSize="14"
-                                           TextColor="DarkRed" />
-                                </StackLayout>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
-                    <Button Text="🔄 Refresh Recommendations" 
-                            Command="{Binding RefreshRecommendationsCommand}"
-                            BackgroundColor="Crimson"
-                            TextColor="White"
-                            Margin="0,10,0,0" />
-                </StackLayout>
-            </Frame>
--->
-                <!-- Quick Actions 
-            <Frame Grid.Row="4" BackgroundColor="LightGray">
-                <StackLayout>
-                    <Label Text="⚡ Quick Actions" FontSize="18" FontAttributes="Bold" />
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-
-                        <Button Grid.Row="0" Grid.Column="0" 
-                                Text="🎣 Log Catch" 
-                                Command="{Binding LogCatchCommand}" 
-                                BackgroundColor="Orange"
-                                TextColor="White"
-                                Margin="5" />
-
-                        <Button Grid.Row="0" Grid.Column="1" 
-                                Text="⚙️ Change Method" 
-                                Command="{Binding ChangeTrollingMethodCommand}" 
-                                BackgroundColor="Purple"
-                                TextColor="White"
-                                Margin="5" />
-
-                        <Button Grid.Row="1" Grid.Column="0" 
-                                Text="🎯 Manage Lures" 
-                                Command="{Binding ManageLuresCommand}" 
-                                BackgroundColor="DarkGreen"
-                                TextColor="White"
-                                Margin="5" />
-
-                        <Button Grid.Row="1" Grid.Column="1" 
-                                Text="📊 View History" 
-                                Command="{Binding ViewCatchHistoryCommand}" 
-                                BackgroundColor="Navy"
-                                TextColor="White"
-                                Margin="5" />
-                    </Grid>
-
-                    <Label Text="{Binding FormattedLastUpdated}" 
-                           FontSize="10" 
-                           TextColor="Gray"
-                           HorizontalOptions="Center"
-                           Margin="0,10,0,0" />
-                </StackLayout>
-            </Frame>
--->
             </Grid>
         </ScrollView>
     </RefreshView>
