@@ -15,6 +15,7 @@
             <converters:AutoRefreshTextConverter x:Key="AutoRefreshTextConverter" />
             <converters:AutoRefreshColorConverter x:Key="AutoRefreshColorConverter" />
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:EnumToStringConverter x:Key="EnumToStringConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

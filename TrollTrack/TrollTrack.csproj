@@ -47,6 +47,8 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+	    <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
+
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -68,12 +70,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Features\Catches\CatchData.cs" />
+	  <Compile Remove="Features\Lures\LureData.cs" />
+	  <Compile Remove="Features\Programs\ProgramData.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
 		
 		<!-- Essential packages for your fishing app -->
-		<PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.100" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
@@ -86,25 +93,19 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="MVVM\Views\Analytics.xaml.cs">
-			<DependentUpon>Analytics.xaml</DependentUpon>
-		</Compile>
-	</ItemGroup>
-
-	<ItemGroup>
-		<MauiXaml Update="MVVM\Views\Catches.xaml">
+		<MauiXaml Update="Views\Catches.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="MVVM\Views\Dashboard.xaml">
+		<MauiXaml Update="Views\Dashboard.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="MVVM\Views\Lures.xaml">
+		<MauiXaml Update="Views\Lures.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="MVVM\Views\Analytics.xaml">
+		<MauiXaml Update="Views\Analytics.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
-		<MauiXaml Update="MVVM\Views\Program.xaml">
+		<MauiXaml Update="Views\Programs.xaml">
 			<Generator>MSBuild:Compile</Generator>
 		</MauiXaml>
 	</ItemGroup>
