@@ -11,10 +11,12 @@ namespace TrollTrack.Services
     public class WeatherService : IWeatherService
     {
         private readonly HttpClient _httpClient;
+        private readonly ISettingsService _settingsService;
 
-        public WeatherService(HttpClient httpClient)
+        public WeatherService(HttpClient httpClient, ISettingsService settingsService)
         {
             _httpClient = httpClient;
+            _settingsService = settingsService;
 
             // Set timeout for weather requests
             _httpClient.Timeout = TimeSpan.FromSeconds(AppConfig.Constants.WeatherApiTimeoutSeconds);
@@ -25,13 +27,13 @@ namespace TrollTrack.Services
         /// </summary>
         public async Task<WeatherDataEntity?> GetCurrentWeatherAsync(double latitude, double longitude)
         {
-            var apiKey = AppConfig.Runtime.WeatherApiKey;
-
-            if (!ConfigurationService.IsWeatherApiConfigured())
+            if (!_settingsService.IsWeatherApiConfigured())
             {
-                var (_, message) = ConfigurationService.GetWeatherApiKeyStatus();
+                var (_, message) = _settingsService.GetWeatherApiKeyStatus();
                 throw new InvalidOperationException(message);
             }
+
+            var apiKey = _settingsService.WeatherApiKey;
 
             try
             {
@@ -103,12 +105,12 @@ namespace TrollTrack.Services
         /// </summary>
         public async Task<List<WeatherDataEntity>> GetWeatherForecastAsync(double latitude, double longitude, int days = 3)
         {
-            if (!ConfigurationService.IsWeatherApiConfigured())
+            if (!_settingsService.IsWeatherApiConfigured())
             {
                 throw new InvalidOperationException("Weather API not configured");
             }
 
-            var apiKey = AppConfig.Runtime.WeatherApiKey;
+            var apiKey = _settingsService.WeatherApiKey;
 
             // WeatherAPI.com free tier supports up to 3 days forecast
             if (days > 3) days = 3;
@@ -158,14 +160,14 @@ namespace TrollTrack.Services
                 throw new ArgumentException("City name cannot be empty");
             }
 
-            if (!ConfigurationService.IsWeatherApiConfigured())
+            if (!_settingsService.IsWeatherApiConfigured())
             {
                 throw new InvalidOperationException("Weather API not configured");
             }
 
             try
             {
-                var apiKey = AppConfig.Runtime.WeatherApiKey;
+                var apiKey = _settingsService.WeatherApiKey;
                 var currentWeatherUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json" +
                     $"?key={apiKey}" +
                     $"&q={Uri.EscapeDataString(cityName)}" +

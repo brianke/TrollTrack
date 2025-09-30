@@ -68,7 +68,7 @@
 		<!-- Raw Assets -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
-
+	
 	<ItemGroup>
 	  <Compile Remove="Features\Catches\CatchData.cs" />
 	  <Compile Remove="Features\Lures\LureData.cs" />
@@ -91,24 +91,5 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.100" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<MauiXaml Update="Views\Catches.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\Dashboard.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\Lures.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\Analytics.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\Programs.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-	</ItemGroup>
-
 
 </Project>

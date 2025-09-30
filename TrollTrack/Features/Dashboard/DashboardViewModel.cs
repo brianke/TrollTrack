@@ -7,6 +7,7 @@ namespace TrollTrack.Features.Dashboard
     public partial class DashboardViewModel : BaseViewModel
     {
         private readonly IWeatherService _weatherService;
+        private readonly ISettingsService _settingsService;
 
         #region Observable Properties
 
@@ -29,9 +30,10 @@ namespace TrollTrack.Features.Dashboard
 
         #region Constructor
 
-        public DashboardViewModel(ILocationService locationService, IDatabaseService databaseService, IWeatherService weatherService) : base(locationService, databaseService)
+        public DashboardViewModel(ILocationService locationService, IDatabaseService databaseService, IWeatherService weatherService, ISettingsService settingsService) : base(locationService, databaseService)
         {
             _weatherService = weatherService;
+            _settingsService = settingsService;
 
             CheckApiConfiguration();
 
@@ -41,8 +43,8 @@ namespace TrollTrack.Features.Dashboard
 
         private void CheckApiConfiguration()
         {
-            IsWeatherApiConfigured = ConfigurationService.IsWeatherApiConfigured();
-            var (isValid, message) = ConfigurationService.GetWeatherApiKeyStatus();
+            IsWeatherApiConfigured = _settingsService.IsWeatherApiConfigured();
+            var (isValid, message) = _settingsService.GetWeatherApiKeyStatus();
             WeatherApiStatusMessage = message;
         }
 
@@ -141,13 +143,14 @@ namespace TrollTrack.Features.Dashboard
         }
 
         [RelayCommand]
-        private async Task LogCatchAsync() => await NavigateToAsync(RouteConstants.Catch);
+        private async Task LogCatchAsync() => await NavigateToAsync(RouteConstants.Catches);
 
         [RelayCommand]
-        private async Task ChangeTrollingMethodAsync() => await NavigateToAsync(RouteConstants.Trolling);
+        private async Task ChangeTrollingMethodAsync() => await NavigateToAsync(RouteConstants.Programs);
 
         [RelayCommand]
-        private async Task ViewCatchHistoryAsync() => await NavigateToAsync(RouteConstants.History);
+        private async Task ViewCatchHistoryAsync() => await NavigateToAsync(RouteConstants.Catches);
+
 
         [RelayCommand]
         private async Task ManageLuresAsync() => await NavigateToAsync(RouteConstants.Lures);

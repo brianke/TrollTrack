@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
-using TrollTrack.Configuration;
 using TrollTrack.Features.Analytics;
 using TrollTrack.Features.Catches;
 using TrollTrack.Features.Dashboard;
 using TrollTrack.Features.Lures;
 using TrollTrack.Features.Programs;
+using TrollTrack.Services;
 
 namespace TrollTrack
 {
@@ -23,26 +23,19 @@ namespace TrollTrack
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            // Register HTTP client and services
+            // Register HTTP client
             builder.Services.AddSingleton<HttpClient>();
 
-            // Register services as singletons
+            // Register services
             builder.Services.AddSingleton<ILocationService, LocationService>();
             builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
-
-            // Register WeatherService with HttpClient dependency
-            builder.Services.AddSingleton<IWeatherService>(serviceProvider =>
-            {
-                var httpClient = serviceProvider.GetRequiredService<HttpClient>();
-                return (IWeatherService)new WeatherService(httpClient);
-            });
+            builder.Services.AddSingleton<IWeatherService, WeatherService>();
 
             // Register ViewModels
             builder.Services.AddTransient<DashboardViewModel>();
             builder.Services.AddTransient<CatchesViewModel>();
             builder.Services.AddTransient<LuresViewModel>();
             builder.Services.AddTransient<ProgramsViewModel>();
-            builder.Services.AddTransient<CatchesViewModel>();
             builder.Services.AddTransient<AnalyticsViewModel>();
 
             // Register Views
@@ -56,27 +49,27 @@ namespace TrollTrack
             builder.Logging.AddDebug();
 #endif
 
-            var app = builder.Build();
+            //var app = builder.Build();
 
-            // Initialize configuration on app startup
-            _ = Task.Run(async () =>
-            { 
-                // TODO: Remove before deploying
-                // Replace "your-actual-api-key-here" with your real key
-                await SecureStorage.SetAsync("WeatherApiKey", "c94ed9868e9447c2b2e145937252508");
-                System.Diagnostics.Debug.WriteLine("Test API key set!");
+            //// Initialize configuration on app startup
+            //_ = Task.Run(async () =>
+            //{ 
+            //    // TODO: Remove before deploying
+            //    // Replace "your-actual-api-key-here" with your real key
+            //    await SecureStorage.SetAsync("WeatherApiKey", "c94ed9868e9447c2b2e145937252508");
+            //    System.Diagnostics.Debug.WriteLine("Test API key set!");
 
-                try
-                {
-                    await ConfigurationService.InitializeAsync();
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Failed to initialize configuration: {ex.Message}");
-                }
-            });
+            //    try
+            //    {
+            //        await ConfigurationService.InitializeAsync();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        System.Diagnostics.Debug.WriteLine($"Failed to initialize configuration: {ex.Message}");
+            //    }
+            //});
 
-            return app;
+            return builder.Build();
         }
     }
 }
