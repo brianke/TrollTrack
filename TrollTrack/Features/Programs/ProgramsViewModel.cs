@@ -14,8 +14,27 @@ namespace TrollTrack.Features.Programs
 
         public ProgramsViewModel(ILocationService locationService, IDatabaseService databaseService) : base(locationService, databaseService)
         {
-            Title = "Programs Page";
+            // Load data when ViewModel is created
+            _ = InitializeAsync();
 
+        }
+
+        #endregion
+
+
+        #region Initialization
+
+        /// <summary>
+        /// Initialize the data needed for the catches 
+        /// </summary>
+        /// <returns></returns>
+        public async Task InitializeAsync()
+        {
+            Debug.WriteLine("Starting programs initialization...");
+            IsInitializing = true;
+
+            // Update Title
+            Title = "Programs";
         }
 
         #endregion

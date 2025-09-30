@@ -6,7 +6,7 @@ public partial class LuresView : ContentPage
     
     public LuresView(LuresViewModel viewModel)
 	{
-        //InitializeComponent();
+        InitializeComponent();
 
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
