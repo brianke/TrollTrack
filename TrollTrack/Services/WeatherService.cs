@@ -100,7 +100,7 @@ public class WeatherService : IWeatherService
         }
     }
 
-    private static WeatherDataEntity MapToWeatherDataEntity(Current current, Location location)
+    private static WeatherDataEntity MapToWeatherDataEntity(Current current, Features.Shared.Models.WeatherApi.Location location)
     {
         return new WeatherDataEntity
         {
@@ -129,7 +129,7 @@ public class WeatherService : IWeatherService
         };
     }
 
-    private static WeatherDataEntity MapToWeatherDataEntity(ForecastDay forecastDay, Location location)
+    private static WeatherDataEntity MapToWeatherDataEntity(ForecastDay forecastDay, Features.Shared.Models.WeatherApi.Location location)
     {
         return new WeatherDataEntity
         {

@@ -12,7 +12,7 @@
                 <DataTemplate x:DataType="e:LureDataEntity">
                     <Border Padding="10" Margin="10">
                         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
-                            <Image Grid.RowSpan="2" Source="{Binding PrimaryImagePath}" WidthRequest="100" HeightRequest="100">
+                            <Image Grid.RowSpan="2" Source="{Binding PrimaryImage.Path}" WidthRequest="100" HeightRequest="100">
                                 <Image.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:LuresViewModel}}, Path=OpenImageCommand}"
                                                               CommandParameter="{Binding PrimaryImagePath}" />

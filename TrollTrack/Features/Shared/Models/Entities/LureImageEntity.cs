@@ -13,12 +13,6 @@ namespace TrollTrack.Features.Shared.Models.Entities
         public Guid Id { get; set; }
 
         [Required]
-        public string ImagePath { get; set; }
-
-        [ForeignKey(typeof(LureDataEntity))]
-        public Guid LureId { get; set; }
-
-        [ManyToOne]
-        public LureDataEntity Lure { get; set; }
+        public string Path { get; set; }
     }
 }

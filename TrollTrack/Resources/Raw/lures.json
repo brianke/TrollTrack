@@ -5,8 +5,13 @@
     "Color": "Blue Shiner",
     "Buoyancy": "Floating",
     "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_blueshiner.png" ]
+    "Weight": 0.625,
+    "Images": [
+      {
+        "Id": "50F3FC9A-7F6A-481E-9C51-8A1B14BB0A67",
+        "Path": "bandit_blueshiner.png"
+      }
+    ]
   },
   {
     "Id": "964ED109-E28B-4BC1-801A-F5A98FDDC2E2",
@@ -14,8 +19,13 @@
     "Color": "Chrome Black Back",
     "Buoyancy": "Floating",
     "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_chromeblackback.png" ]
+    "Weight": 0.625,
+    "Images": [
+      {
+        "Id": "F18FDCA8-ED55-4DCF-996F-29DAC1A638E6",
+        "Path": "bandit_chromeblackback.png"
+      }
+    ]
   },
   {
     "Id": "C8A81BFB-1EED-42FF-A43E-2CFDB9CA39F4",
@@ -23,8 +33,13 @@
     "Color": "Chrome Blue Back",
     "Buoyancy": "Floating",
     "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_chromeblueback.png" ]
+    "Weight": 0.625,
+    "Images": [
+      {
+        "Id": "78DCDB86-E511-43F3-BD9F-B6F44467C015",
+        "Path": "bandit_chromeblueback.png"
+      }
+    ]
   },
   {
     "Id": "1F2EA346-4CDF-4556-BEFB-7A7455C7EC5C",
@@ -32,8 +47,13 @@
     "Color": "Coconut Candy",
     "Buoyancy": "Floating",
     "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_coconutcandy.png" ]
+    "Weight": 0.625,
+    "Images": [
+      {
+        "Id": "49EDAEB5-D1FD-4831-A7E7-3A7B19980596",
+        "Path": "bandit_coconutcandy.png"
+      }
+    ]
   },
   {
     "Id": "E934B851-DA2B-482F-ABBB-FBB9F1C0A13A",
@@ -41,8 +61,13 @@
     "Color": "Humble Bee",
     "Buoyancy": "Floating",
     "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_humblebee.png" ]
+    "Weight": 0.625,
+    "Images": [
+      {
+        "Id": "E55C6F59-3A9F-4E16-A1E2-D714814A3854",
+        "Path": "bandit_humblebee.png"
+      }
+    ]
   },
   {
     "Id": "E934B851-DA2B-482F-ABBB-FBB9F1C0A13A",
@@ -50,7 +75,12 @@
     "Color": "Purple Mist",
     "Buoyancy": "Floating",
     "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_purplemist.png" ]
+    "Weight": 0.625,
+    "Images": [
+      {
+        "Id": "323FA851-D3EB-4500-91DE-D47261887239",
+        "Path": "bandit_purplemist.png"
+      }
+    ]
   }
 ]

@@ -372,7 +372,7 @@ namespace TrollTrack.Services
             {
                 foreach (var image in lureData.Images)
                 {
-                    entity.Images.Add(new LureImageEntity { Id = Guid.NewGuid(), ImagePath = image.ImagePath });
+                    entity.Images.Add(new LureImageEntity { Id = Guid.NewGuid(), Path = image.Path });
                 }
             }
 
