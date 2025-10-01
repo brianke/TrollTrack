@@ -2,61 +2,32 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrollTrack.Features.Catches.CatchesView"
-             xmlns:f="clr-namespace:TrollTrack.Features.Catches">
+             xmlns:f="clr-namespace:TrollTrack.Features.Catches"
+             x:DataType="f:CatchesViewModel">
 
     <ScrollView>
-        <Grid Padding="15,0,15,15">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <VerticalStackLayout Spacing="15" Padding="15">
 
             <Label Text="{Binding RefreshStatus}" 
-                   FontSize="12" 
-                   TextColor="DarkBlue"
-                   HorizontalOptions="Center"
-                   Margin="0,0,0,5"
-                   Grid.Row="0"/>
+                   Style="{StaticResource InfoLabel}"
+                   Margin="0,0,0,5"/>
 
-            <!-- Current Location -->
-            <Border BackgroundColor="LightBlue" 
-                    Stroke="DodgerBlue"
-                    StrokeThickness="2"
-                    StrokeShape="RoundRectangle 12"
-                    Margin="0,0,0,15"
-                    Padding="15"
-                    Grid.Row="1">
+            <Border Style="{StaticResource InfoCard}">
                 <HorizontalStackLayout HorizontalOptions="Center">
                     <Label Text="Species: "
-                           FontSize="18"
-                           FontAttributes="Bold"
+                           Style="{StaticResource CardTitle}"
                            VerticalOptions="Center" />
                     <Picker Title="Select"
                             ItemsSource="{Binding FishOptions}"
                             SelectedItem="{Binding SelectedFishOption, Mode=TwoWay, Converter={StaticResource EnumToStringConverter}}"
-                            FontSize="18"
-                            FontAttributes="Bold"
-                            VerticalOptions="Center"
-                            HorizontalOptions="Center" />
+                            Style="{StaticResource CardPicker}" />
                 </HorizontalStackLayout>
-
             </Border>   
             
             <Button Text="+"
-                    FontSize="24"
-                    FontAttributes="Bold"
-                    WidthRequest="50"
-                    HeightRequest="50"
-                    CornerRadius="25"
-                    BackgroundColor="DodgerBlue"
-                    TextColor="White"
-                    HorizontalOptions="Center"
-                    VerticalOptions="Center"
-                    Command="{Binding AddNewCatchCommand}"
-                    Grid.Row="2"/>
-        </Grid>
+                    Style="{StaticResource CircularButton}"
+                    Command="{Binding AddNewCatchCommand}"/>
+
+        </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

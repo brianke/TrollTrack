@@ -30,6 +30,7 @@ namespace TrollTrack
             builder.Services.AddSingleton<ILocationService, LocationService>();
             builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
             builder.Services.AddSingleton<IWeatherService, WeatherService>();
+            builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
 
             // Register ViewModels
             builder.Services.AddTransient<DashboardViewModel>();
@@ -48,26 +49,6 @@ namespace TrollTrack
 #if DEBUG
             builder.Logging.AddDebug();
 #endif
-
-            //var app = builder.Build();
-
-            //// Initialize configuration on app startup
-            //_ = Task.Run(async () =>
-            //{ 
-            //    // TODO: Remove before deploying
-            //    // Replace "your-actual-api-key-here" with your real key
-            //    await SecureStorage.SetAsync("WeatherApiKey", "c94ed9868e9447c2b2e145937252508");
-            //    System.Diagnostics.Debug.WriteLine("Test API key set!");
-
-            //    try
-            //    {
-            //        await ConfigurationService.InitializeAsync();
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        System.Diagnostics.Debug.WriteLine($"Failed to initialize configuration: {ex.Message}");
-            //    }
-            //});
 
             return builder.Build();
         }
