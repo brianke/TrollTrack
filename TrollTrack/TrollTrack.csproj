@@ -75,6 +75,24 @@
 	  <Compile Remove="Features\Lures\LureData.cs" />
 	  <Compile Remove="Features\Programs\ProgramData.cs" />
 	</ItemGroup>
+	
+	<ItemGroup>
+	  <None Remove="Resources\Images\Lures\bandit_blueshiner.png" />
+	  <None Remove="Resources\Images\Lures\bandit_chromeblackback.png" />
+	  <None Remove="Resources\Images\Lures\bandit_chromeblueback.png" />
+	  <None Remove="Resources\Images\Lures\bandit_coconutcandy.png" />
+	  <None Remove="Resources\Images\Lures\bandit_humblebee.png" />
+	  <None Remove="Resources\Images\Lures\bandit_purplemist.png" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <MauiImage Include="Resources\Images\Lures\bandit_blueshiner.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblackback.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblueback.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_coconutcandy.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_humblebee.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_purplemist.png" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />

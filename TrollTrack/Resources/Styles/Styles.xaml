@@ -184,56 +184,6 @@
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Black}, Dark={StaticResource White}}" />
     </Style>
 
-    <Style x:Key="InfoCard" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
-        <Setter Property="Stroke" Value="{StaticResource BorderAccent}" />
-        <Setter Property="StrokeThickness" Value="2" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
-        <Setter Property="Padding" Value="15" />
-        <Setter Property="Margin" Value="0,0,0,15" />
-    </Style>
-
-    <Style x:Key="CardTitle" TargetType="Label">
-        <Setter Property="FontSize" Value="18" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="HorizontalOptions" Value="Center" />
-    </Style>
-
-    <Style x:Key="InfoLabel" TargetType="Label">
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="TextColor" Value="{StaticResource InfoText}" />
-        <Setter Property="HorizontalOptions" Value="Center" />
-    </Style>
-
-    <Style x:Key="DataLabel" TargetType="Label">
-        <Setter Property="FontFamily" Value="Courier" />
-        <Setter Property="FontSize" Value="16" />
-    </Style>
-
-    <Style x:Key="SubtleDataLabel" TargetType="Label" BasedOn="{StaticResource DataLabel}">
-        <Setter Property="FontSize" Value="13" />
-        <Setter Property="TextColor" Value="{StaticResource Gray500}" />
-    </Style>
-
-    <Style x:Key="CardPicker" TargetType="Picker">
-        <Setter Property="FontSize" Value="18" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="HorizontalOptions" Value="Center" />
-    </Style>
-
-    <Style x:Key="CircularButton" TargetType="Button">
-        <Setter Property="FontSize" Value="24" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="WidthRequest" Value="50" />
-        <Setter Property="HeightRequest" Value="50" />
-        <Setter Property="CornerRadius" Value="25" />
-        <Setter Property="BackgroundColor" Value="{StaticResource BorderAccent}" />
-        <Setter Property="TextColor" Value="{StaticResource White}" />
-        <Setter Property="HorizontalOptions" Value="Center" />
-        <Setter Property="VerticalOptions" Value="Center" />
-    </Style>
-
     <Style TargetType="Label" x:Key="Headline">
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource MidnightBlue}, Dark={StaticResource White}}" />
         <Setter Property="FontSize" Value="32" />
@@ -246,6 +196,66 @@
         <Setter Property="FontSize" Value="24" />
         <Setter Property="HorizontalOptions" Value="Center" />
         <Setter Property="HorizontalTextAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="CardTitle" TargetType="Label">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="InfoLabel" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{StaticResource Gray900}" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="LureCard" TargetType="Border">
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Margin" Value="10" />
+        <Setter Property="Stroke" Value="{StaticResource Gray300}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+    </Style>
+
+    <Style x:Key="LureImage" TargetType="Image">
+        <Setter Property="WidthRequest" Value="100" />
+        <Setter Property="HeightRequest" Value="100" />
+    </Style>
+
+    <Style x:Key="LureTitle" TargetType="Label">
+        <Setter Property="FontSize" Value="Large" />
+    </Style>
+
+    <Style x:Key="LureSubtitle" TargetType="Label">
+        <Setter Property="FontSize" Value="Medium" />
+    </Style>
+
+    <Style x:Key="LureDetailLabel" TargetType="Label">
+        <Setter Property="FontSize" Value="Small" />
+    </Style>
+
+    <Style x:Key="ModalOverlay" TargetType="Grid">
+        <Setter Property="BackgroundColor" Value="#80000000" />
+    </Style>
+
+    <Style x:Key="ModalContent" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource White}" />
+        <Setter Property="Margin" Value="20" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="CloseButton" TargetType="Button">
+        <Setter Property="Text" Value="✕" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Black}" />
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="WidthRequest" Value="40" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="CornerRadius" Value="20" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="HorizontalOptions" Value="End" />
+        <Setter Property="VerticalOptions" Value="Start" />
+        <Setter Property="Margin" Value="10" />
     </Style>
 
     <Style TargetType="ListView">
@@ -442,7 +452,7 @@
             </VisualStateGroupList>
         </Setter>
     </Style>
-  
+
     <!--
     <Style TargetType="TitleBar">
         <Setter Property="MinimumHeightRequest" Value="32"/>

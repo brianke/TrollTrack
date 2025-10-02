@@ -10,30 +10,32 @@
         <CollectionView ItemsSource="{Binding Lures}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="e:LureDataEntity">
-                    <Border Padding="10" Margin="10">
+                    <Border Style="{StaticResource LureCard}">
                         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
-                            <Image Grid.RowSpan="2" Source="{Binding PrimaryImage.Path}" WidthRequest="100" HeightRequest="100">
+                            <Image Grid.RowSpan="2" 
+                                   Source="{Binding PrimaryImage.Path}" 
+                                   Style="{StaticResource LureImage}">
                                 <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:LuresViewModel}}, Path=OpenImageCommand}"
-                                                              CommandParameter="{Binding PrimaryImagePath}" />
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:LuresViewModel}}, Path=OpenImage}"
+                                                          CommandParameter="{Binding PrimaryImage.Path}" />
                                 </Image.GestureRecognizers>
                             </Image>
-                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                <Label Text="{Binding Manufacturer}" FontSize="Large" />
-                                <Label Text="{Binding Color}" FontSize="Medium" />
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Padding="10,0,0,0">
+                                <Label Text="{Binding Manufacturer}" Style="{StaticResource LureTitle}" />
+                                <Label Text="{Binding Color}" Style="{StaticResource LureSubtitle}" />
                             </VerticalStackLayout>
-                            <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,*,*" Margin="0,10,0,0">
+                            <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,*,*" Margin="0,10,0,0" Padding="10,0,0,0">
                                 <VerticalStackLayout>
-                                    <Label Text="Buoyancy" FontSize="Small" />
-                                    <Label Text="{Binding Buoyancy}" FontSize="Small" />
+                                    <Label Text="Buoyancy" Style="{StaticResource LureDetailLabel}" />
+                                    <Label Text="{Binding Buoyancy}" Style="{StaticResource LureDetailLabel}" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="1">
-                                    <Label Text="Length" FontSize="Small" />
-                                    <Label Text="{Binding Length}" FontSize="Small" />
+                                    <Label Text="Length" Style="{StaticResource LureDetailLabel}" />
+                                    <Label Text="{Binding Length, StringFormat='{0:F2} '}" Style="{StaticResource LureDetailLabel}" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="2">
-                                    <Label Text="Weight" FontSize="Small" />
-                                    <Label Text="{Binding Weight}" FontSize="Small" x:DataType="e:LureDataEntity" />
+                                    <Label Text="Weight" Style="{StaticResource LureDetailLabel}" />
+                                    <Label Text="{Binding Weight, StringFormat='{0:F3} oz'}" Style="{StaticResource LureDetailLabel}" />
                                 </VerticalStackLayout>
                             </Grid>
                         </Grid>
@@ -41,42 +43,27 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-    
+
         <!-- Image Modal Overlay -->
         <Grid IsVisible="{Binding IsImageModalVisible}"
-              BackgroundColor="#80000000"
+              Style="{StaticResource ModalOverlay}"
               x:DataType="vm:LuresViewModel">
 
-            <!-- Semi-transparent background that closes modal when tapped -->
             <BoxView Color="Transparent">
                 <BoxView.GestureRecognizers>
                     <TapGestureRecognizer Command="{Binding CloseImageCommand}" />
                 </BoxView.GestureRecognizers>
             </BoxView>
 
-            <!-- Modal content -->
-            <Border BackgroundColor="White" 
-                    Margin="20"
-                    VerticalOptions="Center">
+            <Border Style="{StaticResource ModalContent}">
                 <Grid>
-                    <!-- Full-size image -->
                     <Image Source="{Binding SelectedImagePath}"
                            Aspect="AspectFit"
                            VerticalOptions="FillAndExpand"
                            HorizontalOptions="FillAndExpand" />
 
-                    <!-- Close button -->
-                    <Button Text="✕"
-                            BackgroundColor="Black"
-                            TextColor="White"
-                            WidthRequest="40"
-                            HeightRequest="40"
-                            CornerRadius="20"
-                            FontSize="18"
-                            HorizontalOptions="End"
-                            VerticalOptions="Start"
-                            Margin="10"
-                            Command="{Binding CloseImageCommand}" />
+                    <Button Command="{Binding CloseImageCommand}" 
+                            Style="{StaticResource CloseButton}"/>
                 </Grid>
             </Border>
         </Grid>
