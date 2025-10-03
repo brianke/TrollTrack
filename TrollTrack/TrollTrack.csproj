@@ -55,6 +55,11 @@
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\trolltrack_icon.svg" Color="#2E8BC0" />
 
+		<!-- Styles -->
+		<MauiXaml Update="Resources\Styles\*.xaml">
+			<SubType>Designer</SubType>
+		</MauiXaml>
+		
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
@@ -69,7 +74,7 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 		<EmbeddedResource Include="Configuration\appsettings.json" />
 	</ItemGroup>
-	
+		
 	<ItemGroup>
 	  <Compile Remove="Features\Catches\CatchData.cs" />
 	  <Compile Remove="Features\Lures\LureData.cs" />

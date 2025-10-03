@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using System.Windows.Input;
 using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models.Entities;
 
@@ -31,6 +30,9 @@ namespace TrollTrack.Features.Lures
 
             // Load data when ViewModel is created
             _ = InitializeAsync();
+
+            // Add this to verify the command exists
+            Debug.WriteLine($"OpenImageCommand is null: {OpenImageCommand == null}");
 
         }
 

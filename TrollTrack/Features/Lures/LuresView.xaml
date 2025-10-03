@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage x:Name="LuresPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
              xmlns:vm="clr-namespace:TrollTrack.Features.Lures"
@@ -15,9 +16,9 @@
                             <Image Grid.RowSpan="2" 
                                    Source="{Binding PrimaryImage.Path}" 
                                    Style="{StaticResource LureImage}">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:LuresViewModel}}, Path=OpenImage}"
-                                                          CommandParameter="{Binding PrimaryImage.Path}" />
+                                <Image.GestureRecognizers>                                    
+                                    <!-- Using the code behind here as I could not get RelayCommand to work directly from here -->
+                                    <TapGestureRecognizer Tapped="OnImageTapped" />
                                 </Image.GestureRecognizers>
                             </Image>
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Padding="10,0,0,0">
@@ -55,17 +56,25 @@
                 </BoxView.GestureRecognizers>
             </BoxView>
 
-            <Border Style="{StaticResource ModalContent}">
-                <Grid>
-                    <Image Source="{Binding SelectedImagePath}"
-                           Aspect="AspectFit"
-                           VerticalOptions="FillAndExpand"
-                           HorizontalOptions="FillAndExpand" />
+            <VerticalStackLayout VerticalOptions="Center" 
+                                 HorizontalOptions="Center"
+                                 Spacing="10">
 
-                    <Button Command="{Binding CloseImageCommand}" 
-                            Style="{StaticResource CloseButton}"/>
-                </Grid>
-            </Border>
+                <!-- Close button above the image -->
+                <Button Command="{Binding CloseImageCommand}" 
+                        Style="{StaticResource CloseButton}"
+                        HorizontalOptions="End"/>
+
+                <!-- Image container -->
+                <Border Style="{StaticResource ModalContent}">
+                    <Grid>
+                        <Image Source="{Binding SelectedImagePath}"
+                               Aspect="AspectFit"
+                               VerticalOptions="FillAndExpand"
+                               HorizontalOptions="FillAndExpand" />
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
         </Grid>
     </Grid>
 </ContentPage>

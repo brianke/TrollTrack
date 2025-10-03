@@ -198,6 +198,44 @@
         <Setter Property="HorizontalTextAlignment" Value="Center" />
     </Style>
 
+    <Style x:Key="InfoCard" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource CardBackground}" />
+        <Setter Property="Stroke" Value="{StaticResource BorderAccent}" />
+        <Setter Property="StrokeThickness" Value="2" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="Padding" Value="15" />
+        <Setter Property="Margin" Value="0,0,0,15" />
+    </Style>
+
+    <Style x:Key="DataLabel" TargetType="Label">
+        <Setter Property="FontFamily" Value="Courier" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+    <Style x:Key="SubtleDataLabel" TargetType="Label" BasedOn="{StaticResource DataLabel}">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{StaticResource Gray500}" />
+    </Style>
+
+    <Style x:Key="CardPicker" TargetType="Picker">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="CircularButton" TargetType="Button">
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="WidthRequest" Value="50" />
+        <Setter Property="HeightRequest" Value="50" />
+        <Setter Property="CornerRadius" Value="25" />
+        <Setter Property="BackgroundColor" Value="{StaticResource BorderAccent}" />
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
     <Style x:Key="CardTitle" TargetType="Label">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="FontAttributes" Value="Bold" />
@@ -206,7 +244,7 @@
 
     <Style x:Key="InfoLabel" TargetType="Label">
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="TextColor" Value="{StaticResource Gray900}" />
+        <Setter Property="TextColor" Value="{StaticResource Gray500}" />
         <Setter Property="HorizontalOptions" Value="Center" />
     </Style>
 
