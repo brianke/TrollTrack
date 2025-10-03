@@ -21,6 +21,7 @@ namespace TrollTrack
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                    fonts.AddFont("RobotoMono-Regular.ttf", "RobotoMono");
                 });
 
             // Register HTTP client

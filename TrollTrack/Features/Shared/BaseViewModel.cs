@@ -5,11 +5,12 @@ namespace TrollTrack.Features.Shared
     /// <summary>
     /// Base class for all ViewModels providing common functionality
     /// </summary>
-    public partial class BaseViewModel : ObservableValidator
+    public partial class BaseViewModel : ObservableValidator, IDisposable
     {
         #region Private Fields - Services injected via constructor
         protected readonly ILocationService _locationService;
         protected readonly IDatabaseService _databaseService;
+        private bool _disposed;
         #endregion
 
         #region Protected Properties - Access services through these
@@ -56,9 +57,6 @@ namespace TrollTrack.Features.Shared
 
         [ObservableProperty]
         private bool isLoading;
-
-
-
 
         #region Location Properties
 
@@ -111,19 +109,72 @@ namespace TrollTrack.Features.Shared
 
         public BaseViewModel(ILocationService locationService, IDatabaseService databaseService)
         {
-            _locationService = locationService;
-            _databaseService = databaseService;
+            _locationService = locationService ?? throw new ArgumentNullException(nameof(locationService));
+            _databaseService = databaseService ?? throw new ArgumentNullException(nameof(databaseService));
 
             // Subscribe to location updates
-            _locationService.LocationUpdated += async (sender, location) => await OnLocationServiceUpdated(sender, location);
+            _locationService.LocationUpdated += OnLocationServiceUpdated;
         }
 
+        #endregion
 
+        #region IDisposable Implementation
+
+        /// <summary>
+        /// Public dispose method that can be called by consumers
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Protected virtual dispose method for derived classes to override
+        /// </summary>
+        /// <param name="disposing">True if disposing managed resources</param>
         protected virtual void Dispose(bool disposing)
         {
+            if (_disposed)
+                return;
+
             if (disposing)
             {
-                _locationService.LocationUpdated -= async (sender, location) => await OnLocationServiceUpdated(sender, location);
+                // Dispose managed resources
+
+                // Unsubscribe from events to prevent memory leaks
+                if (_locationService != null)
+                {
+                    _locationService.LocationUpdated -= OnLocationServiceUpdated;
+                }
+
+                // Clear collections if any
+                // Derived classes should override to clean up their specific resources
+            }
+
+            // Dispose unmanaged resources here (if any)
+            // None in this base class
+
+            _disposed = true;
+        }
+
+        /// <summary>
+        /// Finalizer - only needed if you have unmanaged resources
+        /// Since we don't, this is commented out but shown for reference
+        /// </summary>
+        // ~BaseViewModel()
+        // {
+        //     Dispose(false);
+        // }
+
+        /// <summary>
+        /// Helper method to throw if the object has been disposed
+        /// </summary>
+        protected void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(GetType().Name);
             }
         }
 
@@ -134,6 +185,7 @@ namespace TrollTrack.Features.Shared
         [RelayCommand]
         public async Task UpdateLocationAsync()
         {
+            ThrowIfDisposed();
             await ExecuteSafelyAsync(() => GetAndSetLocationAsync(showAlerts: true), "Getting location...");
         }
 
@@ -145,6 +197,8 @@ namespace TrollTrack.Features.Shared
         // Internal method that doesn't set busy state (used by RefreshDashboard)
         protected async Task UpdateLocationInternalAsync()
         {
+            ThrowIfDisposed();
+
             try
             {
                 await GetAndSetLocationAsync(showAlerts: false);
@@ -157,6 +211,8 @@ namespace TrollTrack.Features.Shared
 
         protected async Task<bool> GetAndSetLocationAsync(bool showAlerts)
         {
+            ThrowIfDisposed();
+
             if (!HasLocationPermission)
             {
                 await RequestLocationPermissionAsync();
@@ -184,7 +240,7 @@ namespace TrollTrack.Features.Shared
                     CurrentLocation = location;
                     CurrentLatitude = Math.Round(location.Latitude, 6);
                     CurrentLongitude = Math.Round(location.Longitude, 6);
-                    UpdateLastUpdatedTime(); // This also updates formatted time
+                    UpdateLastUpdatedTime();
                     RefreshStatus = $"Location updated at {DateTime.Now:HH:mm:ss}";
                 });
                 return true;
@@ -203,6 +259,8 @@ namespace TrollTrack.Features.Shared
 
         public async Task RequestLocationPermissionAsync()
         {
+            ThrowIfDisposed();
+
             try
             {
                 var hasPermission = await _locationService.RequestLocationPermissionAsync();
@@ -306,8 +364,11 @@ namespace TrollTrack.Features.Shared
 
         #endregion
 
-        private async Task OnLocationServiceUpdated(object sender, LocationDataEntity location)
+        private async void OnLocationServiceUpdated(object sender, LocationDataEntity location)
         {
+            if (_disposed)
+                return;
+
             try
             {
                 await MainThread.InvokeOnMainThreadAsync(async () =>
@@ -318,7 +379,7 @@ namespace TrollTrack.Features.Shared
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error handling location update: {ex.Message}");
+                Debug.WriteLine($"Error handling location update: {ex.Message}");
             }
         }
 
@@ -333,6 +394,8 @@ namespace TrollTrack.Features.Shared
         /// <param name="busyTitle">Optional title to show while busy</param>
         protected virtual void SetBusy(bool busy, string busyTitle = "")
         {
+            ThrowIfDisposed();
+
             IsBusy = busy;
 
             if (busy && !string.IsNullOrEmpty(busyTitle))
@@ -348,6 +411,8 @@ namespace TrollTrack.Features.Shared
         /// <param name="clearAfter">Time to clear the error (optional)</param>
         protected virtual void SetError(string error, TimeSpan? clearAfter = null)
         {
+            ThrowIfDisposed();
+
             HasError = true;
             ErrorMessage = error;
 
@@ -356,10 +421,13 @@ namespace TrollTrack.Features.Shared
                 // Clear error after specified time
                 Task.Delay(clearAfter.Value).ContinueWith(_ =>
                 {
-                    MainThread.BeginInvokeOnMainThread(() =>
+                    if (!_disposed)
                     {
-                        ClearError();
-                    });
+                        MainThread.BeginInvokeOnMainThread(() =>
+                        {
+                            ClearError();
+                        });
+                    }
                 });
             }
         }
@@ -369,6 +437,9 @@ namespace TrollTrack.Features.Shared
         /// </summary>
         protected virtual void ClearError()
         {
+            if (_disposed)
+                return;
+
             HasError = false;
             ErrorMessage = string.Empty;
         }
@@ -382,6 +453,8 @@ namespace TrollTrack.Features.Shared
         /// <returns>True if operation succeeded, false if it failed</returns>
         protected async Task<bool> ExecuteSafelyAsync(Func<Task> operation, string busyMessage = "", bool showErrorAlert = true)
         {
+            ThrowIfDisposed();
+
             if (IsBusy)
                 return false;
 
@@ -395,10 +468,10 @@ namespace TrollTrack.Features.Shared
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error in {GetType().Name}: {ex.Message}");
+                Debug.WriteLine($"Error in {GetType().Name}: {ex.Message}");
                 SetError(ex.Message, TimeSpan.FromSeconds(5));
 
-                if (showErrorAlert)
+                if (showErrorAlert && !_disposed)
                 {
                     await ShowAlertAsync("Error", ex.Message);
                 }
@@ -407,7 +480,10 @@ namespace TrollTrack.Features.Shared
             }
             finally
             {
-                SetBusy(false);
+                if (!_disposed)
+                {
+                    SetBusy(false);
+                }
             }
         }
 
@@ -422,6 +498,8 @@ namespace TrollTrack.Features.Shared
         /// <returns>Operation result or default value</returns>
         protected async Task<T> ExecuteSafelyAsync<T>(Func<Task<T>> operation, T defaultValue = default, string busyMessage = "", bool showErrorAlert = true)
         {
+            ThrowIfDisposed();
+
             if (IsBusy)
                 return defaultValue;
 
@@ -434,10 +512,10 @@ namespace TrollTrack.Features.Shared
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error in {GetType().Name}: {ex.Message}");
+                Debug.WriteLine($"Error in {GetType().Name}: {ex.Message}");
                 SetError(ex.Message, TimeSpan.FromSeconds(5));
 
-                if (showErrorAlert)
+                if (showErrorAlert && !_disposed)
                 {
                     await ShowAlertAsync("Error", ex.Message);
                 }
@@ -446,7 +524,10 @@ namespace TrollTrack.Features.Shared
             }
             finally
             {
-                SetBusy(false);
+                if (!_disposed)
+                {
+                    SetBusy(false);
+                }
             }
         }
 
@@ -458,6 +539,9 @@ namespace TrollTrack.Features.Shared
         /// <param name="message">The message to display in the alert.</param>
         public virtual async Task ShowAlertAsync(string title, string message)
         {
+            if (_disposed)
+                return;
+
             try
             {
                 await MainThread.InvokeOnMainThreadAsync(async () =>
@@ -475,7 +559,6 @@ namespace TrollTrack.Features.Shared
             }
         }
 
-
         /// <summary>
         /// Shows a confirmation dialog to the user
         /// </summary>
@@ -486,6 +569,8 @@ namespace TrollTrack.Features.Shared
         /// <returns>True if user accepted, false if cancelled</returns>
         protected virtual async Task<bool> ShowConfirmationAsync(string title, string message, string accept = "Yes", string cancel = "No")
         {
+            ThrowIfDisposed();
+
             try
             {
                 var page = GetCurrentPage();
@@ -497,7 +582,7 @@ namespace TrollTrack.Features.Shared
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to show confirmation: {ex.Message}");
+                Debug.WriteLine($"Failed to show confirmation: {ex.Message}");
                 return false;
             }
         }
@@ -529,7 +614,7 @@ namespace TrollTrack.Features.Shared
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Failed to get current page: {ex.Message}");
+                Debug.WriteLine($"Failed to get current page: {ex.Message}");
                 return null;
             }
         }
@@ -572,10 +657,13 @@ namespace TrollTrack.Features.Shared
 
         public void UpdateLastUpdatedTime()
         {
+            if (_disposed)
+                return;
+
             LocationLastUpdated = DateTime.Now;
             LocationLastUpdatedFormatted = $"Last updated: {LocationLastUpdated:HH:mm tt}";
         }
-        #endregion
 
+        #endregion
     }
 }
