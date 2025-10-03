@@ -14,7 +14,7 @@ namespace TrollTrack.Services
     {
         private SQLiteAsyncConnection? _database;
         private readonly string _databasePath;
-        private bool _isInitialized;
+        private Task? _initializationTask;  // Store the Task itself
         private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
 
         public DatabaseService()
@@ -30,7 +30,7 @@ namespace TrollTrack.Services
             await _initializationSemaphore.WaitAsync();
             try
             {
-                if (_isInitialized)
+                if (_database != null)  // Check if already done
                     return;
 
                 _database = new SQLiteAsyncConnection(_databasePath);
@@ -45,7 +45,6 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<LureImageEntity>();
                 await _database.CreateTableAsync<LureImageEntity>();
 
-                _isInitialized = true;
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }
             catch (Exception ex)
@@ -61,10 +60,19 @@ namespace TrollTrack.Services
 
         private async Task<SQLiteAsyncConnection> GetDatabaseAsync()
         {
-            if (!_isInitialized)
+            // If we have a task, await it (whether in progress or completed)
+            if (_initializationTask == null)
             {
-                await InitializeAsync();
+                // Use Interlocked to ensure only ONE thread creates the task
+                var newTask = InitializeAsync();
+                if (Interlocked.CompareExchange(ref _initializationTask, newTask, null) != null)
+                {
+                    // Another thread beat us to it, use their task instead
+                    // Our newTask will be garbage collected
+                }
             }
+
+            await _initializationTask;
             return _database!;
         }
 
