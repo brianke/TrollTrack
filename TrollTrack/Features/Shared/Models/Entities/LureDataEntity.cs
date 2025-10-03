@@ -10,7 +10,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
         public Guid Id { get; set; }
 
         [Required]
-        public String Manufacturer { get; set; }
+        public String Manufacturer { get; set; } = string.Empty;
 
         public Double Length { get; set; }
 
@@ -23,13 +23,13 @@ namespace TrollTrack.Features.Shared.Models.Entities
         [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<LureImageEntity>? Images { get; set; }
 
-        public String? PrimaryImagePath
+        public LureImageEntity? PrimaryImage
         {
             get
             {
                 if (Images != null && Images.Count > 0)
                 {
-                    return Images[0].ImagePath;
+                    return Images[0];
                 }
                 return null;
             }

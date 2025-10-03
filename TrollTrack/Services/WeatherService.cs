@@ -1,379 +1,185 @@
-﻿using System.Text.Json;
+using Newtonsoft.Json;
 using TrollTrack.Configuration;
-using TrollTrack.Features.Shared.Models;
 using TrollTrack.Features.Shared.Models.Entities;
+using TrollTrack.Features.Shared.Models.WeatherApi;
 
-namespace TrollTrack.Services
+namespace TrollTrack.Services;
+
+/// <summary>
+/// Service for fetching weather data from WeatherAPI.com, refactored to use modern practices.
+/// </summary>
+public class WeatherService : IWeatherService
 {
-    /// <summary>
-    /// Service for fetching weather data from WeatherAPI.com
-    /// </summary>
-    public class WeatherService : IWeatherService
+    private readonly HttpClient _httpClient;
+    private readonly IConfigurationService _configurationService;
+    private readonly string _apiKey;
+
+    public WeatherService(HttpClient httpClient, IConfigurationService configurationService)
     {
-        private readonly HttpClient _httpClient;
-        private readonly ISettingsService _settingsService;
+        _httpClient = httpClient;
+        _configurationService = configurationService;
+        _apiKey = _configurationService.ApiKey;
 
-        public WeatherService(HttpClient httpClient, ISettingsService settingsService)
+        if (string.IsNullOrWhiteSpace(_apiKey))
         {
-            _httpClient = httpClient;
-            _settingsService = settingsService;
-
-            // Set timeout for weather requests
-            _httpClient.Timeout = TimeSpan.FromSeconds(AppConfig.Constants.WeatherApiTimeoutSeconds);
+            throw new InvalidOperationException("Weather API key is not configured.");
         }
 
-        /// <summary>
-        /// Gets current weather data for specified coordinates
-        /// </summary>
-        public async Task<WeatherDataEntity?> GetCurrentWeatherAsync(double latitude, double longitude)
+        _httpClient.Timeout = TimeSpan.FromSeconds(AppConfig.Constants.WeatherApiTimeoutSeconds);
+    }
+
+    private async Task<T> FetchAndDeserializeAsync<T>(string url)
+    {
+        try
         {
-            if (!_settingsService.IsWeatherApiConfigured())
+            var response = await _httpClient.GetStringAsync(url);
+            return JsonConvert.DeserializeObject<T>(response);
+        }
+        catch (HttpRequestException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Weather API HTTP error: {ex.Message}");
+            if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
             {
-                var (_, message) = _settingsService.GetWeatherApiKeyStatus();
-                throw new InvalidOperationException(message);
+                throw new UnauthorizedAccessException("Invalid weather API key. Please check your configuration.");
             }
-
-            var apiKey = _settingsService.WeatherApiKey;
-
-            try
+            if (ex.Message.Contains("403") || ex.Message.Contains("Forbidden"))
             {
-                // Current weather and air quality endpoint
-                var currentWeatherUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json" +
-                    $"?key={apiKey}" +
-                    $"&q={latitude},{longitude}" +
-                    $"&aqi=yes"; // Include air quality data
-
-                var currentResponse = await _httpClient.GetStringAsync(currentWeatherUrl);
-                var currentJson = JsonDocument.Parse(currentResponse);
-
-                var weather = ParseCurrentWeatherData(currentJson, latitude, longitude);
-
-                // Try to get astronomy data (optional)
-                try
-                {
-                    var astronomyUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/astronomy.json" +
-                        $"?key={apiKey}" +
-                        $"&q={latitude},{longitude}" +
-                        $"&dt={DateTime.Now:yyyy-MM-dd}";
-
-                    var astronomyResponse = await _httpClient.GetStringAsync(astronomyUrl);
-                    var astronomyJson = JsonDocument.Parse(astronomyResponse);
-                    AddAstronomyData(weather, astronomyJson);
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Astronomy data not available: {ex.Message}");
-                    // Continue without astronomy data
-                }
-
-                return weather;
+                throw new UnauthorizedAccessException("Weather API access denied. The key may have exceeded its quota.");
             }
-            catch (HttpRequestException ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Weather API HTTP error: {ex.Message}");
+            throw new Exception("Unable to fetch weather data. Check your internet connection.", ex);
+        }
+        catch (JsonException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Weather API JSON error: {ex.Message}");
+            throw new Exception("Received invalid weather data from the API.", ex);
+        }
+    }
 
-                // Provide more specific error messages based on HTTP status
-                if (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
-                {
-                    throw new UnauthorizedAccessException("Invalid weather API key. Please check your API key in Settings.");
-                }
-                else if (ex.Message.Contains("403") || ex.Message.Contains("Forbidden"))
-                {
-                    throw new UnauthorizedAccessException("Weather API access denied. Your API key may have exceeded its quota.");
-                }
-                else if (ex.Message.Contains("429"))
-                {
-                    throw new InvalidOperationException("Too many weather API requests. Please try again in a few minutes.");
-                }
+    public async Task<WeatherDataEntity?> GetCurrentWeatherAsync(double latitude, double longitude)
+    {
+        var url = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json?key={_apiKey}&q={latitude},{longitude}&aqi=yes";
+        var apiResponse = await FetchAndDeserializeAsync<WeatherApiResponse>(url);
 
-                throw new Exception("Unable to fetch weather data. Please check your internet connection.", ex);
-            }
-            catch (JsonException ex)
+        return MapToWeatherDataEntity(apiResponse.Current, apiResponse.Location);
+    }
+
+    public async Task<List<WeatherDataEntity>> GetWeatherForecastAsync(double latitude, double longitude, int days = 3)
+    {
+        days = Math.Clamp(days, 1, 3); // Free tier supports up to 3 days
+        var url = $"{AppConfig.Constants.WeatherApiBaseUrl}/forecast.json?key={_apiKey}&q={latitude},{longitude}&days={days}&aqi=no&alerts=no";
+        var apiResponse = await FetchAndDeserializeAsync<WeatherApiResponse>(url);
+
+        var forecasts = new List<WeatherDataEntity>();
+        if (apiResponse?.Forecast?.ForecastDay != null)
+        {
+            foreach (var day in apiResponse.Forecast.ForecastDay)
             {
-                System.Diagnostics.Debug.WriteLine($"Weather API JSON error: {ex.Message}");
-                throw new Exception("Received invalid weather data from the API.", ex);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Weather API general error: {ex.Message}");
-                throw new Exception("An unexpected error occurred while fetching weather data.", ex);
+                forecasts.Add(MapToWeatherDataEntity(day, apiResponse.Location));
             }
         }
+        return forecasts;
+    }
 
-        /// <summary>
-        /// Gets weather forecast for the next few days
-        /// </summary>
-        public async Task<List<WeatherDataEntity>> GetWeatherForecastAsync(double latitude, double longitude, int days = 3)
+    public async Task<WeatherDataEntity?> GetWeatherByCityAsync(string cityName)
+    {
+        if (string.IsNullOrWhiteSpace(cityName))
         {
-            if (!_settingsService.IsWeatherApiConfigured())
-            {
-                throw new InvalidOperationException("Weather API not configured");
-            }
-
-            var apiKey = _settingsService.WeatherApiKey;
-
-            // WeatherAPI.com free tier supports up to 3 days forecast
-            if (days > 3) days = 3;
-            if (days < 1) days = 1;
-
-            try
-            {
-                var forecastUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/forecast.json" +
-                    $"?key={apiKey}" +
-                    $"&q={latitude},{longitude}" +
-                    $"&days={days}" +
-                    $"&aqi=no" +  // Skip air quality for forecast to save API calls
-                    $"&alerts=no";
-
-                var response = await _httpClient.GetStringAsync(forecastUrl);
-                var json = JsonDocument.Parse(response);
-
-                var forecasts = new List<WeatherDataEntity>();
-
-                // Check if forecast data exists
-                if (json.RootElement.TryGetProperty("forecast", out var forecastElement) &&
-                    forecastElement.TryGetProperty("forecastday", out var forecastDays))
-                {
-                    foreach (var day in forecastDays.EnumerateArray())
-                    {
-                        var weather = ParseForecastDay(day, latitude, longitude);
-                        forecasts.Add(weather);
-                    }
-                }
-
-                return forecasts;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Weather forecast error: {ex.Message}");
-                throw new Exception("An error occurred while fetching weather forecast.", ex);
-            }
+            throw new ArgumentException("City name cannot be empty.", nameof(cityName));
         }
 
-        /// <summary>
-        /// Gets weather data by city name
-        /// </summary>
-        public async Task<WeatherDataEntity?> GetWeatherByCityAsync(string cityName)
+        var url = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json?key={_apiKey}&q={Uri.EscapeDataString(cityName)}&aqi=yes";
+
+        try
         {
-            if (string.IsNullOrWhiteSpace(cityName))
-            {
-                throw new ArgumentException("City name cannot be empty");
-            }
-
-            if (!_settingsService.IsWeatherApiConfigured())
-            {
-                throw new InvalidOperationException("Weather API not configured");
-            }
-
-            try
-            {
-                var apiKey = _settingsService.WeatherApiKey;
-                var currentWeatherUrl = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json" +
-                    $"?key={apiKey}" +
-                    $"&q={Uri.EscapeDataString(cityName)}" +
-                    $"&aqi=yes";
-
-                var response = await _httpClient.GetStringAsync(currentWeatherUrl);
-                var json = JsonDocument.Parse(response);
-
-                var location = json.RootElement.GetProperty("location");
-                var lat = location.GetProperty("lat").GetDouble();
-                var lon = location.GetProperty("lon").GetDouble();
-
-                var weather = ParseCurrentWeatherData(json, lat, lon);
-                weather.LocationName = location.GetProperty("name").GetString();
-
-                return weather;
-            }
-            catch (HttpRequestException ex) when (ex.Message.Contains("400"))
-            {
-                throw new ArgumentException($"Location '{cityName}' not found. Please check the spelling.");
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Weather by city error: {ex.Message}");
-                throw new Exception($"An error occurred while fetching weather for {cityName}.", ex);
-            }
+            var apiResponse = await FetchAndDeserializeAsync<WeatherApiResponse>(url);
+            return MapToWeatherDataEntity(apiResponse.Current, apiResponse.Location);
         }
-
-        /// <summary>
-        /// Test the API key by making a simple request
-        /// </summary>
-        private async Task<bool> TestApiKeyAsync()
+        catch (HttpRequestException ex) when (ex.Message.Contains("400"))
         {
-            try
-            {
-                // Use default location for testing
-                await GetCurrentWeatherAsync(
-                    AppConfig.Constants.DefaultLatitude,
-                    AppConfig.Constants.DefaultLongitude);
-                return true;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return false;
-            }
-            catch
-            {
-                // Other errors don't necessarily mean the API key is bad
-                return true;
-            }
+            throw new ArgumentException($"Location '{cityName}' not found. Please check the spelling.", ex);
         }
+    }
 
-        private static WeatherDataEntity ParseCurrentWeatherData(JsonDocument json, double latitude, double longitude)
+    private static WeatherDataEntity MapToWeatherDataEntity(Current current, Features.Shared.Models.WeatherApi.Location location)
+    {
+        return new WeatherDataEntity
         {
-            var root = json.RootElement;
-            var location = root.GetProperty("location");
-            var current = root.GetProperty("current");
-            var condition = current.GetProperty("condition");
+            Timestamp = DateTime.UtcNow,
+            Latitude = location.Lat,
+            Longitude = location.Lon,
+            LocationName = location.Name,
+            Temperature = current.TempF,
+            FeelsLike = current.FeelslikeF,
+            TemperatureUnit = "F",
+            Humidity = current.Humidity,
+            Pressure = current.PressureIn * 33.8639, // Convert inHg to hPa
+            WindSpeed = current.WindMph,
+            WindDirection = current.WindDegree,
+            WindDirectionCardinal = current.WindDir,
+            WindGust = current.GustMph,
+            WindSpeedUnit = "mph",
+            Visibility = current.VisMiles,
+            CloudCover = current.Cloud,
+            WeatherCondition = current.Condition?.Text ?? string.Empty,
+            WeatherDescription = current.Condition?.Text ?? string.Empty,
+            UvIndex = current.Uv,
+            RainfallAmount = current.PrecipIn,
+            AirQualityIndex = current.AirQuality?.UsEpaIndex,
+            AirQualityDescription = GetAirQualityDescription(current.AirQuality?.UsEpaIndex)
+        };
+    }
 
-            var weather = new WeatherDataEntity
-            {
-                Timestamp = DateTime.UtcNow,
-                Latitude = latitude,
-                Longitude = longitude,
-                LocationName = location.GetProperty("name").GetString(),
-
-                // Temperature data (always get Fahrenheit from API)
-                Temperature = current.GetProperty("temp_f").GetDouble(),
-                FeelsLike = current.GetProperty("feelslike_f").GetDouble(),
-                TemperatureUnit = "F",
-
-                // Humidity and Pressure
-                Humidity = current.GetProperty("humidity").GetDouble(),
-                Pressure = current.GetProperty("pressure_in").GetDouble() * 33.8639, // Convert inHg to hPa
-
-                // Wind data
-                WindSpeed = current.GetProperty("wind_mph").GetDouble(),
-                WindDirection = current.GetProperty("wind_degree").GetDouble(),
-                WindDirectionCardinal = current.GetProperty("wind_dir").GetString() ?? "",
-                WindGust = current.GetProperty("gust_mph").GetDouble(),
-                WindSpeedUnit = "mph",
-
-                // Visibility and conditions
-                Visibility = current.GetProperty("vis_miles").GetDouble(),
-                CloudCover = current.GetProperty("cloud").GetDouble(),
-                WeatherCondition = condition.GetProperty("text").GetString() ?? "",
-                WeatherDescription = condition.GetProperty("text").GetString() ?? "",
-
-                // UV Index
-                UvIndex = current.GetProperty("uv").GetDouble(),
-
-                // Precipitation
-                RainfallAmount = current.GetProperty("precip_in").GetDouble()
-            };
-
-            // Add air quality if available
-            if (root.TryGetProperty("current", out var currentElement) &&
-                currentElement.TryGetProperty("air_quality", out var airQuality))
-            {
-                if (airQuality.TryGetProperty("us-epa-index", out var epaIndex))
-                {
-                    weather.AirQualityIndex = epaIndex.GetDouble();
-                    weather.AirQualityDescription = GetAirQualityDescription(epaIndex.GetInt32());
-                }
-            }
-
-            return weather;
-        }
-
-        private static WeatherDataEntity ParseForecastDay(JsonElement forecastDay, double latitude, double longitude)
+    private static WeatherDataEntity MapToWeatherDataEntity(ForecastDay forecastDay, Features.Shared.Models.WeatherApi.Location location)
+    {
+        return new WeatherDataEntity
         {
-            var day = forecastDay.GetProperty("day");
-            var astro = forecastDay.GetProperty("astro");
-            var condition = day.GetProperty("condition");
-            var date = DateTime.Parse(forecastDay.GetProperty("date").GetString() ?? DateTime.Now.ToString("yyyy-MM-dd"));
+            Timestamp = DateTime.Parse(forecastDay.Date),
+            Latitude = location.Lat,
+            Longitude = location.Lon,
+            LocationName = location.Name,
+            Temperature = forecastDay.Day.AvgtempF,
+            TemperatureMin = forecastDay.Day.MintempF,
+            TemperatureMax = forecastDay.Day.MaxtempF,
+            TemperatureUnit = "F",
+            Humidity = forecastDay.Day.Avghumidity,
+            WindSpeed = forecastDay.Day.MaxwindMph,
+            WindSpeedUnit = "mph",
+            Visibility = forecastDay.Day.AvgvisMiles,
+            WeatherCondition = forecastDay.Day.Condition?.Text ?? string.Empty,
+            WeatherDescription = forecastDay.Day.Condition?.Text ?? string.Empty,
+            UvIndex = forecastDay.Day.Uv,
+            PrecipitationChance = forecastDay.Day.DailyChanceOfRain,
+            RainfallAmount = forecastDay.Day.TotalprecipIn,
+            Sunrise = ParseTimeString(forecastDay.Astro?.Sunrise),
+            Sunset = ParseTimeString(forecastDay.Astro?.Sunset),
+            Moonrise = ParseTimeString(forecastDay.Astro?.Moonrise),
+            Moonset = ParseTimeString(forecastDay.Astro?.Moonset),
+            MoonPhase = forecastDay.Astro?.MoonPhase,
+            MoonIllumination = double.TryParse(forecastDay.Astro?.MoonIllumination?.Replace("%", ""), out var illumination) ? illumination : 0
+        };
+    }
 
-            var weather = new WeatherDataEntity
-            {
-                Timestamp = date,
-                Latitude = latitude,
-                Longitude = longitude,
-
-                // Temperature data
-                Temperature = day.GetProperty("avgtemp_f").GetDouble(),
-                TemperatureMin = day.GetProperty("mintemp_f").GetDouble(),
-                TemperatureMax = day.GetProperty("maxtemp_f").GetDouble(),
-                TemperatureUnit = "F",
-
-                // Weather conditions
-                Humidity = day.GetProperty("avghumidity").GetDouble(),
-                WindSpeed = day.GetProperty("maxwind_mph").GetDouble(),
-                WindSpeedUnit = "mph",
-
-                Visibility = day.GetProperty("avgvis_miles").GetDouble(),
-                WeatherCondition = condition.GetProperty("text").GetString() ?? "",
-                WeatherDescription = condition.GetProperty("text").GetString() ?? "",
-
-                // UV and precipitation
-                UvIndex = day.GetProperty("uv").GetDouble(),
-                PrecipitationChance = day.GetProperty("daily_chance_of_rain").GetDouble(),
-                RainfallAmount = day.GetProperty("totalprecip_in").GetDouble(),
-
-                // Astronomy data
-                Sunrise = ParseTimeString(astro.GetProperty("sunrise").GetString()),
-                Sunset = ParseTimeString(astro.GetProperty("sunset").GetString()),
-                Moonrise = ParseTimeString(astro.GetProperty("moonrise").GetString()),
-                Moonset = ParseTimeString(astro.GetProperty("moonset").GetString()),
-                MoonPhase = astro.GetProperty("moon_phase").GetString() ?? "",
-                MoonIllumination = double.Parse(astro.GetProperty("moon_illumination").GetString()?.Replace("%", "") ?? "0")
-            };
-
-            return weather;
-        }
-
-        private static void AddAstronomyData(WeatherDataEntity weather, JsonDocument astronomyJson)
+    private static DateTime ParseTimeString(string? timeString)
+    {
+        if (string.IsNullOrEmpty(timeString)) return DateTime.MinValue;
+        if (DateTime.TryParse(timeString, out var result))
         {
-            try
-            {
-                var astro = astronomyJson.RootElement.GetProperty("astronomy").GetProperty("astro");
-
-                weather.Sunrise = ParseTimeString(astro.GetProperty("sunrise").GetString());
-                weather.Sunset = ParseTimeString(astro.GetProperty("sunset").GetString());
-                weather.Moonrise = ParseTimeString(astro.GetProperty("moonrise").GetString());
-                weather.Moonset = ParseTimeString(astro.GetProperty("moonset").GetString());
-                weather.MoonPhase = astro.GetProperty("moon_phase").GetString() ?? "";
-
-                var moonIllumination = astro.GetProperty("moon_illumination").GetString()?.Replace("%", "") ?? "0";
-                weather.MoonIllumination = double.Parse(moonIllumination);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error parsing astronomy data: {ex.Message}");
-            }
+            return result;
         }
+        return DateTime.MinValue;
+    }
 
-        private static DateTime ParseTimeString(string? timeString)
+    private static string GetAirQualityDescription(int? index)
+    {
+        return index switch
         {
-            if (string.IsNullOrEmpty(timeString)) return DateTime.MinValue;
-
-            try
-            {
-                var today = DateTime.Today;
-                if (DateTime.TryParse($"{today:yyyy-MM-dd} {timeString}", out var result))
-                {
-                    return result;
-                }
-                return DateTime.MinValue;
-            }
-            catch
-            {
-                return DateTime.MinValue;
-            }
-        }
-
-        private static string GetAirQualityDescription(int index)
-        {
-            return index switch
-            {
-                1 => "Good",
-                2 => "Moderate",
-                3 => "Unhealthy for Sensitive Groups",
-                4 => "Unhealthy",
-                5 => "Very Unhealthy",
-                6 => "Hazardous",
-                _ => "Unknown"
-            };
-        }
+            1 => "Good",
+            2 => "Moderate",
+            3 => "Unhealthy for Sensitive Groups",
+            4 => "Unhealthy",
+            5 => "Very Unhealthy",
+            6 => "Hazardous",
+            _ => "Unknown"
+        };
     }
 }

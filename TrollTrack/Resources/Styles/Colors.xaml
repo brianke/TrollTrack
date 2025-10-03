@@ -19,6 +19,10 @@
     <Color x:Key="MidnightBlue">#190649</Color>
     <Color x:Key="OffBlack">#1f1f1f</Color>
 
+    <Color x:Key="CardBackground">#ADD8E6</Color>
+    <Color x:Key="BorderAccent">#1E90FF</Color>
+    <Color x:Key="InfoText">#00008B</Color>
+
     <Color x:Key="Gray100">#E1E1E1</Color>
     <Color x:Key="Gray200">#C8C8C8</Color>
     <Color x:Key="Gray300">#ACACAC</Color>
@@ -42,4 +46,8 @@
     <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
     <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
     <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="{StaticResource CardBackground}"/>
+    <SolidColorBrush x:Key="BorderAccentBrush" Color="{StaticResource BorderAccent}"/>
+    <SolidColorBrush x:Key="InfoTextBrush" Color="{StaticResource InfoText}"/>
 </ResourceDictionary>

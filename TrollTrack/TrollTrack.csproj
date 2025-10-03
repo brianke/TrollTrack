@@ -55,6 +55,11 @@
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\trolltrack_icon.svg" Color="#2E8BC0" />
 
+		<!-- Styles -->
+		<MauiXaml Update="Resources\Styles\*.xaml">
+			<SubType>Designer</SubType>
+		</MauiXaml>
+		
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
@@ -67,29 +72,48 @@
 
 		<!-- Raw Assets -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		<EmbeddedResource Include="Configuration\appsettings.json" />
 	</ItemGroup>
-	
+		
 	<ItemGroup>
 	  <Compile Remove="Features\Catches\CatchData.cs" />
 	  <Compile Remove="Features\Lures\LureData.cs" />
 	  <Compile Remove="Features\Programs\ProgramData.cs" />
 	</ItemGroup>
+	
+	<ItemGroup>
+	  <None Remove="Resources\Images\Lures\bandit_blueshiner.png" />
+	  <None Remove="Resources\Images\Lures\bandit_chromeblackback.png" />
+	  <None Remove="Resources\Images\Lures\bandit_chromeblueback.png" />
+	  <None Remove="Resources\Images\Lures\bandit_coconutcandy.png" />
+	  <None Remove="Resources\Images\Lures\bandit_humblebee.png" />
+	  <None Remove="Resources\Images\Lures\bandit_purplemist.png" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <MauiImage Include="Resources\Images\Lures\bandit_blueshiner.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblackback.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblueback.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_coconutcandy.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_humblebee.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_purplemist.png" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.110" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.9" />
 		
 		<!-- Essential packages for your fishing app -->
-		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="12.2.0" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 		<PackageReference Include="SQLiteNetExtensions.Async" Version="2.1.0" />
+		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
 	</ItemGroup>
 
 	<!-- Platform specific configurations -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.100" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.110" />
 	</ItemGroup>
 
 </Project>

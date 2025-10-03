@@ -1,5 +1,4 @@
 ﻿using System.Text.Json;
-using System.Windows.Input;
 using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models.Entities;
 
@@ -26,11 +25,14 @@ namespace TrollTrack.Features.Lures
 
         public LuresViewModel(ILocationService locationService, IDatabaseService databaseService) : base(locationService, databaseService)
         {
-            OpenImageCommand = new RelayCommand<string>(OpenImage);
-            CloseImageCommand = new RelayCommand(CloseImage);
+            //OpenImageCommand = new RelayCommand<string>(OpenImage);
+            //CloseImageCommand = new RelayCommand(CloseImage);
 
             // Load data when ViewModel is created
             _ = InitializeAsync();
+
+            // Add this to verify the command exists
+            Debug.WriteLine($"OpenImageCommand is null: {OpenImageCommand == null}");
 
         }
 
@@ -61,8 +63,8 @@ namespace TrollTrack.Features.Lures
 
         #region Commands
 
-        public ICommand OpenImageCommand { get; }
-        public ICommand CloseImageCommand { get; }
+        //public ICommand OpenImageCommand { get; }
+        //public ICommand CloseImageCommand { get; }
 
         private async Task LoadLuresAsync()
         {
@@ -95,6 +97,7 @@ namespace TrollTrack.Features.Lures
             }, "Loading lures...", showErrorAlert: false);
         }
 
+        [RelayCommand]
         private void OpenImage(string imagePath)
         {
             if (string.IsNullOrEmpty(imagePath)) return;
@@ -103,6 +106,7 @@ namespace TrollTrack.Features.Lures
             IsImageModalVisible = true;
         }
 
+        [RelayCommand]
         private void CloseImage()
         {
             IsImageModalVisible = false;

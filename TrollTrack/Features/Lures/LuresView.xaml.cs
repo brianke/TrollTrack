@@ -1,3 +1,5 @@
+using TrollTrack.Features.Shared.Models.Entities;
+
 namespace TrollTrack.Features.Lures;
 
 public partial class LuresView : ContentPage
@@ -39,5 +41,25 @@ public partial class LuresView : ContentPage
 
         // The ViewModel will handle its own cleanup through BaseViewModel's Dispose
         // No additional cleanup needed here
+    }
+
+    private void OnImageTapped(object sender, EventArgs e)
+    {
+        Debug.WriteLine("IMAGE WAS TAPPED!");
+
+        if (sender is Image image &&
+        image.BindingContext is LureDataEntity lure &&
+        BindingContext is LuresViewModel viewModel)
+        {
+            Debug.WriteLine($"Image path: {lure.PrimaryImage?.Path ?? "NULL"}");
+            Debug.WriteLine($"Command is null: {viewModel.OpenImageCommand == null}");
+            Debug.WriteLine($"Command can execute: {viewModel.OpenImageCommand?.CanExecute(lure.PrimaryImage?.Path)}");
+
+            viewModel.OpenImageCommand?.Execute(lure.PrimaryImage?.Path);
+        }
+        else
+        {
+            Debug.WriteLine("Binding context issue!");
+        }
     }
 }
