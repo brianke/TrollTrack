@@ -13,6 +13,6 @@ namespace TrollTrack.Features.Shared.Models.Entities
         public Guid Id { get; set; }
 
         [Required]
-        public string Path { get; set; }
+        public string Path { get; set; } = string.Empty;
     }
 }

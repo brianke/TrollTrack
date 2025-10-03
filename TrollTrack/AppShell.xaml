@@ -13,33 +13,32 @@
 
     <TabBar>
         <ShellContent
-            Title="Dashboard"
             ContentTemplate="{DataTemplate dashboard:DashboardView}"
-            Route="Dashboard" 
-            Icon="dashboard.png"/>
+            Route="Dashboard" />
+        <!-- 
+            Icon="dashboard.png"/> -->
 
         <ShellContent
-            Title="Catches"
             ContentTemplate="{DataTemplate catches:CatchesView}"
-            Route="Catches" 
-            Icon="fish.png"/>
+            Route="Catches" />
+        <!-- 
+            Icon="fish.png"/> -->
 
         <ShellContent
-            Title="Program"
             ContentTemplate="{DataTemplate programs:ProgramsView}"
-            Route="Program" 
-            Icon="program.png"/>
+            Route="Program" />
+        <!-- 
+            Icon="program.png"/> -->
 
         <ShellContent
-            Title="Lures"
             ContentTemplate="{DataTemplate lures:LuresView}"
-            Route="Lures" 
-            Icon="lure.png"/>
+            Route="Lures"  />
+        <!--
+            Icon="lure.png"/> -->
 
         <ShellContent
-            Title="Analytics"
             ContentTemplate="{DataTemplate analytics:AnalyticsView}"
-            Route="Analytics"
-            Icon="analytics.png" />
+            Route="Analytics" />
+        <!-- Icon="analytics.png" /> -->
     </TabBar>
 </Shell>

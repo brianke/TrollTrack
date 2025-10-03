@@ -10,7 +10,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
         public Guid Id { get; set; }
 
         [Required]
-        public String Manufacturer { get; set; }
+        public String Manufacturer { get; set; } = string.Empty;
 
         public Double Length { get; set; }
 

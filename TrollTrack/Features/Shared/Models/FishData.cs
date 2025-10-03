@@ -36,9 +36,9 @@ namespace TrollTrack.Features.Shared.Models
             }
         };
 
-        public static FishInfoEntity GetInfo(string fishCommonName = "Unknown")
+        public static FishInfoEntity GetInfo(string fishCommonName)
         {
-            return FishList.FirstOrDefault(x => x.CommonName == fishCommonName);
+            return FishList.FirstOrDefault(x => x.CommonName == fishCommonName) ?? FishList.First(x => x.CommonName == "Unknown");
         }
 
         public static List<string> GetAllFishNames()
