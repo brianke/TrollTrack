@@ -12,10 +12,9 @@ namespace TrollTrack.Features.Shared.Models.Entities
         [Indexed]
         public DateTime Timestamp { get; set; }
 
-        [ForeignKey(typeof(LocationDataEntity))]
-        public Guid? LocationId { get; set; }
-        [ManyToOne(CascadeOperations = CascadeOperation.All)]
-        public LocationDataEntity Location { get; set; }
+        public double Latitude { get; set; }
+
+        public double Longitude { get; set; }
 
         [ForeignKey(typeof(ProgramDataEntity))]
         public Guid? ProgramDataId { get; set; }
@@ -24,7 +23,5 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         [ForeignKey(typeof(FishInfoEntity))]
         public Guid? FishInfoId { get; set; }
-        [ManyToOne(CascadeOperations = CascadeOperation.All)]
-        public FishInfoEntity FishInfo { get; set; }
     }
 }

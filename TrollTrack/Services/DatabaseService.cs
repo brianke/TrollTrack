@@ -282,22 +282,6 @@ namespace TrollTrack.Services
                 Timestamp = catchData.Timestamp
             };
 
-            if (catchData.Location != null)
-            {
-                entity.Location = new LocationDataEntity
-                {
-                    Id = Guid.NewGuid(),
-                    Latitude = catchData.Location.Latitude,
-                    Longitude = catchData.Location.Longitude,
-                    Altitude = catchData.Location.Altitude,
-                    Accuracy = catchData.Location.Accuracy,
-                    Course = catchData.Location.Course,
-                    Speed = catchData.Location.Speed,
-                    Timestamp = catchData.Location.Timestamp
-                };
-                entity.LocationId = entity.Location.Id;
-            }
-
             if (catchData.ProgramData != null)
             {
                 // TODO: The ProgramData model is incomplete.
@@ -311,16 +295,7 @@ namespace TrollTrack.Services
             }
 
             // TODO: FishInfo should be selected from predefined list, not created new each time
-            var fishInfo = FishData.GetInfo(catchData.FishInfo.CommonName);
-            entity.FishInfo = new FishInfoEntity
-            {
-                Id = fishInfo.Id,
-                CommonName = fishInfo.CommonName,
-                ScientificName = fishInfo.ScientificName,
-                Habitat = fishInfo.Habitat
-            };
-            entity.FishInfoId = entity.FishInfo.Id;
-            
+            //entity.FishInfoId = FishData.GetFishInfoId(catchData.FishInfoId.ToString());
 
             return entity;
         }
@@ -333,29 +308,10 @@ namespace TrollTrack.Services
                 Timestamp = entity.Timestamp
             };
 
-            if (entity.Location != null)
-            {
-                catchData.Location = new LocationDataEntity
-                {
-                    Latitude = entity.Location.Latitude,
-                    Longitude = entity.Location.Longitude,
-                    Altitude = entity.Location.Altitude,
-                    Accuracy = entity.Location.Accuracy,
-                    Course = entity.Location.Course,
-                    Speed = entity.Location.Speed,
-                    Timestamp = entity.Location.Timestamp
-                };
-            }
-
             if (entity.ProgramData != null)
             {
                 // TODO: The ProgramData model is incomplete.
                 catchData.ProgramData = new ProgramDataEntity();
-            }
-
-            if (entity.FishInfo != null)
-            {
-                catchData.FishInfo = entity.FishInfo;
             }
 
             return catchData;

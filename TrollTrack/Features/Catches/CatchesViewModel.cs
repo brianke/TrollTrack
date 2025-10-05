@@ -90,8 +90,8 @@ public partial class CatchesViewModel : BaseViewModel
             {
                 Id = Guid.NewGuid(),
                 Timestamp = DateTime.Now,
-                Location = currentLocation,
-                FishInfo = fishInfo,
+                Latitude = currentLocation.Latitude,
+                Longitude = currentLocation.Longitude,
                 FishInfoId = fishInfo.Id
             };
 

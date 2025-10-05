@@ -70,8 +70,9 @@
                     <Grid>
                         <Image Source="{Binding SelectedImagePath}"
                                Aspect="AspectFit"
-                               VerticalOptions="FillAndExpand"
-                               HorizontalOptions="FillAndExpand" />
+                               VerticalOptions="Fill"
+                               HorizontalOptions="Fill" 
+                               Background="Transparent"/>
                     </Grid>
                 </Border>
             </VerticalStackLayout>

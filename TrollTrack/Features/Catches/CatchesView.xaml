@@ -7,7 +7,28 @@
 
     <ScrollView>
         <VerticalStackLayout Spacing="15" Padding="15">
+            
+            <!-- ADD THIS: Debug Export Button -->
 
+            <Border Style="{StaticResource InfoCard}" 
+                        Padding="15" 
+                        BackgroundColor="#FF6B35">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="🔧 Developer Tools" 
+                               FontSize="18" 
+                               FontAttributes="Bold"
+                               TextColor="White"
+                               HorizontalOptions="Center"/>
+                    <Button Text="📤 Export Database" 
+                                Clicked="OnExportDatabaseClicked"
+                                BackgroundColor="White"
+                                TextColor="#FF6B35"
+                                FontAttributes="Bold"
+                                HorizontalOptions="Fill"/>
+                </VerticalStackLayout>
+            </Border>
+
+            
             <Label Text="{Binding RefreshStatus}" 
                    Style="{StaticResource InfoLabel}"
                    Margin="0,0,0,5"/>
@@ -19,7 +40,7 @@
                            VerticalOptions="Center" />
                     <Picker Title="Select"
                             ItemsSource="{Binding FishOptions}"
-                            SelectedItem="{Binding SelectedFishOption, Mode=TwoWay, Converter={StaticResource EnumToStringConverter}}"
+                            SelectedItem="{Binding SelectedFishOption, Mode=TwoWay}"
                             Style="{StaticResource CardPicker}" />
                 </HorizontalStackLayout>
             </Border>   
