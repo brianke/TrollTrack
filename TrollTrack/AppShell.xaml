@@ -8,6 +8,7 @@
     xmlns:programs="clr-namespace:TrollTrack.Features.Programs"
     xmlns:lures="clr-namespace:TrollTrack.Features.Lures"
     xmlns:analytics="clr-namespace:TrollTrack.Features.Analytics"
+    xmlns:settings="clr-namespace:TrollTrack.Features.Settings"
     Title="TrollTrack"
     Shell.FlyoutBehavior="Disabled">
 
@@ -43,6 +44,12 @@
         <ShellContent
             Title="Analytics"
             ContentTemplate="{DataTemplate analytics:AnalyticsView}"
+            Route="Analytics" />
+        <!-- Icon="analytics.png" /> -->
+
+        <ShellContent
+            Title="Settings"
+            ContentTemplate="{DataTemplate settings:SettingsView}"
             Route="Analytics" />
         <!-- Icon="analytics.png" /> -->
     </TabBar>

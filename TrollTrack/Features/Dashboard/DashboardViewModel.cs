@@ -25,6 +25,7 @@ public partial class DashboardViewModel : BaseViewModel
         : base(locationService, databaseService)
     {
         _weatherService = weatherService;
+
         Title = "Dashboard";
         _ = InitializeAsync();
     }

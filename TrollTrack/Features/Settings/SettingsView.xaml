@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TrollTrack.Features.Settings.SettingsView"
+             xmlns:f="clr-namespace:TrollTrack.Features.Settings"
+             x:DataType="f:SettingsViewModel">
+    
+    <VerticalStackLayout>
+        <!-- Settings Content -->
+
+        <StackLayout Spacing="20">
+            <!-- Header -->
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="⚙️ Settings" 
+                            FontSize="24" 
+                            FontAttributes="Bold"
+                            VerticalOptions="Center"
+                            Grid.Column="0"/>
+            </Grid>
+
+            <!-- Database Information -->
+            <Border Style="{StaticResource InfoCard}" Padding="15">
+                <StackLayout Spacing="10">
+                    <Label Text="📊 Database Information" 
+                                FontSize="18" 
+                                FontAttributes="Bold"/>
+                    <Label Text="{Binding DatabaseInfo}" 
+                                LineBreakMode="WordWrap"/>
+                    <Button Text="View Database Path"
+                                Command="{Binding ViewDatabasePathCommand}"
+                                HorizontalOptions="Start"
+                                Margin="0,10,0,0"/>
+                </StackLayout>
+            </Border>
+
+            <!-- Danger Zone -->
+            <Border Style="{StaticResource InfoCard}" 
+                        Padding="15"
+                        Stroke="Red">
+                <StackLayout Spacing="10">
+                    <Label Text="⚠️ Danger Zone" 
+                                FontSize="18" 
+                                FontAttributes="Bold"
+                                TextColor="Red"/>
+                    <Label Text="These actions cannot be undone." 
+                                FontSize="12"
+                                TextColor="Red"/>
+                    <Button Text="Clear All Data"
+                                Command="{Binding ClearAllDataCommand}"
+                                BackgroundColor="Red"
+                                TextColor="White"
+                                Margin="0,10,0,0"/>
+                </StackLayout>
+            </Border>
+
+        </StackLayout>
+    </VerticalStackLayout>
+</ContentPage>

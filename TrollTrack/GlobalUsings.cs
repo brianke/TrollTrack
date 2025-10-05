@@ -1,6 +1,13 @@
 ﻿//global using Microsoft.Maui.Essentials;
 global using CommunityToolkit.Mvvm.ComponentModel;
 global using CommunityToolkit.Mvvm.Input;
+global using TrollTrack.Features.Analytics;
+global using TrollTrack.Features.Catches;
+global using TrollTrack.Features.Dashboard;
+global using TrollTrack.Features.Lures;
+global using TrollTrack.Features.Programs;
+global using TrollTrack.Features.Settings;
+global using TrollTrack.Services;
 global using Microsoft.Maui;
 global using Microsoft.Maui.Controls;
 global using SQLite;

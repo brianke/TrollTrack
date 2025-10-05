@@ -1,11 +1,5 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
-using TrollTrack.Features.Analytics;
-using TrollTrack.Features.Catches;
-using TrollTrack.Features.Dashboard;
-using TrollTrack.Features.Lures;
-using TrollTrack.Features.Programs;
-using TrollTrack.Services;
 
 namespace TrollTrack
 {
@@ -35,6 +29,7 @@ namespace TrollTrack
 
             // Register ViewModels
             builder.Services.AddTransient<DashboardViewModel>();
+            builder.Services.AddTransient<SettingsViewModel>();
             builder.Services.AddTransient<CatchesViewModel>();
             builder.Services.AddTransient<LuresViewModel>();
             builder.Services.AddTransient<ProgramsViewModel>();

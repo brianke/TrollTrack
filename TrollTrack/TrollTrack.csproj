@@ -117,5 +117,10 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.110" />
 	</ItemGroup>
+	<ItemGroup>
+	  <MauiXaml Update="Features\Settings\SettingsView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
 
 </Project>

@@ -7,5 +7,6 @@
         public const string Programs = "//Program";
         public const string Lures = "//Lures";
         public const string Analytics = "//Analytics";
+        public const string Settings = "//Settings";
     }
 }

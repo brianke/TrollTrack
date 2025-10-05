@@ -276,11 +276,7 @@ namespace TrollTrack.Services
 
         private CatchDataEntity ConvertToCatchEntity(CatchDataEntity catchData)
         {
-            var entity = new CatchDataEntity
-            {
-                Id = catchData.Id == Guid.Empty ? Guid.NewGuid() : catchData.Id,
-                Timestamp = catchData.Timestamp
-            };
+            var entity = catchData;
 
             if (catchData.ProgramData != null)
             {
@@ -428,6 +424,28 @@ namespace TrollTrack.Services
             {
                 System.Diagnostics.Debug.WriteLine($"Database backup error: {ex.Message}");
                 return null;
+            }
+        }
+
+        public async Task ClearAllTablesAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                await db.DeleteAllAsync<CatchDataEntity>();
+                await db.DeleteAllAsync<LocationDataEntity>();
+                await db.DeleteAllAsync<ProgramDataEntity>();
+                await db.DeleteAllAsync<FishInfoEntity>();
+                await db.DeleteAllAsync<LureDataEntity>();
+                await db.DeleteAllAsync<LureImageEntity>();
+
+                System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error clearing database: {ex.Message}");
+                throw;
             }
         }
 

@@ -28,9 +28,9 @@ public partial class LuresView : ContentPage
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error initializing Dashboard ViewModel: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error initializing Lures ViewModel: {ex.Message}");
             // Optionally show error message to user
-            await DisplayAlert("Error", "Failed to load dashboard data. Please try again.", "OK");
+            await DisplayAlert("Error", "Failed to load lures data. Please try again.", "OK");
         }
     }
 

@@ -17,7 +17,7 @@ namespace TrollTrack.Services
         Task ClearAllCatchDataAsync();
         Task<long> GetDatabaseSizeAsync();
         Task<string?> BackupDatabaseAsync();
-
+        Task ClearAllTablesAsync(); 
         #endregion
 
         #region Lure methods
