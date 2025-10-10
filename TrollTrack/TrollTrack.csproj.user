@@ -8,6 +8,9 @@
     <DefaultDevice>pixel_7_-_api_35</DefaultDevice>
     <AndroidDesignerPreferredTheme>Maui.SplashTheme</AndroidDesignerPreferredTheme>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
+    <DebuggerFlavor>ProjectDebugger</DebuggerFlavor>
+  </PropertyGroup>
   <ItemGroup>
     <None Update="App.xaml">
       <SubType>Designer</SubType>

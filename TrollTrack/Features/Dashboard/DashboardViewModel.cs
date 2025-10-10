@@ -69,12 +69,12 @@ public partial class DashboardViewModel : BaseViewModel
                 }
             }
 
-            var weather = await _weatherService.GetCurrentWeatherAsync(CurrentLatitude, CurrentLongitude);
+            var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
 
             if (weather != null)
             {
-                WeatherEntity = weather;
-                LocationName = weather.LocationName ?? "Location Unavailable";
+                WeatherEntity = weather[0];
+                LocationName = weather[0].LocationName ?? "Location Unavailable";
                 WeatherSummary = $"Weather updated at {DateTime.Now:T}";
                 if (isRefresh)
                 {
