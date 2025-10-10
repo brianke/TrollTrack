@@ -1,6 +1,6 @@
 namespace TrollTrack.Features.Catches;
 
-public partial class CatchesView : ContentPage
+public partial class CatchesView : ContentView
 {
     private readonly CatchesViewModel _viewModel;
 
@@ -11,42 +11,9 @@ public partial class CatchesView : ContentPage
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         BindingContext = viewModel;
-        _viewModel = viewModel;
     }
 
-    private async void OnExportDatabaseClicked(object sender, EventArgs e)
-    {
-        try
-        {
-#if ANDROID
-            var dbPath = Path.Combine(FileSystem.AppDataDirectory, "trolltrack.db");
-
-            if (!File.Exists(dbPath))
-            {
-                await DisplayAlert("Error", "Database not found", "OK");
-                return;
-            }
-
-            // Copy to a shareable location
-            var tempPath = Path.Combine(FileSystem.CacheDirectory, $"trolltrack_export.db");
-            File.Copy(dbPath, tempPath, overwrite: true);
-
-            // Share the file - this will let you save it anywhere, email it, etc.
-            await Share.Default.RequestAsync(new ShareFileRequest
-            {
-                Title = "Save TrollTrack Database",
-                File = new ShareFile(tempPath)
-            });
-#else
-        await DisplayAlert("Info", "Export only available on Android", "OK");
-#endif
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlert("Error", ex.Message, "OK");
-            Debug.WriteLine($"Export error: {ex}");
-        }
-    }
+/* 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -71,4 +38,5 @@ public partial class CatchesView : ContentPage
         // The ViewModel will handle its own cleanup through BaseViewModel's Dispose
         // No additional cleanup needed here
     }
+*/
 }

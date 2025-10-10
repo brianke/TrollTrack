@@ -33,6 +33,24 @@
                 </StackLayout>
             </Border>
 
+            <Border Style="{StaticResource InfoCard}" 
+                        Padding="15" 
+                        BackgroundColor="#FF6B35">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="🔧 Developer Tools" 
+                               FontSize="18" 
+                               FontAttributes="Bold"
+                               TextColor="White"
+                               HorizontalOptions="Center"/>
+                    <Button Text="📤 Export Database" 
+                                Command="{Binding ExportDatabaseCommand}"
+                                BackgroundColor="White"
+                                TextColor="#FF6B35"
+                                FontAttributes="Bold"
+                                HorizontalOptions="Fill"/>
+                </VerticalStackLayout>
+            </Border>
+
             <!-- Danger Zone -->
             <Border Style="{StaticResource InfoCard}" 
                         Padding="15"

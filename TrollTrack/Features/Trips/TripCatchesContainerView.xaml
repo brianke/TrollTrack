@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TrollTrack.Features.Trips.TripCatchesContainerView"
+             xmlns:trips="clr-namespace:TrollTrack.Features.Trips"
+             xmlns:catches="clr-namespace:TrollTrack.Features.Catches"
+             x:Name="ContainerPage">
+
+    <!-- This container hosts either TripView or CatchesView based on active trip status -->
+    <ContentView x:Name="ContentContainer"/>
+
+</ContentPage>

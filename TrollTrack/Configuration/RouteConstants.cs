@@ -3,6 +3,7 @@
     public static class RouteConstants
     {
         public const string Dashboard = "//Dashboard";
+        public const string Trips = "//Trips";
         public const string Catches = "//Catches";
         public const string Programs = "//Program";
         public const string Lures = "//Lures";

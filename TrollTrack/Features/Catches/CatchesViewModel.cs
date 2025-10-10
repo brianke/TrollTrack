@@ -25,6 +25,12 @@ public partial class CatchesViewModel : BaseViewModel
     [ObservableProperty]
     private int _todaysCatches;
 
+    [ObservableProperty]
+    private TripDataEntity? _activeTrip;
+
+    [ObservableProperty]
+    private bool _hasActiveTrip;
+
     #endregion
 
     #region Constructor
@@ -46,7 +52,13 @@ public partial class CatchesViewModel : BaseViewModel
         {
             IsInitializing = true;
             FishOptions = FishData.GetAllFishNames();
+
+            // Load active trip
+            await LoadActiveTripAsync();
+
+            // Load catches for active trip or all catches
             await LoadCatchesAsync();
+
             IsInitializing = false;
         }, "Initializing catches...");
     }
@@ -55,13 +67,44 @@ public partial class CatchesViewModel : BaseViewModel
 
     #region Commands
 
+    private async Task LoadActiveTripAsync()
+    {
+        var trip = await _databaseService.GetActiveTripAsync();
+        ActiveTrip = trip;
+        HasActiveTrip = trip != null;
+
+        if (HasActiveTrip)
+        {
+            Title = $"Catches - {ActiveTrip?.TripName}";
+        }
+        else
+        {
+            Title = "Catches";
+        }
+    }
+
     private async Task LoadCatchesAsync()
     {
         await ExecuteSafelyAsync(async () =>
         {
             IsLoading = true;
-            var allCatches = await _databaseService.GetCatchDataAsync();
-            var todaysCatchList = await _databaseService.GetTodaysCatchesAsync();
+
+            List<CatchDataEntity> allCatches;
+
+            if (HasActiveTrip && ActiveTrip != null)
+            {
+                // Load catches only for active trip
+                allCatches = await _databaseService.GetCatchesForTripAsync(ActiveTrip.Id);
+            }
+            else
+            {
+                // Load all catches
+                allCatches = await _databaseService.GetCatchDataAsync();
+            }
+
+            var todaysCatchList = allCatches
+                .Where(c => c.Timestamp.Date == DateTime.Today)
+                .ToList();
 
             Catches = new ObservableCollection<CatchDataEntity>(allCatches);
             TotalCatches = allCatches.Count;
@@ -81,6 +124,14 @@ public partial class CatchesViewModel : BaseViewModel
             return;
         }
 
+        // Check if there's an active trip
+        if (!HasActiveTrip)
+        {
+            await ShowAlertAsync("No Active Trip",
+                "Please start a trip before logging catches. Go to the Trips tab to start a new trip.");
+            return;
+        }
+
         await ExecuteSafelyAsync(async () =>
         {
             var currentLocation = await _locationService.GetCurrentLocationAsync();
@@ -92,10 +143,19 @@ public partial class CatchesViewModel : BaseViewModel
                 Timestamp = DateTime.Now,
                 Latitude = currentLocation.Latitude,
                 Longitude = currentLocation.Longitude,
-                FishInfoId = fishInfo.Id
+                FishInfoId = fishInfo.Id,
+                TripId = ActiveTrip!.Id  // Set the TripId
             };
 
+            // Save catch
             await _databaseService.SaveCatchAsync(newCatch);
+
+            // Add catch to active trip's collection for UI
+            if (ActiveTrip.Catches == null)
+            {
+                ActiveTrip.Catches = new List<CatchDataEntity>();
+            }
+            ActiveTrip.Catches.Add(newCatch);
 
             Catches.Insert(0, newCatch);
             TotalCatches++;
@@ -105,7 +165,54 @@ public partial class CatchesViewModel : BaseViewModel
             }
 
             Debug.WriteLine($"Added new catch: {SelectedFishOption} at {newCatch.Timestamp}");
+
+            // Clear selection
+            SelectedFishOption = string.Empty;
         }, "Adding catch...");
+    }
+
+    [RelayCommand]
+    private async Task DeleteCatchAsync(CatchDataEntity catchToDelete)
+    {
+        if (catchToDelete == null)
+            return;
+
+        var confirm = await ShowConfirmationAsync(
+            "Delete Catch?",
+            $"Are you sure you want to delete this catch?",
+            "Delete",
+            "Cancel");
+
+        if (!confirm)
+            return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            await _databaseService.DeleteCatchAsync(catchToDelete.Id);
+
+            Catches.Remove(catchToDelete);
+            TotalCatches--;
+
+            if (catchToDelete.Timestamp.Date == DateTime.Today)
+            {
+                TodaysCatches--;
+            }
+
+            // Update active trip's catch collection if exists
+            if (ActiveTrip?.Catches != null)
+            {
+                ActiveTrip.Catches.Remove(catchToDelete);
+            }
+
+            Debug.WriteLine($"Deleted catch: {catchToDelete.Id}");
+        }, "Deleting catch...");
+    }
+
+    [RelayCommand]
+    private async Task RefreshCatchesAsync()
+    {
+        await LoadActiveTripAsync();
+        await LoadCatchesAsync();
     }
 
     #endregion

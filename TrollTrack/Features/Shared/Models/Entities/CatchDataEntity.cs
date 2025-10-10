@@ -16,10 +16,12 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         public double Longitude { get; set; }
 
+        // Foreign key to Trip - NO ManyToOne navigation property
+        [ForeignKey(typeof(TripDataEntity))]
+        public Guid? TripId { get; set; }
+
         [ForeignKey(typeof(ProgramDataEntity))]
         public Guid? ProgramDataId { get; set; }
-        [ManyToOne(CascadeOperations = CascadeOperation.All)]
-        public ProgramDataEntity ProgramData { get; set; }
 
         [ForeignKey(typeof(FishInfoEntity))]
         public Guid? FishInfoId { get; set; }
