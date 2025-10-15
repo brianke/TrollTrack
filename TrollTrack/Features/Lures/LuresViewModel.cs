@@ -29,10 +29,10 @@ namespace TrollTrack.Features.Lures
             //CloseImageCommand = new RelayCommand(CloseImage);
 
             // Load data when ViewModel is created
-            _ = InitializeAsync();
+            //_ = InitializeAsync();
 
             // Add this to verify the command exists
-            Debug.WriteLine($"OpenImageCommand is null: {OpenImageCommand == null}");
+            //Debug.WriteLine($"OpenImageCommand is null: {OpenImageCommand == null}");
 
         }
 

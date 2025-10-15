@@ -13,7 +13,7 @@ public partial class CatchesView : ContentView
         BindingContext = viewModel;
     }
 
-/* 
+    /*
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -38,5 +38,5 @@ public partial class CatchesView : ContentView
         // The ViewModel will handle its own cleanup through BaseViewModel's Dispose
         // No additional cleanup needed here
     }
-*/
+    */
 }

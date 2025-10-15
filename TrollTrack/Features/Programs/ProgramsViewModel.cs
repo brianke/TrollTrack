@@ -15,7 +15,7 @@ namespace TrollTrack.Features.Programs
         public ProgramsViewModel(ILocationService locationService, IDatabaseService databaseService) : base(locationService, databaseService)
         {
             // Load data when ViewModel is created
-            _ = InitializeAsync();
+            //_ = InitializeAsync();
 
         }
 

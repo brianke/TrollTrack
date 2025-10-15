@@ -8,7 +8,8 @@
     <VerticalStackLayout>
         <!-- Settings Content -->
 
-        <StackLayout Spacing="20">
+        <StackLayout Spacing="15"
+                     Margin="15">
             <!-- Header -->
             <Grid ColumnDefinitions="*,Auto">
                 <Label Text="⚙️ Settings" 
@@ -33,6 +34,7 @@
                 </StackLayout>
             </Border>
 
+            <!-- Debug Export Button -->
             <Border Style="{StaticResource InfoCard}" 
                         Padding="15" 
                         BackgroundColor="#FF6B35">

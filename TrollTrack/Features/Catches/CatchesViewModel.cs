@@ -39,7 +39,7 @@ public partial class CatchesViewModel : BaseViewModel
         : base(locationService, databaseService)
     {
         Title = "Catches";
-        _ = InitializeAsync();
+        //_ = InitializeAsync();
     }
 
     #endregion
