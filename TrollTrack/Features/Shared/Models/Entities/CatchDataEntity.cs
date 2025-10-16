@@ -1,5 +1,4 @@
 ﻿using SQLiteNetExtensions.Attributes;
-using TrollTrack.Models.Entities;
 
 namespace TrollTrack.Features.Shared.Models.Entities
 {

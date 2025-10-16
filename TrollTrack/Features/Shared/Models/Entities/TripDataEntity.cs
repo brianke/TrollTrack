@@ -21,8 +21,15 @@ namespace TrollTrack.Features.Shared.Models.Entities
         [ForeignKey(typeof(WeatherDataEntity))]
         public Guid? WeatherEntityId { get; set; }
 
+        public int TemperatureF { get; set; } = 0;
+
         [Ignore]
-        public WeatherDataEntity WeatherEntity { get; set; }
+        public WeatherDataEntity? WeatherEntity { get; set; }
+
+        public int SecchiDepth { get; set; } = 0; // feet
+
+        public string Clarity { get; set; } = string.Empty;
+
 
         // OneToMany relationship - Trip owns the catches
         [OneToMany(CascadeOperations = CascadeOperation.All)]
@@ -46,6 +53,8 @@ namespace TrollTrack.Features.Shared.Models.Entities
         }
 
         public bool IsActive { get; set; }
+
+        public string Notes { get; set; } = string.Empty;
 
     }
 }

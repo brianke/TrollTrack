@@ -1,9 +1,6 @@
 using SQLiteNetExtensionsAsync.Extensions;
 using TrollTrack.Configuration;
-using TrollTrack.Features.Catches;
-using TrollTrack.Features.Shared.Models;
 using TrollTrack.Features.Shared.Models.Entities;
-using TrollTrack.Models.Entities;
 
 namespace TrollTrack.Services
 {
@@ -45,6 +42,8 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<LureImageEntity>();
                 await _database.CreateTableAsync<TripDataEntity>();
                 await _database.CreateTableAsync<WeatherDataEntity>();
+                //await _database.CreateTableAsync<TrollingDataPoint>();
+
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }

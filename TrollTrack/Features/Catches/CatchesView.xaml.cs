@@ -11,6 +11,10 @@ public partial class CatchesView : ContentView
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         BindingContext = viewModel;
+
+        // Add this for debugging
+        Debug.WriteLine($"BindingContext set to: {BindingContext?.GetType().Name}");
+
     }
 
     /*

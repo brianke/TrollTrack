@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentView x:Name="CatchesPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrollTrack.Features.Catches.CatchesView"
              xmlns:f="clr-namespace:TrollTrack.Features.Catches"
              xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
              x:DataType="f:CatchesViewModel">
 
-    <RefreshView IsRefreshing="{Binding IsRefreshing}"
-                 Command="{Binding RefreshCatchesCommand}">
+    <!--<RefreshView IsRefreshing="{Binding IsRefreshing}"
+                 Command="{Binding RefreshCatchesCommand}">-->
         <ScrollView>
             <VerticalStackLayout Spacing="15" Padding="15">
 
@@ -25,9 +26,9 @@
                     </HorizontalStackLayout>
                 </Border>
 
-                <Label Text="{Binding RefreshStatus}" 
+                <!--<Label Text="{Binding RefreshStatus}" 
                        Style="{StaticResource InfoLabel}"
-                       Margin="0,0,0,5"/>
+                       Margin="0,0,0,5"/>-->
 
                 <!-- Statistics -->
                 <Border Style="{StaticResource InfoCard}">
@@ -52,14 +53,60 @@
                     </Grid>
                 </Border>
 
-                <!-- Add Catch Section -->
+                <!-- Add New Rod Section -->
                 <Border Style="{StaticResource InfoCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Add Rod"
+                               Style="{StaticResource CardTitle}"
+                               HorizontalOptions="Center"/>
+                        <Button Text="+ Add Rod"
+                                Style="{StaticResource CircularButton}"
+                                WidthRequest="120"
+                                HeightRequest="40"
+                                CornerRadius="20"
+                                Command="{Binding AddRodCommand}"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Add Catch Section -->            
+                <Border Style="{StaticResource InfoCard}"
+                        x:Name="CatchSection">
                     <VerticalStackLayout Spacing="10">
                         <Label Text="Log New Catch"
                                Style="{StaticResource CardTitle}"
                                HorizontalOptions="Center"/>
 
-                        <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                        <Label Text="No rods configured. Add a rod first!"
+                               HorizontalOptions="Center"
+                               TextColor="{StaticResource Gray500}"
+                               Margin="0,10"
+                               IsVisible="{Binding HasNoRods}"/>
+
+                    <FlexLayout BindableLayout.ItemsSource="{Binding Rods}"
+                                Wrap="Wrap"
+                                JustifyContent="Center"
+                                AlignItems="Start"
+                                AlignContent="Start">   
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="e:RodEntity">
+                                <Button Text="{Binding Name}"
+        BackgroundColor="Blue"
+        TextColor="White"
+        WidthRequest="100"
+        HeightRequest="100"
+        Margin="5"
+        Command="{Binding Source={x:Reference CatchesPage}, Path=BindingContext.AddNewCatchCommand}"/>
+                                <!--<Button Text="{Binding Name}"
+                                        Style="{StaticResource AddCatchButton}"
+                                        FontSize="12"
+                                        Padding="5"
+                                        Margin="5"
+                                        Command="{Binding Source={x:Reference CatchSection}, Path=BindingContext.AddNewCatchCommand}" />-->
+                                <!--CommandParameter="{Binding .}"/>-->
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                    <!--       <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
                             <Label Text="Species: "
                                    Style="{StaticResource CardTitle}"
                                    VerticalOptions="Center" />
@@ -75,7 +122,7 @@
                                 WidthRequest="120"
                                 HeightRequest="40"
                                 CornerRadius="20"
-                                Command="{Binding AddNewCatchCommand}"/>
+                                Command="{Binding AddNewCatchCommand}"/>-->
                     </VerticalStackLayout>
                 </Border>
 
@@ -164,5 +211,5 @@
 
             </VerticalStackLayout>
         </ScrollView>
-    </RefreshView>
+    <!--</RefreshView>-->
 </ContentView>

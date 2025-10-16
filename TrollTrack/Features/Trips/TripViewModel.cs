@@ -30,6 +30,9 @@ namespace TrollTrack.Features.Trips
         [ObservableProperty]
         private int _activeTripCatchCount;
 
+        [ObservableProperty]
+        private string _tripNotes;
+
         #endregion
 
         #region Constructor
@@ -100,7 +103,6 @@ namespace TrollTrack.Features.Trips
                     TripDate = NewTripDate,
                     StartTime = DateTime.Now,
                     IsActive = true,
-                    //Location = weather?.LocationName ?? "Unknown",
                     WeatherEntity = weather,
                     WeatherEntityId = weather?.Id,
                     Catches = new List<CatchDataEntity>()

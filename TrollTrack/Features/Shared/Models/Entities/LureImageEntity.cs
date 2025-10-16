@@ -1,8 +1,4 @@
-﻿using SQLite;
-using SQLiteNetExtensions.Attributes;
-using System;
-using System.ComponentModel.DataAnnotations;
-using TrollTrack.Features.Shared.Models.Entities;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TrollTrack.Features.Shared.Models.Entities
 {

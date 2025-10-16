@@ -1,10 +1,6 @@
-﻿using SQLite;
-using SQLiteNetExtensions.Attributes;
-using System;
-using System.Collections.Generic;
-using TrollTrack.Features.Shared.Models.Entities;
+﻿using SQLiteNetExtensions.Attributes;
 
-namespace TrollTrack.Models.Entities
+namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("ProgramData")]
     public class ProgramDataEntity

@@ -134,8 +134,8 @@
                 </VerticalStackLayout>
             </Border>
 
-            <Label Text="{Binding RefreshStatus}" 
-                   Style="{StaticResource InfoLabel}"/>
+            <!--<Label Text="{Binding RefreshStatus}" 
+                   Style="{StaticResource InfoLabel}"/>-->
         </VerticalStackLayout>
     </ScrollView>
 </ContentView>

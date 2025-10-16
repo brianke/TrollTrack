@@ -1,5 +1,4 @@
-using System.Collections.ObjectModel;
-using System.Diagnostics;
+using System.Xml.Serialization;
 using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models;
 using TrollTrack.Features.Shared.Models.Entities;
@@ -31,6 +30,12 @@ public partial class CatchesViewModel : BaseViewModel
     [ObservableProperty]
     private bool _hasActiveTrip;
 
+    [ObservableProperty]
+    private ObservableCollection<RodEntity> _rods = [];
+
+    public bool HasNoRods => Rods == null || Rods.Count == 0;
+
+   
     #endregion
 
     #region Constructor
@@ -40,6 +45,9 @@ public partial class CatchesViewModel : BaseViewModel
     {
         Title = "Catches";
         //_ = InitializeAsync();
+
+        // Subscribe to collection changes
+        Rods.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasNoRods));
     }
 
     #endregion
@@ -116,8 +124,16 @@ public partial class CatchesViewModel : BaseViewModel
     }
 
     [RelayCommand]
-    private async Task AddNewCatchAsync()
+    private void AddNewCatch()
     {
+        Debug.WriteLine("=== ADD NEW CATCH BUTTON CLICKED ===");
+        Shell.Current.DisplayAlert("Test", "Button works!", "OK");
+    }
+
+        /*    private async Task AddNewCatchAsync()   //(RodEntity rodEntity)
+    {
+        Debug.WriteLine("AddNewCatch command executed!"); // Add this to verify it's being called
+
         if (string.IsNullOrWhiteSpace(SelectedFishOption))
         {
             await ShowAlertAsync("No Species Selected", "Please select a fish species before logging a catch.");
@@ -169,8 +185,9 @@ public partial class CatchesViewModel : BaseViewModel
             // Clear selection
             SelectedFishOption = string.Empty;
         }, "Adding catch...");
-    }
 
+    }
+        */
     [RelayCommand]
     private async Task DeleteCatchAsync(CatchDataEntity catchToDelete)
     {
@@ -211,8 +228,64 @@ public partial class CatchesViewModel : BaseViewModel
     [RelayCommand]
     private async Task RefreshCatchesAsync()
     {
-        await LoadActiveTripAsync();
-        await LoadCatchesAsync();
+        //await LoadActiveTripAsync();
+        //await LoadCatchesAsync();
+    }
+
+    [RelayCommand]
+    private async Task AddRod()
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            IsLoading = true;
+
+            // Add new rod to trip
+            var _rod = new RodEntity
+            {
+                Name = $"Rod {Rods.Count + 1}"
+            };
+
+            Rods.Add(_rod);
+            Debug.WriteLine($"Added new rod: {_rod.Name}");
+
+
+            //var currentLocation = await _locationService.GetCurrentLocationAsync();
+            //var fishInfo = FishData.GetInfo(SelectedFishOption);
+
+            //var newCatch = new CatchDataEntity
+            //{
+            //    Id = Guid.NewGuid(),
+            //    Timestamp = DateTime.Now,
+            //    Latitude = currentLocation.Latitude,
+            //    Longitude = currentLocation.Longitude,
+            //    FishInfoId = fishInfo.Id,
+            //    TripId = ActiveTrip!.Id  // Set the TripId
+            //};
+
+            //// Save catch
+            //await _databaseService.SaveCatchAsync(newCatch);
+
+            //// Add catch to active trip's collection for UI
+            //if (ActiveTrip.Catches == null)
+            //{
+            //    ActiveTrip.Catches = new List<CatchDataEntity>();
+            //}
+            //ActiveTrip.Catches.Add(newCatch);
+
+            //Catches.Insert(0, newCatch);
+            //TotalCatches++;
+            //if (newCatch.Timestamp.Date == DateTime.Today)
+            //{
+            //    TodaysCatches++;
+            //}
+
+            //Debug.WriteLine($"Added new catch: {SelectedFishOption} at {newCatch.Timestamp}");
+
+            //// Clear selection
+            //SelectedFishOption = string.Empty;
+            IsLoading = false;
+
+        }, "Adding rod...");
     }
 
     #endregion
