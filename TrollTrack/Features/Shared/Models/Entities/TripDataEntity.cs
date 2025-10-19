@@ -5,7 +5,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
 {
     public class TripDataEntity
     {
-        [Key]
+        [PrimaryKey]
         public Guid Id { get; set; }
 
         [Indexed]

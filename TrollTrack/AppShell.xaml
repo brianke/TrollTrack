@@ -4,7 +4,7 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:dashboard="clr-namespace:TrollTrack.Features.Dashboard"
-    xmlns:trips="clr-namespace:TrollTrack.Features.Trips"
+    xmlns:catches="clr-namespace:TrollTrack.Features.Catches"
     xmlns:programs="clr-namespace:TrollTrack.Features.Programs"
     xmlns:lures="clr-namespace:TrollTrack.Features.Lures"
     xmlns:analytics="clr-namespace:TrollTrack.Features.Analytics"
@@ -22,7 +22,7 @@
 
         <ShellContent
             Title="Trips"
-            ContentTemplate="{DataTemplate trips:TripCatchesContainerView}"
+            ContentTemplate="{DataTemplate catches:CatchesView}"
             Route="Trips" />
         <!-- 
             Icon="fish.png"/> -->

@@ -8,7 +8,7 @@ public class Hour
     public long TimeEpoch { get; set; }
 
     [JsonProperty("time")]
-    public string Time { get; set; }
+    public string Time { get; set; } = string.Empty;
 
     [JsonProperty("temp_c")]
     public double TempC { get; set; }
@@ -20,7 +20,7 @@ public class Hour
     public int IsDay { get; set; }
 
     [JsonProperty("condition")]
-    public Condition Condition { get; set; }
+    public Condition Condition { get; set; } = new Condition();
 
     [JsonProperty("wind_mph")]
     public double WindMph { get; set; }
@@ -32,7 +32,7 @@ public class Hour
     public int WindDegree { get; set; }
 
     [JsonProperty("wind_dir")]
-    public string WindDir { get; set; }
+    public string WindDir { get; set; } = string.Empty;
 
     [JsonProperty("pressure_mb")]
     public double PressureMb { get; set; }

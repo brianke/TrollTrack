@@ -8,6 +8,7 @@ namespace TrollTrack.Services
         #region Trip methods
 
         Task<int> SaveTripAsync(TripDataEntity trip);
+        Task<int> UpdateTripAsync(TripDataEntity tripData);
         Task<TripDataEntity?> GetTripByIdAsync(Guid id);
         Task<TripDataEntity?> GetActiveTripAsync();
         Task<List<TripDataEntity>> GetAllTripsAsync();

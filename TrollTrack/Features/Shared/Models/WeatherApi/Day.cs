@@ -56,7 +56,7 @@ public class Day
     public int DailyChanceOfSnow { get; set; }
 
     [JsonProperty("condition")]
-    public Condition Condition { get; set; }
+    public Condition Condition { get; set; } = new Condition();
 
     [JsonProperty("uv")]
     public double Uv { get; set; }

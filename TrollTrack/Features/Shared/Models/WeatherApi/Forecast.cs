@@ -5,5 +5,5 @@ namespace TrollTrack.Features.Shared.Models.WeatherApi;
 public class Forecast
 {
     [JsonProperty("forecastday")]
-    public List<ForecastDay> ForecastDay { get; set; }
+    public List<ForecastDay> ForecastDay { get; set; } = new List<ForecastDay>();
 }

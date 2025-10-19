@@ -117,6 +117,28 @@ namespace TrollTrack.Services
         }
 
         /// <summary>
+        /// Update an existing trip record
+        /// </summary>
+        public async Task<int> UpdateTripAsync(TripDataEntity tripData)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                // Update the trip and its children (catches)
+                await db.UpdateWithChildrenAsync(tripData);
+
+                Debug.WriteLine($"Updated trip: {tripData.TripName}, IsActive: {tripData.IsActive}");
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error updating trip: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Get a specific trip by ID
         /// </summary>
         public async Task<TripDataEntity?> GetTripByIdAsync(Guid id)

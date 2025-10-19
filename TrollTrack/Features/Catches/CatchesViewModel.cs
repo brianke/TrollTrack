@@ -1,13 +1,42 @@
-using System.Xml.Serialization;
-using TrollTrack.Features.Shared;
-using TrollTrack.Features.Shared.Models;
+﻿using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Features.Catches;
 
 public partial class CatchesViewModel : BaseViewModel
 {
-    #region Observable Properties
+    private readonly IWeatherService _weatherService;
+
+    #region Trip Properties
+
+    [ObservableProperty]
+    private ObservableCollection<TripDataEntity> _recentTrips = new();
+
+    [ObservableProperty]
+    private TripDataEntity? _activeTrip;
+
+    [ObservableProperty]
+    private bool _hasActiveTrip;
+
+    [ObservableProperty]
+    private string _newTripName = string.Empty;
+
+    [ObservableProperty]
+    private DateTime _newTripDate = DateTime.Today;
+
+    [ObservableProperty]
+    private string _activeTripDuration = "00:00:00";
+
+    [ObservableProperty]
+    private int _activeTripCatchCount;
+
+    [ObservableProperty]
+    private string _tripNotes = string.Empty;
+
+    #endregion Trip Properties
+
+
+    #region Catch Properties
 
     [ObservableProperty]
     private List<string> _fishOptions = [];
@@ -25,25 +54,20 @@ public partial class CatchesViewModel : BaseViewModel
     private int _todaysCatches;
 
     [ObservableProperty]
-    private TripDataEntity? _activeTrip;
-
-    [ObservableProperty]
-    private bool _hasActiveTrip;
-
-    [ObservableProperty]
     private ObservableCollection<RodEntity> _rods = [];
 
     public bool HasNoRods => Rods == null || Rods.Count == 0;
 
-   
-    #endregion
+    #endregion Catch Properties
 
     #region Constructor
 
-    public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService)
+    public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService, ITripService tripService, IWeatherService weatherService)
         : base(locationService, databaseService)
     {
-        Title = "Catches";
+        _weatherService = weatherService;
+
+        Title = "Trips";
         //_ = InitializeAsync();
 
         // Subscribe to collection changes
@@ -59,13 +83,16 @@ public partial class CatchesViewModel : BaseViewModel
         await ExecuteSafelyAsync(async () =>
         {
             IsInitializing = true;
-            FishOptions = FishData.GetAllFishNames();
+            //FishOptions = FishData.GetAllFishNames();
 
             // Load active trip
             await LoadActiveTripAsync();
 
-            // Load catches for active trip or all catches
-            await LoadCatchesAsync();
+            // Load past trips
+            await LoadRecentTripsAsync();
+
+            //// Load catches for active trip or all catches
+            //await LoadCatchesAsync();
 
             IsInitializing = false;
         }, "Initializing catches...");
@@ -73,7 +100,95 @@ public partial class CatchesViewModel : BaseViewModel
 
     #endregion
 
-    #region Commands
+    #region Trip Management Commands
+
+
+
+    [RelayCommand]
+    private async Task StartNewTripAsync()
+    {
+        if (string.IsNullOrWhiteSpace(NewTripName))
+        {
+            await ShowAlertAsync("Trip Name Required", "Please enter a name for your trip.");
+            return;
+        }
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            // Get current location and weather
+            var location = await _locationService.GetCurrentLocationAsync();
+            var weather = await _weatherService.GetCurrentWeatherAsync(
+                location.Latitude,
+                location.Longitude);
+
+            // Create new trip
+            var trip = new TripDataEntity
+            {
+                Id = Guid.NewGuid(),
+                TripName = NewTripName,
+                TripDate = NewTripDate,
+                StartTime = DateTime.Now,
+                IsActive = true,
+                WeatherEntity = weather,
+                WeatherEntityId = weather?.Id,
+                Catches = new List<CatchDataEntity>()
+            };
+
+            // Save to database
+            await _databaseService.SaveTripAsync(trip);
+
+            // Set as active trip
+            ActiveTrip = trip;
+            HasActiveTrip = true;
+
+            // Start duration timer
+            //StartDurationTimer();
+
+            // Clear form
+            NewTripName = string.Empty;
+            NewTripDate = DateTime.Today;
+
+            // Reload recent trips
+            await LoadRecentTripsAsync();
+
+            Title = "Trip Catches";
+
+            Debug.WriteLine($"Started new trip: {trip.TripName}");
+        }, "Starting trip...");
+    }
+
+    [RelayCommand]
+    private async Task EndActiveTripAsync()
+    {
+        if (!HasActiveTrip || ActiveTrip == null)
+            return;
+
+        var confirm = await ShowConfirmationAsync(
+            "End Trip?",
+            $"Are you sure you want to end '{ActiveTrip.TripName}'?",
+            "End Trip",
+            "Cancel");
+
+        if (!confirm)
+            return;
+
+        await ExecuteSafelyAsync(async () =>
+        {
+            ActiveTrip.EndTime = DateTime.Now;
+            ActiveTrip.IsActive = false;
+
+            await _databaseService.UpdateTripAsync(ActiveTrip);
+
+            // Clear active trip
+            ActiveTrip = null;
+            HasActiveTrip = false;
+
+            // Reload trips
+            await LoadRecentTripsAsync();
+
+            Debug.WriteLine("Trip ended successfully");
+        }, "Ending trip...");
+    }
 
     private async Task LoadActiveTripAsync()
     {
@@ -91,202 +206,58 @@ public partial class CatchesViewModel : BaseViewModel
         }
     }
 
-    private async Task LoadCatchesAsync()
+    private async Task LoadRecentTripsAsync()
     {
-        await ExecuteSafelyAsync(async () =>
+        var trips = await _databaseService.GetRecentTripsAsync(10);
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            IsLoading = true;
-
-            List<CatchDataEntity> allCatches;
-
-            if (HasActiveTrip && ActiveTrip != null)
+            RecentTrips.Clear();
+            foreach (var trip in trips)
             {
-                // Load catches only for active trip
-                allCatches = await _databaseService.GetCatchesForTripAsync(ActiveTrip.Id);
+                RecentTrips.Add(trip);
             }
-            else
-            {
-                // Load all catches
-                allCatches = await _databaseService.GetCatchDataAsync();
-            }
-
-            var todaysCatchList = allCatches
-                .Where(c => c.Timestamp.Date == DateTime.Today)
-                .ToList();
-
-            Catches = new ObservableCollection<CatchDataEntity>(allCatches);
-            TotalCatches = allCatches.Count;
-            TodaysCatches = todaysCatchList.Count;
-
-            Debug.WriteLine($"Loaded {allCatches.Count} catch records");
-            IsLoading = false;
-        }, "Loading catches...");
+        });
     }
 
     [RelayCommand]
-    private void AddNewCatch()
+    private async Task ViewTripDetailsAsync(TripDataEntity trip)
+    //[RelayCommand(CanExecute = nameof(CanViewTripDetails))]
+    //private void ViewTripDetailsAsync(TripDataEntity trip)
     {
-        Debug.WriteLine("=== ADD NEW CATCH BUTTON CLICKED ===");
-        Shell.Current.DisplayAlert("Test", "Button works!", "OK");
-    }
+        Debug.WriteLine("=== ViewTripDetails EXECUTING ===");
 
-        /*    private async Task AddNewCatchAsync()   //(RodEntity rodEntity)
-    {
-        Debug.WriteLine("AddNewCatch command executed!"); // Add this to verify it's being called
-
-        if (string.IsNullOrWhiteSpace(SelectedFishOption))
-        {
-            await ShowAlertAsync("No Species Selected", "Please select a fish species before logging a catch.");
-            return;
-        }
-
-        // Check if there's an active trip
-        if (!HasActiveTrip)
-        {
-            await ShowAlertAsync("No Active Trip",
-                "Please start a trip before logging catches. Go to the Trips tab to start a new trip.");
-            return;
-        }
-
-        await ExecuteSafelyAsync(async () =>
-        {
-            var currentLocation = await _locationService.GetCurrentLocationAsync();
-            var fishInfo = FishData.GetInfo(SelectedFishOption);
-
-            var newCatch = new CatchDataEntity
-            {
-                Id = Guid.NewGuid(),
-                Timestamp = DateTime.Now,
-                Latitude = currentLocation.Latitude,
-                Longitude = currentLocation.Longitude,
-                FishInfoId = fishInfo.Id,
-                TripId = ActiveTrip!.Id  // Set the TripId
-            };
-
-            // Save catch
-            await _databaseService.SaveCatchAsync(newCatch);
-
-            // Add catch to active trip's collection for UI
-            if (ActiveTrip.Catches == null)
-            {
-                ActiveTrip.Catches = new List<CatchDataEntity>();
-            }
-            ActiveTrip.Catches.Add(newCatch);
-
-            Catches.Insert(0, newCatch);
-            TotalCatches++;
-            if (newCatch.Timestamp.Date == DateTime.Today)
-            {
-                TodaysCatches++;
-            }
-
-            Debug.WriteLine($"Added new catch: {SelectedFishOption} at {newCatch.Timestamp}");
-
-            // Clear selection
-            SelectedFishOption = string.Empty;
-        }, "Adding catch...");
-
-    }
-        */
-    [RelayCommand]
-    private async Task DeleteCatchAsync(CatchDataEntity catchToDelete)
-    {
-        if (catchToDelete == null)
+        if (trip == null)
             return;
 
-        var confirm = await ShowConfirmationAsync(
-            "Delete Catch?",
-            $"Are you sure you want to delete this catch?",
-            "Delete",
-            "Cancel");
+        // Navigate to trip details or set as active to view catches
+        //if (trip.IsActive)
+        //{
+        //    ActiveTrip = trip;
+        //    HasActiveTrip = true;
+        //    //StartDurationTimer();
+        //}
+        //else
+        //{
+        // TODO: Navigate to trip history/details view
+        await Shell.Current.DisplayAlert("Trip Details",
+            $"Trip: {trip.TripName}\n" +
+            $"Date: {trip.TripDate:d}\n" +
+            $"Catches: {trip.CatchCount}\n", "OK");
 
-        if (!confirm)
-            return;
-
-        await ExecuteSafelyAsync(async () =>
-        {
-            await _databaseService.DeleteCatchAsync(catchToDelete.Id);
-
-            Catches.Remove(catchToDelete);
-            TotalCatches--;
-
-            if (catchToDelete.Timestamp.Date == DateTime.Today)
-            {
-                TodaysCatches--;
-            }
-
-            // Update active trip's catch collection if exists
-            if (ActiveTrip?.Catches != null)
-            {
-                ActiveTrip.Catches.Remove(catchToDelete);
-            }
-
-            Debug.WriteLine($"Deleted catch: {catchToDelete.Id}");
-        }, "Deleting catch...");
+        //await ShowAlertAsync("Trip Details",
+        //        $"Trip: {trip.TripName}\n" +
+        //        $"Date: {trip.TripDate:d}\n" +
+        //        $"Catches: {trip.CatchCount}\n");
+            //+ $"Duration: {trip.Duration?.ToString(@"hh\:mm\:ss") ?? "N/A"}");
+        //}
     }
 
-    [RelayCommand]
-    private async Task RefreshCatchesAsync()
-    {
-        //await LoadActiveTripAsync();
-        //await LoadCatchesAsync();
-    }
+    //private bool CanViewTripDetails(TripDataEntity trip)
+    //{
+    //    Debug.WriteLine($"CanViewTripDetails called - trip is null: {trip == null}");
+    //    return trip != null;
+    //}
 
-    [RelayCommand]
-    private async Task AddRod()
-    {
-        await ExecuteSafelyAsync(async () =>
-        {
-            IsLoading = true;
-
-            // Add new rod to trip
-            var _rod = new RodEntity
-            {
-                Name = $"Rod {Rods.Count + 1}"
-            };
-
-            Rods.Add(_rod);
-            Debug.WriteLine($"Added new rod: {_rod.Name}");
-
-
-            //var currentLocation = await _locationService.GetCurrentLocationAsync();
-            //var fishInfo = FishData.GetInfo(SelectedFishOption);
-
-            //var newCatch = new CatchDataEntity
-            //{
-            //    Id = Guid.NewGuid(),
-            //    Timestamp = DateTime.Now,
-            //    Latitude = currentLocation.Latitude,
-            //    Longitude = currentLocation.Longitude,
-            //    FishInfoId = fishInfo.Id,
-            //    TripId = ActiveTrip!.Id  // Set the TripId
-            //};
-
-            //// Save catch
-            //await _databaseService.SaveCatchAsync(newCatch);
-
-            //// Add catch to active trip's collection for UI
-            //if (ActiveTrip.Catches == null)
-            //{
-            //    ActiveTrip.Catches = new List<CatchDataEntity>();
-            //}
-            //ActiveTrip.Catches.Add(newCatch);
-
-            //Catches.Insert(0, newCatch);
-            //TotalCatches++;
-            //if (newCatch.Timestamp.Date == DateTime.Today)
-            //{
-            //    TodaysCatches++;
-            //}
-
-            //Debug.WriteLine($"Added new catch: {SelectedFishOption} at {newCatch.Timestamp}");
-
-            //// Clear selection
-            //SelectedFishOption = string.Empty;
-            IsLoading = false;
-
-        }, "Adding rod...");
-    }
-
-    #endregion
+    #endregion Trip Management Commands
 }

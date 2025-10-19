@@ -158,14 +158,6 @@ namespace TrollTrack.Features.Shared
             _disposed = true;
         }
 
-        /// <summary>
-        /// Finalizer - only needed if you have unmanaged resources
-        /// Since we don't, this is commented out but shown for reference
-        /// </summary>
-        // ~BaseViewModel()
-        // {
-        //     Dispose(false);
-        // }
 
         /// <summary>
         /// Helper method to throw if the object has been disposed

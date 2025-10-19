@@ -73,11 +73,22 @@
 
 		<!-- Raw Assets -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		<AndroidResource Remove="Features\CatchesOld\**" />
+		<AndroidResource Remove="Features\Trips\**" />
+		<Compile Remove="Features\CatchesOld\**" />
+		<Compile Remove="Features\Trips\**" />
+		<EmbeddedResource Remove="Features\CatchesOld\**" />
+		<EmbeddedResource Remove="Features\Trips\**" />
+		<MauiCss Remove="Features\CatchesOld\**" />
+		<MauiCss Remove="Features\Trips\**" />
+		<MauiXaml Remove="Features\CatchesOld\**" />
+		<MauiXaml Remove="Features\Trips\**" />
+		<None Remove="Features\CatchesOld\**" />
+		<None Remove="Features\Trips\**" />
 		<EmbeddedResource Include="Configuration\appsettings.json" />
 	</ItemGroup>
 		
 	<ItemGroup>
-	  <Compile Remove="Features\Catches\CatchData.cs" />
 	  <Compile Remove="Features\Lures\LureData.cs" />
 	  <Compile Remove="Features\Programs\ProgramData.cs" />
 	</ItemGroup>
@@ -119,21 +130,10 @@
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.110" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Compile Update="Features\Trips\TripCatchesContainerView.xaml.cs">
-	    <DependentUpon>TripCatchesContainerView.xaml</DependentUpon>
-	  </Compile>
-	  <Compile Update="Features\Trips\TripView.xaml.cs">
-	    <DependentUpon>TripView.xaml</DependentUpon>
-	  </Compile>
-	</ItemGroup>
-	<ItemGroup>
+	  <MauiXaml Update="Features\Catches\CatchesView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Features\Settings\SettingsView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Features\Trips\TripCatchesContainerView.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Features\Trips\TripView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
