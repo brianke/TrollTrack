@@ -13,7 +13,7 @@ namespace TrollTrack.Features.Shared
         private bool _disposed;
         #endregion
 
-        #region Protected Properties - Access services through these
+        #region Protected Properties - Access services through these**
         protected ILocationService LocationService => _locationService;
         protected IDatabaseService DatabaseService => _databaseService;
         #endregion

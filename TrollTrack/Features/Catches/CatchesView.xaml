@@ -39,8 +39,8 @@
 
                 <!-- View Past Trips Section -->
                 <CollectionView ItemsSource="{Binding RecentTrips}"
-                                SelectionMode="Single"
-                                SelectionChanged="OnTripSelectionChanged">
+                                SelectionMode="Single">
+                    <!--SelectionChanged="OnTripSelectionChanged">-->
                     <CollectionView.EmptyView>
                         <Label Text="No trips yet. Start your first trip!"
                                HorizontalOptions="Center"
@@ -48,50 +48,47 @@
                                Margin="0,20"/>
                     </CollectionView.EmptyView>
 
-                    <!--<CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="e:TripDataEntity">
-                            <Button Text="{Binding TripName}"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CatchesViewModel}}, Path=ViewTripDetailsCommand}"
-                                    CommandParameter="{Binding .}"
-                                    Style="{StaticResource InfoCard}"
-                                    HorizontalOptions="FillAndExpand"
-                                    Margin="0,5"/>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>-->
-                    
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="e:TripDataEntity">
                             <Border Style="{StaticResource InfoCard}"
                                     Margin="0,5">
-                                <!--<Border.GestureRecognizers>
-                                    <TapGestureRecognizer 
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnTripTapped"/>
+                                    <!--<TapGestureRecognizer 
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CatchesViewModel}}, Path=ViewTripDetailsCommand}"
-                                            CommandParameter="{Binding .}" />
-                                </Border.GestureRecognizers>-->
+                                            CommandParameter="{Binding .}" />-->
+                                </Border.GestureRecognizers>
 
-                                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
-                                    <Label Text="{Binding TripName}"
+                            <!--<Button Text="{Binding TripName}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CatchesViewModel}}, Path=ViewTripDetailsCommand}"
+                                    CommandParameter="{Binding .}" 
+                                    BackgroundColor="{StaticResource Primary}"
+                                    Margin="0,10,0,0">
+                                </Button>-->
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+                                <Label Text="{Binding TripName}"
                                                 FontSize="18"
                                                 FontAttributes="Bold"
                                                 Grid.Row="0" Grid.Column="0"/>
 
-                                    <Label Text="🎣 ACTIVE"
+                                <Label Text="🎣 ACTIVE"
                                            TextColor="Green"
                                            FontAttributes="Bold"
                                            Grid.Row="0" Grid.Column="1"
                                            IsVisible="{Binding IsActive}"/>
 
-                                    <Label Text="{Binding TripDate, StringFormat='{0:D}'}"
+                                <Label Text="{Binding TripDate, StringFormat='{0:D}'}"
                                            Grid.Row="1" Grid.Column="0"
                                            Grid.ColumnSpan="2"/>
 
-                                    <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
-                                        <Label Text="{Binding CatchCount}"/>
-                                        <Label Text=" catches"/>
-                                        <Label Text=" • "/>
-                                        <!--<Label Text="{Binding Location}"/>-->
-                                    </HorizontalStackLayout>
-                                </Grid>
+                                <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                                    <Label Text="{Binding CatchCount}"/>
+                                    <Label Text=" catches"/>
+                                    <Label Text=" • "/>
+                                    <Label Text="{Binding Location}"/>
+                                </HorizontalStackLayout>
+                            </Grid>
+                            
                             </Border>
                         </DataTemplate>
                     </CollectionView.ItemTemplate>
@@ -121,7 +118,75 @@
                         Command="{Binding EndActiveTripCommand}"
                         BackgroundColor="{StaticResource Primary}"
                         Margin="0,10,0,0"/>
-                
+
+                <!-- Add New Rod Section -->
+                <Border Style="{StaticResource InfoCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Add Rod"
+                               Style="{StaticResource CardTitle}"
+                               HorizontalOptions="Center"/>
+                        <Button Text="+ Add Rod"
+                                Style="{StaticResource CircularButton}"
+                                WidthRequest="120"
+                                HeightRequest="40"
+                                CornerRadius="20"
+                                Command="{Binding AddRodCommand}"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Add Catch Section -->
+                <Border Style="{StaticResource InfoCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Log New Catch"
+                               Style="{StaticResource CardTitle}"
+                               HorizontalOptions="Center"/>
+
+                        <Label Text="No rods configured. Add a rod first!"
+                               HorizontalOptions="Center"
+                               TextColor="{StaticResource Gray500}"
+                               Margin="0,10"
+                               IsVisible="{Binding HasNoRods}"/>
+
+                        <FlexLayout BindableLayout.ItemsSource="{Binding Rods}"
+                                    Wrap="Wrap"
+                                    JustifyContent="Center"
+                                    AlignItems="Start"
+                                    AlignContent="Start">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="e:RodEntity">
+                                    <Border Style="{StaticResource InfoCard}"
+                                            Margin="5">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Tapped="OnAddCatchTapped"/>
+                                        </Border.GestureRecognizers>
+
+                                        <VerticalStackLayout Spacing="10">
+                                            <Label Text="{Binding Name}"
+                                                   Style="{StaticResource CardTitle}"
+                                                   HorizontalOptions="Center"/>
+                                           
+                                            <!--<Button Text="+"
+                                                    Style="{StaticResource CircularButton}"
+                                                    WidthRequest="120"
+                                                    HeightRequest="40"
+                                                    CornerRadius="20" />-->
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                                <!--<DataTemplate x:DataType="e:RodEntity">
+                                    <Button Text="{Binding Name}"
+                                        Style="{StaticResource AddCatchButton}"
+                                        FontSize="12"
+                                        Padding="5"
+                                        Margin="5"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CatchesViewModel}}, Path=AddNewCatchCommand}" />-->
+                                    <!--CommandParameter="{Binding .}"/>
+                                </DataTemplate>-->
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                        
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
 
 

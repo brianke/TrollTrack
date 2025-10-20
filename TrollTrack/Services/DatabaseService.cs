@@ -41,6 +41,7 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<LureDataEntity>();
                 await _database.CreateTableAsync<LureImageEntity>();
                 await _database.CreateTableAsync<TripDataEntity>();
+                await _database.CreateTableAsync<RodEntity>();
                 await _database.CreateTableAsync<WeatherDataEntity>();
                 //await _database.CreateTableAsync<TrollingDataPoint>();
 

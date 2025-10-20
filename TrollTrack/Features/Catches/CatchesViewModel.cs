@@ -35,6 +35,15 @@ public partial class CatchesViewModel : BaseViewModel
 
     #endregion Trip Properties
 
+    #region Rod Properites
+
+    [ObservableProperty]
+    private ObservableCollection<RodEntity> _rods = [];
+
+    public bool HasNoRods => Rods == null || Rods.Count == 0;
+
+
+    #endregion
 
     #region Catch Properties
 
@@ -52,11 +61,6 @@ public partial class CatchesViewModel : BaseViewModel
 
     [ObservableProperty]
     private int _todaysCatches;
-
-    [ObservableProperty]
-    private ObservableCollection<RodEntity> _rods = [];
-
-    public bool HasNoRods => Rods == null || Rods.Count == 0;
 
     #endregion Catch Properties
 
@@ -260,4 +264,42 @@ public partial class CatchesViewModel : BaseViewModel
     //}
 
     #endregion Trip Management Commands
+
+
+    #region Rod Commands
+
+    [RelayCommand]
+    private async Task AddRod()
+    {
+        await ExecuteSafelyAsync(async () =>
+        {
+            IsLoading = true;
+
+            // Add new rod to trip
+            var _rod = new RodEntity
+            {
+                Name = $"Rod {Rods.Count + 1}"
+            };
+
+            Rods.Add(_rod);
+            Debug.WriteLine($"Added new rod: {_rod.Name}");
+
+            IsLoading = false;
+
+        }, "Adding rod...");
+    }
+
+    #endregion
+
+
+    #region Catches COmmands
+
+    [RelayCommand]
+    private async Task AddNewCatch(RodEntity rod)
+    {
+        Debug.WriteLine("=== ADD NEW CATCH BUTTON CLICKED ===");
+        Shell.Current.DisplayAlert("Test", "Button works!", "OK");
+    }
+
+    #endregion
 }
