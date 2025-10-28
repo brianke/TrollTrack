@@ -45,6 +45,11 @@ namespace TrollTrack.Features.Shared.Models
         {
             return FishList.Select(f => f.CommonName).ToList();
         }
+
+        public static string GetFishNameById(Guid fishInfoId)
+        {
+            return FishList.FirstOrDefault(f => f.Id == fishInfoId)?.CommonName ?? "Unknown";
+        }
     }
 
 }

@@ -1,8 +1,4 @@
-﻿using SQLite;
-using SQLiteNetExtensions.Attributes;
-using System;
-using System.ComponentModel.DataAnnotations;
-using TrollTrack.Features.Shared.Models.Entities;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TrollTrack.Features.Shared.Models.Entities
 {
@@ -10,7 +6,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
     public class LureImageEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
         public string Path { get; set; } = string.Empty;

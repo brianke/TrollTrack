@@ -1,12 +1,12 @@
-﻿using SQLiteNetExtensions.Attributes;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("FishInfo")]
     public class FishInfoEntity
     {
-        public Guid Id { get; set; }
+        [PrimaryKey]
+        public Guid Id { get; set; } = Guid.NewGuid();
         
         [Required]
         public string CommonName { get; set; }

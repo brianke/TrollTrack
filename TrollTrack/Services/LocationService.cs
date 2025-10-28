@@ -28,7 +28,7 @@ namespace TrollTrack.Services
         /// Event that is fired whenever the locaiton is updated
         /// This event can be subscribed to by other classes/models when needing to do something when location is updated
         /// </summary>
-        public event EventHandler<LocationDataEntity> LocationUpdated;
+        public event EventHandler<LocationDataEntity>? LocationUpdated;
 
 
         // List for tracking location history

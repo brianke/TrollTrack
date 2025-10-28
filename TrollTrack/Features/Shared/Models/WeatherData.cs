@@ -8,7 +8,7 @@ namespace TrollTrack.Features.Shared.Models
     /// </summary>
     public class WeatherData
     {
-        public WeatherDataEntity WeatherEntity { get; set; }
+        public WeatherDataEntity WeatherEntity { get; set; } = new WeatherDataEntity();
 
         // Derived properties for fishing
         public bool IsFishingWeatherGood => CalculateFishingConditions();

@@ -11,7 +11,6 @@ public partial class ProgramsView : ContentPage
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         BindingContext = viewModel;
-        _viewModel = viewModel;
     }
 
 

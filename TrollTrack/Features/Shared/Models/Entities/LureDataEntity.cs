@@ -7,7 +7,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
     public class LureDataEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
         public String Manufacturer { get; set; } = string.Empty;

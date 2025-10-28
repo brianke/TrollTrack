@@ -1,19 +1,23 @@
-namespace TrollTrack.Features.Dashboard;
+namespace TrollTrack.Features.Catches;
 
-public partial class DashboardView : ContentPage
+public partial class CatchesViewOld : ContentView
 {
-    private readonly DashboardViewModel _viewModel;
+    private readonly CatchesViewModelOld _viewModel;
 
-    public DashboardView(DashboardViewModel viewModel)
+    public CatchesViewOld(CatchesViewModelOld viewModel)
     {
         InitializeComponent();
 
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         BindingContext = viewModel;
+
+        // Add this for debugging
+        Debug.WriteLine($"BindingContext set to: {BindingContext?.GetType().Name}");
+
     }
 
-
+    /*
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -31,7 +35,6 @@ public partial class DashboardView : ContentPage
         }
     }
 
-
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
@@ -39,4 +42,5 @@ public partial class DashboardView : ContentPage
         // The ViewModel will handle its own cleanup through BaseViewModel's Dispose
         // No additional cleanup needed here
     }
+    */
 }

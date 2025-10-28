@@ -13,7 +13,7 @@ namespace TrollTrack.Features.Shared
         private bool _disposed;
         #endregion
 
-        #region Protected Properties - Access services through these
+        #region Protected Properties - Access services through these**
         protected ILocationService LocationService => _locationService;
         protected IDatabaseService DatabaseService => _databaseService;
         #endregion
@@ -158,14 +158,6 @@ namespace TrollTrack.Features.Shared
             _disposed = true;
         }
 
-        /// <summary>
-        /// Finalizer - only needed if you have unmanaged resources
-        /// Since we don't, this is commented out but shown for reference
-        /// </summary>
-        // ~BaseViewModel()
-        // {
-        //     Dispose(false);
-        // }
 
         /// <summary>
         /// Helper method to throw if the object has been disposed

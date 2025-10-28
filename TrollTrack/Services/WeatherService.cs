@@ -109,14 +109,14 @@ public class WeatherService : IWeatherService
             Longitude = location.Lon,
             LocationName = location.Name,
             Temperature = current.TempF,
-            FeelsLike = current.FeelslikeF,
+            //FeelsLike = current.FeelslikeF,
             TemperatureUnit = "F",
             Humidity = current.Humidity,
             Pressure = current.PressureIn * 33.8639, // Convert inHg to hPa
             WindSpeed = current.WindMph,
             WindDirection = current.WindDegree,
-            WindDirectionCardinal = current.WindDir,
-            WindGust = current.GustMph,
+            //WindDirectionCardinal = current.WindDir,
+            //WindGust = current.GustMph,
             WindSpeedUnit = "mph",
             Visibility = current.VisMiles,
             CloudCover = current.Cloud,
@@ -124,8 +124,8 @@ public class WeatherService : IWeatherService
             WeatherDescription = current.Condition?.Text ?? string.Empty,
             UvIndex = current.Uv,
             RainfallAmount = current.PrecipIn,
-            AirQualityIndex = current.AirQuality?.UsEpaIndex,
-            AirQualityDescription = GetAirQualityDescription(current.AirQuality?.UsEpaIndex)
+            //AirQualityIndex = current.AirQuality?.UsEpaIndex,
+            //AirQualityDescription = GetAirQualityDescription(current.AirQuality?.UsEpaIndex)
         };
     }
 
@@ -138,8 +138,8 @@ public class WeatherService : IWeatherService
             Longitude = location.Lon,
             LocationName = location.Name,
             Temperature = forecastDay.Day.AvgtempF,
-            TemperatureMin = forecastDay.Day.MintempF,
-            TemperatureMax = forecastDay.Day.MaxtempF,
+            //TemperatureMin = forecastDay.Day.MintempF,
+            //TemperatureMax = forecastDay.Day.MaxtempF,
             TemperatureUnit = "F",
             Humidity = forecastDay.Day.Avghumidity,
             WindSpeed = forecastDay.Day.MaxwindMph,
@@ -169,17 +169,17 @@ public class WeatherService : IWeatherService
         return DateTime.MinValue;
     }
 
-    private static string GetAirQualityDescription(int? index)
-    {
-        return index switch
-        {
-            1 => "Good",
-            2 => "Moderate",
-            3 => "Unhealthy for Sensitive Groups",
-            4 => "Unhealthy",
-            5 => "Very Unhealthy",
-            6 => "Hazardous",
-            _ => "Unknown"
-        };
-    }
+    //private static string GetAirQualityDescription(int? index)
+    //{
+    //    return index switch
+    //    {
+    //        1 => "Good",
+    //        2 => "Moderate",
+    //        3 => "Unhealthy for Sensitive Groups",
+    //        4 => "Unhealthy",
+    //        5 => "Very Unhealthy",
+    //        6 => "Hazardous",
+    //        _ => "Unknown"
+    //    };
+    //}
 }

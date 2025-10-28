@@ -8,7 +8,8 @@
     <VerticalStackLayout>
         <!-- Settings Content -->
 
-        <StackLayout Spacing="20">
+        <StackLayout Spacing="15"
+                     Margin="15">
             <!-- Header -->
             <Grid ColumnDefinitions="*,Auto">
                 <Label Text="⚙️ Settings" 
@@ -31,6 +32,25 @@
                                 HorizontalOptions="Start"
                                 Margin="0,10,0,0"/>
                 </StackLayout>
+            </Border>
+
+            <!-- Debug Export Button -->
+            <Border Style="{StaticResource InfoCard}" 
+                        Padding="15" 
+                        BackgroundColor="#FF6B35">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="🔧 Developer Tools" 
+                               FontSize="18" 
+                               FontAttributes="Bold"
+                               TextColor="White"
+                               HorizontalOptions="Center"/>
+                    <Button Text="📤 Export Database" 
+                                Command="{Binding ExportDatabaseCommand}"
+                                BackgroundColor="White"
+                                TextColor="#FF6B35"
+                                FontAttributes="Bold"
+                                HorizontalOptions="Fill"/>
+                </VerticalStackLayout>
             </Border>
 
             <!-- Danger Zone -->

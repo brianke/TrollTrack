@@ -8,7 +8,7 @@ public class Current
     public long LastUpdatedEpoch { get; set; }
 
     [JsonProperty("last_updated")]
-    public string LastUpdated { get; set; }
+    public string LastUpdated { get; set; } = string.Empty;
 
     [JsonProperty("temp_c")]
     public double TempC { get; set; }
@@ -20,7 +20,7 @@ public class Current
     public int IsDay { get; set; }
 
     [JsonProperty("condition")]
-    public Condition Condition { get; set; }
+    public Condition Condition { get; set; } = new Condition();
 
     [JsonProperty("wind_mph")]
     public double WindMph { get; set; }
@@ -32,7 +32,7 @@ public class Current
     public int WindDegree { get; set; }
 
     [JsonProperty("wind_dir")]
-    public string WindDir { get; set; }
+    public string WindDir { get; set; } = string.Empty;
 
     [JsonProperty("pressure_mb")]
     public double PressureMb { get; set; }
@@ -74,5 +74,5 @@ public class Current
     public double GustKph { get; set; }
 
     [JsonProperty("air_quality")]
-    public AirQuality AirQuality { get; set; }
+    public AirQuality AirQuality { get; set; } = new AirQuality();
 }

@@ -1,9 +1,6 @@
 using SQLiteNetExtensionsAsync.Extensions;
 using TrollTrack.Configuration;
-using TrollTrack.Features.Catches;
-using TrollTrack.Features.Shared.Models;
 using TrollTrack.Features.Shared.Models.Entities;
-using TrollTrack.Models.Entities;
 
 namespace TrollTrack.Services
 {
@@ -43,7 +40,11 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<FishInfoEntity>();
                 await _database.CreateTableAsync<LureDataEntity>();
                 await _database.CreateTableAsync<LureImageEntity>();
-                await _database.CreateTableAsync<LureImageEntity>();
+                await _database.CreateTableAsync<TripDataEntity>();
+                await _database.CreateTableAsync<RodEntity>();
+                await _database.CreateTableAsync<WeatherDataEntity>();
+                await _database.CreateTableAsync<CustomClarityEntity>();
+
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }
@@ -75,6 +76,377 @@ namespace TrollTrack.Services
             await _initializationTask;
             return _database!;
         }
+
+        #region Trip Data Operations
+
+        /// <summary>
+        /// Save or update a trip
+        /// </summary>
+        public async Task<int> SaveTripAsync(TripDataEntity trip)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                // Save weather entity first if it exists
+                if (trip.WeatherEntity != null)
+                {
+                    await db.InsertOrReplaceAsync(trip.WeatherEntity);
+                    trip.WeatherEntityId = trip.WeatherEntity.Id;
+                }
+
+                // Save the trip
+                await db.InsertOrReplaceAsync(trip);
+
+                // Save catches with TripId set
+                if (trip.Catches != null && trip.Catches.Any())
+                {
+                    foreach (var catchEntity in trip.Catches)
+                    {
+                        catchEntity.TripId = trip.Id; // Ensure TripId is set
+                        await db.InsertOrReplaceWithChildrenAsync(catchEntity, recursive: true);
+                    }
+                }
+
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving trip: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Update an existing trip record
+        /// </summary>
+        public async Task<int> UpdateTripAsync(TripDataEntity tripData)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                // Update the trip and its children (catches)
+                await db.UpdateWithChildrenAsync(tripData);
+
+                Debug.WriteLine($"Updated trip: {tripData.TripName}, IsActive: {tripData.IsActive}");
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error updating trip: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Get a specific trip by ID
+        /// </summary>
+        public async Task<TripDataEntity?> GetTripByIdAsync(Guid id)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var trip = await db.FindAsync<TripDataEntity>(id);
+
+                if (trip == null)
+                    return null;
+
+                // Load weather entity separately if needed
+                if (trip.WeatherEntityId != null)
+                {
+                    try
+                    {
+                        trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(trip.WeatherEntityId.Value);
+                    }
+                    catch
+                    {
+                        // Weather entity not found, continue
+                    }
+                }
+
+                // Load catches for this trip
+                trip.Catches = await db.Table<CatchDataEntity>()
+                    .Where(c => c.TripId == id)
+                    .ToListAsync();
+
+                // Load children for each catch
+                foreach (var catchEntity in trip.Catches)
+                {
+                    await db.GetChildrenAsync(catchEntity, recursive: true);
+                }
+
+                return trip;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting trip by ID: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get the currently active trip
+        /// </summary>
+        public async Task<TripDataEntity?> GetActiveTripAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var activeTrip = await db.Table<TripDataEntity>()
+                    .Where(t => t.IsActive)
+                    .FirstOrDefaultAsync();
+
+                if (activeTrip != null)
+                {
+                    // Load weather entity
+                    if (activeTrip.WeatherEntityId != null)
+                    {
+                        try
+                        {
+                            activeTrip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
+                                activeTrip.WeatherEntityId.Value);
+                        }
+                        catch
+                        {
+                            // Weather entity not found, continue
+                        }
+                    }
+
+                    // Load catches for this trip
+                    activeTrip.Catches = await db.Table<CatchDataEntity>()
+                        .Where(c => c.TripId == activeTrip.Id)
+                        .ToListAsync();
+
+                    // Load children for each catch
+                    foreach (var catchEntity in activeTrip.Catches)
+                    {
+                        await db.GetChildrenAsync(catchEntity, recursive: true);
+                    }
+                }
+
+                return activeTrip;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting active trip: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Get all trips
+        /// </summary>
+        public async Task<List<TripDataEntity>> GetAllTripsAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var trips = await db.Table<TripDataEntity>()
+                    .OrderByDescending(t => t.TripDate)
+                    .ToListAsync();
+
+                // Load weather entities and catches for each trip
+                foreach (var trip in trips)
+                {
+                    if (trip.WeatherEntityId != null)
+                    {
+                        try
+                        {
+                            trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
+                                trip.WeatherEntityId.Value);
+                        }
+                        catch
+                        {
+                            // Weather entity not found, continue
+                        }
+                    }
+
+                    // Load catches
+                    trip.Catches = await db.Table<CatchDataEntity>()
+                        .Where(c => c.TripId == trip.Id)
+                        .ToListAsync();
+
+                    // Load children for each catch
+                    foreach (var catchEntity in trip.Catches)
+                    {
+                        await db.GetChildrenAsync(catchEntity, recursive: true);
+                    }
+                }
+
+                return trips;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting all trips: {ex.Message}");
+                return new List<TripDataEntity>();
+            }
+        }
+
+        /// <summary>
+        /// Get recent trips
+        /// </summary>
+        public async Task<List<TripDataEntity>> GetRecentTripsAsync(int count = 10)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var trips = await db.Table<TripDataEntity>()
+                    .OrderByDescending(t => t.TripDate)
+                    .Take(count)
+                    .ToListAsync();
+
+                // Load weather and catches for each trip
+                foreach (var trip in trips)
+                {
+                    if (trip.WeatherEntityId != null)
+                    {
+                        try
+                        {
+                            trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
+                                trip.WeatherEntityId.Value);
+                        }
+                        catch
+                        {
+                            // Weather entity not found, continue
+                        }
+                    }
+
+                    // Load catches
+                    trip.Catches = await db.Table<CatchDataEntity>()
+                        .Where(c => c.TripId == trip.Id)
+                        .ToListAsync();
+
+                    // Load children for each catch
+                    foreach (var catchEntity in trip.Catches)
+                    {
+                        await db.GetChildrenAsync(catchEntity, recursive: true);
+                    }
+                }
+
+                return trips;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting recent trips: {ex.Message}");
+                return new List<TripDataEntity>();
+            }
+        }
+
+        /// <summary>
+        /// Get trips within a date range
+        /// </summary>
+        public async Task<List<TripDataEntity>> GetTripsByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var trips = await db.Table<TripDataEntity>()
+                    .Where(t => t.TripDate >= startDate && t.TripDate <= endDate)
+                    .ToListAsync();
+
+                // Load weather and catches for each trip
+                foreach (var trip in trips)
+                {
+                    if (trip.WeatherEntityId != null)
+                    {
+                        try
+                        {
+                            trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
+                                trip.WeatherEntityId.Value);
+                        }
+                        catch
+                        {
+                            // Weather entity not found, continue
+                        }
+                    }
+
+                    // Load catches
+                    trip.Catches = await db.Table<CatchDataEntity>()
+                        .Where(c => c.TripId == trip.Id)
+                        .ToListAsync();
+
+                    // Load children for each catch
+                    foreach (var catchEntity in trip.Catches)
+                    {
+                        await db.GetChildrenAsync(catchEntity, recursive: true);
+                    }
+                }
+
+                return trips.OrderByDescending(t => t.TripDate).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting trips by date range: {ex.Message}");
+                return new List<TripDataEntity>();
+            }
+        }
+
+        /// <summary>
+        /// Get all catches for a specific trip
+        /// </summary>
+        public async Task<List<CatchDataEntity>> GetCatchesForTripAsync(Guid tripId)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var catches = await db.Table<CatchDataEntity>()
+                    .Where(c => c.TripId == tripId)
+                    .OrderByDescending(c => c.Timestamp)
+                    .ToListAsync();
+
+                // Load children for each catch
+                foreach (var catchEntity in catches)
+                {
+                    await db.GetChildrenAsync(catchEntity, recursive: true);
+                }
+
+                return catches;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting catches for trip: {ex.Message}");
+                return new List<CatchDataEntity>();
+            }
+        }
+
+        /// <summary>
+        /// Delete a trip and all associated catches
+        /// </summary>
+        public async Task<int> DeleteTripAsync(Guid id)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                // Delete all catches associated with this trip
+                var catches = await db.Table<CatchDataEntity>()
+                    .Where(c => c.TripId == id)
+                    .ToListAsync();
+
+                foreach (var catchEntity in catches)
+                {
+                    await db.DeleteAsync(catchEntity, recursive: true);
+                }
+
+                // Delete the trip
+                var trip = await db.FindAsync<TripDataEntity>(id);
+                if (trip != null)
+                {
+                    await db.DeleteAsync(trip);
+                    return 1;
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting trip: {ex.Message}");
+                throw;
+            }
+        }
+
+        #endregion
 
         #region Catch Data Operations
 
@@ -235,6 +607,86 @@ namespace TrollTrack.Services
 
         #endregion
 
+        #region Custom Clarity Operations
+
+        public async Task<int> SaveCustomClarityAsync(string clarity)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                // Check if already exists
+                var existing = await db.Table<CustomClarityEntity>()
+                    .Where(c => c.Description == clarity)
+                    .FirstOrDefaultAsync();
+
+                if (existing != null)
+                {
+                    Debug.WriteLine($"Custom clarity '{clarity}' already exists");
+                    return 0;
+                }
+
+                var entity = new CustomClarityEntity
+                {
+                    Id = Guid.NewGuid(),
+                    Description = clarity,
+                    CreatedAt = DateTime.Now
+                };
+
+                await db.InsertAsync(entity);
+                Debug.WriteLine($"Saved custom clarity: {clarity}");
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error saving custom clarity: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<List<string>> GetCustomClaritiesAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entities = await db.Table<CustomClarityEntity>()
+                    .OrderBy(c => c.Description)
+                    .ToListAsync();
+
+                return entities.Select(e => e.Description).ToList();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error getting custom clarities: {ex.Message}");
+                return new List<string>();
+            }
+        }
+
+        public async Task<int> DeleteCustomClarityAsync(string clarity)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entity = await db.Table<CustomClarityEntity>()
+                    .Where(c => c.Description == clarity)
+                    .FirstOrDefaultAsync();
+
+                if (entity != null)
+                {
+                    return await db.DeleteAsync(entity);
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error deleting custom clarity: {ex.Message}");
+                throw;
+            }
+        }
+
+        #endregion
+
         #region Lure Methods
 
         public async Task<int> SaveLureAsync(LureDataEntity lureData)
@@ -278,17 +730,17 @@ namespace TrollTrack.Services
         {
             var entity = catchData;
 
-            if (catchData.ProgramData != null)
-            {
-                // TODO: The ProgramData model is incomplete.
-                entity.ProgramData = new ProgramDataEntity
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Placeholder Program",
-                    Description = "Placeholder Description"
-                };
-                entity.ProgramDataId = entity.ProgramData.Id;
-            }
+            //if (catchData.ProgramData != null)
+            //{
+            //    // TODO: The ProgramData model is incomplete.
+            //    entity.ProgramData = new ProgramDataEntity
+            //    {
+            //        Id = Guid.NewGuid(),
+            //        Name = "Placeholder Program",
+            //        Description = "Placeholder Description"
+            //    };
+            //    entity.ProgramDataId = entity.ProgramData.Id;
+            //}
 
             // TODO: FishInfo should be selected from predefined list, not created new each time
             //entity.FishInfoId = FishData.GetFishInfoId(catchData.FishInfoId.ToString());
@@ -304,11 +756,11 @@ namespace TrollTrack.Services
                 Timestamp = entity.Timestamp
             };
 
-            if (entity.ProgramData != null)
-            {
-                // TODO: The ProgramData model is incomplete.
-                catchData.ProgramData = new ProgramDataEntity();
-            }
+            //if (entity.ProgramData != null)
+            //{
+            //    // TODO: The ProgramData model is incomplete.
+            //    catchData.ProgramData = new ProgramDataEntity();
+            //}
 
             return catchData;
         }
@@ -376,9 +828,6 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
                 await db.DeleteAllAsync<CatchDataEntity>();
-                await db.DeleteAllAsync<LocationDataEntity>();
-                await db.DeleteAllAsync<ProgramDataEntity>();
-                await db.DeleteAllAsync<FishInfoEntity>();
 
                 System.Diagnostics.Debug.WriteLine("All catch data cleared");
             }
@@ -439,6 +888,9 @@ namespace TrollTrack.Services
                 await db.DeleteAllAsync<FishInfoEntity>();
                 await db.DeleteAllAsync<LureDataEntity>();
                 await db.DeleteAllAsync<LureImageEntity>();
+                await db.DeleteAllAsync<TripDataEntity>();
+                await db.DeleteAllAsync<WeatherDataEntity>();
+                await db.DeleteAllAsync<CustomClarityEntity>();
 
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
             }
@@ -450,6 +902,7 @@ namespace TrollTrack.Services
         }
 
         #endregion
+
 
         public async ValueTask DisposeAsync()
         {

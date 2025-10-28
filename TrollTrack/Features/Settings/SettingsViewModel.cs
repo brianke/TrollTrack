@@ -62,6 +62,42 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private async Task ExportDatabaseAsync()
+    {
+        try
+        {
+//#if ANDROID
+            var dbPath = Path.Combine(FileSystem.AppDataDirectory, "trolltrack.db");
+
+            if (!File.Exists(dbPath))
+            {
+                //await DisplayAlert("Error", "Database not found", "OK");
+                return;
+            }
+
+            // Copy to a shareable location
+            var tempPath = Path.Combine(FileSystem.CacheDirectory, $"trolltrack_export.db");
+            File.Copy(dbPath, tempPath, overwrite: true);
+
+            // Share the file - this will let you save it anywhere, email it, etc.
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = "Save TrollTrack Database",
+                File = new ShareFile(tempPath)
+            });
+//#else
+//        await DisplayAlert("Info", "Export only available on Android", "OK");
+//#endif
+        }
+        catch (Exception ex)
+        {
+            //await DisplayAlert("Error", ex.Message, "OK");
+            Debug.WriteLine($"Export error: {ex}");
+        }
+    }
+
+
+    [RelayCommand]
     private async Task ViewDatabasePathAsync()
     {
         var path = Path.Combine(FileSystem.AppDataDirectory, "trolltrack.db");

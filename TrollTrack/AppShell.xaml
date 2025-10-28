@@ -21,9 +21,9 @@
             Icon="dashboard.png"/> -->
 
         <ShellContent
-            Title="Catches"
+            Title="Trips"
             ContentTemplate="{DataTemplate catches:CatchesView}"
-            Route="Catches" />
+            Route="Trips" />
         <!-- 
             Icon="fish.png"/> -->
 
