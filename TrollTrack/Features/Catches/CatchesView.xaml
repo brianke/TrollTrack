@@ -17,24 +17,81 @@
 
                 <!-- Start New Trip Section -->
                 <Border Style="{StaticResource InfoCard}">
-                    <VerticalStackLayout Spacing="10">
+                    <Grid>
+
+                        <!-- Define Rows -->
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width=".35*" />
+                            <ColumnDefinition Width=".65*" />
+                        </Grid.ColumnDefinitions>
+                        
                         <Label Text="Start New Trip" 
                                Style="{StaticResource CardTitle}"
-                               HorizontalOptions="Center"/>
+                               HorizontalOptions="Center" 
+                               Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" />
 
-                        <Label Text="Trip Name"/>
+                        <Label Text="Trip Name"
+                               VerticalOptions="Center"
+                               Grid.Row="1" Grid.Column="0" />
                         <Entry Text="{Binding NewTripName}"
-                               Placeholder="e.g., Lake Erie Morning Run"/>
+                               Placeholder="e.g., Lake Erie Morning Run"
+                               PlaceholderColor="White"
+                               Grid.Row="1" Grid.Column="1" />
 
-                        <Label Text="Trip Date"/>
+                        <Label Text="Trip Date"
+                               VerticalOptions="Center"
+                               Grid.Row="2" Grid.Column="0" />
                         <DatePicker Date="{Binding NewTripDate}"
-                                    Format="D"/>
+                                    Format="D"
+                                    Grid.Row="2" Grid.Column="1" />
+
+                        <Label Text="Water Temp (F)"
+                               VerticalOptions="Center"
+                               Grid.Row="3" Grid.Column="0" />
+                        <Picker Title="Water Temp (F)"
+                                ItemsSource="{Binding WaterTemps}"
+                                SelectedItem="{Binding WaterTemp, Mode=TwoWay}"
+                                Grid.Row="3" Grid.Column="1" />
+
+                        <Label Text="Secchi Depth (ft)"
+                               VerticalOptions="Center"
+                               Grid.Row="4" Grid.Column="0" />
+                        <Picker ItemsSource="{Binding SecchiNumberList}"
+                                SelectedItem="{Binding SecchiDepth, Mode=TwoWay}"
+                                Grid.Row="4" Grid.Column="1" />
+
+                        <Label Text="Water Clarity"
+                               VerticalOptions="Center"
+                               Grid.Row="5" Grid.Column="0" />
+                        <Picker ItemsSource="{Binding ClarityOptions}"
+                                SelectedItem="{Binding Clarity, Mode=TwoWay}"
+                                Grid.Row="5" Grid.Column="1" />
+
+                        <Label Text="Trip Notes"
+                               VerticalOptions="Center"
+                               Grid.Row="6" Grid.Column="0" />
+                        <Entry Text="{Binding TripNotes}"
+                               Placeholder="e.g., Taking friends out for walleye"
+                               PlaceholderColor="White"
+                               Grid.Row="6" Grid.Column="1" />
 
                         <Button Text="🚤 Start Trip"
                                 Command="{Binding StartNewTripCommand}"
                                 BackgroundColor="{StaticResource Primary}"
-                                Margin="0,10,0,0"/>
-                    </VerticalStackLayout>
+                                Margin="0,10,0,0"
+                                Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" />
+                    </Grid>
                 </Border>
 
                 <!-- View Past Trips Section -->
@@ -85,7 +142,7 @@
                                     <Label Text="{Binding CatchCount}"/>
                                     <Label Text=" catches"/>
                                     <Label Text=" • "/>
-                                    <Label Text="{Binding Location}"/>
+                                    <!--<Label Text="{Binding Location}"/>-->
                                 </HorizontalStackLayout>
                             </Grid>
                             
@@ -185,6 +242,89 @@
                             </BindableLayout.ItemTemplate>
                         </FlexLayout>
                         
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Catches List -->
+                <Border Style="{StaticResource InfoCard}">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Catch History"
+                               Style="{StaticResource CardTitle}"
+                               HorizontalOptions="Center"/>
+
+                        <CollectionView ItemsSource="{Binding Catches}"
+                                        SelectionMode="None">
+                            <CollectionView.EmptyView>
+                                <Label Text="No catches yet. Log your first catch!"
+                                       HorizontalOptions="Center"
+                                       TextColor="{StaticResource Gray500}"
+                                       Margin="0,20"/>
+                            </CollectionView.EmptyView>
+
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="e:CatchDataEntity">
+                                    <SwipeView>
+                                        <!--<SwipeView.RightItems>
+                                            <SwipeItems>
+                                                <SwipeItem Text="Delete"
+                                                          BackgroundColor="Red"
+                                                          Command="{Binding Source={RelativeSource AncestorType={x:Type f:CatchesViewModel}}, Path=DeleteCatchCommand}"
+                                                          CommandParameter="{Binding .}"/>
+                                            </SwipeItems>
+                                        </SwipeView.RightItems>-->
+
+                                        <Border Style="{StaticResource InfoCard}"
+                                                Margin="0,5">
+                                            <Grid ColumnDefinitions="Auto,*,Auto" 
+                                                  RowDefinitions="Auto,Auto,Auto"
+                                                  ColumnSpacing="10"
+                                                  RowSpacing="5">
+
+                                                <!-- Fish Icon/Emoji -->
+                                                <Label Text="🐟"
+                                                       FontSize="32"
+                                                       Grid.RowSpan="3"
+                                                       VerticalOptions="Center"/>
+
+                                                <!-- Species Name -->
+                                                <Label Text="{Binding FishName}"
+                                                       FontSize="18"
+                                                       FontAttributes="Bold"
+                                                       Grid.Column="1"
+                                                       Grid.Row="0"/>
+
+                                                <!-- Time -->
+                                                <Label Text="{Binding Timestamp, StringFormat='{0:t}'}"
+                                                       FontSize="14"
+                                                       TextColor="{StaticResource Gray500}"
+                                                       Grid.Column="2"
+                                                       Grid.Row="0"/>
+
+                                                <!-- Location -->
+                                                <Label Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2">
+                                                    <Label.FormattedText>
+                                                        <FormattedString>
+                                                            <Span Text="📍 "/>
+                                                            <Span Text="{Binding Latitude, StringFormat='{0:F4}'}"/>
+                                                            <Span Text=", "/>
+                                                            <Span Text="{Binding Longitude, StringFormat='{0:F4}'}"/>
+                                                        </FormattedString>
+                                                    </Label.FormattedText>
+                                                </Label>
+
+                                                <!-- Date (if not today) -->
+                                                <Label Text="{Binding Timestamp, StringFormat='{0:M/d/yyyy}'}"
+                                                       Grid.Column="1"
+                                                       Grid.Row="2"
+                                                       Grid.ColumnSpan="2"
+                                                       TextColor="{StaticResource Gray500}"
+                                                       FontSize="12"/>
+                                            </Grid>
+                                        </Border>
+                                    </SwipeView>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
                     </VerticalStackLayout>
                 </Border>
             </VerticalStackLayout>

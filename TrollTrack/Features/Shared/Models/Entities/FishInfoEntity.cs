@@ -6,7 +6,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
     public class FishInfoEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
         
         [Required]
         public string CommonName { get; set; }

@@ -6,7 +6,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
     public class CatchDataEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Indexed]
         public DateTime Timestamp { get; set; }
@@ -17,12 +17,21 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         // Foreign key to Trip - NO ManyToOne navigation property
         [ForeignKey(typeof(TripDataEntity))]
-        public Guid? TripId { get; set; }
+        public Guid TripId { get; set; }
 
         [ForeignKey(typeof(ProgramDataEntity))]
-        public Guid? ProgramDataId { get; set; }
+        public Guid ProgramDataId { get; set; }
 
         [ForeignKey(typeof(FishInfoEntity))]
-        public Guid? FishInfoId { get; set; }
+        public Guid FishInfoId { get; set; }
+
+        [Ignore]
+        public string FishName
+        {
+            get
+            {
+                return FishData.GetFishNameById(FishInfoId);
+            }
+        }
     }
 }

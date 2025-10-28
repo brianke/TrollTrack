@@ -104,7 +104,6 @@ public class WeatherService : IWeatherService
     {
         return new WeatherDataEntity
         {
-            Id = new Guid(),
             Timestamp = DateTime.UtcNow,
             Latitude = location.Lat,
             Longitude = location.Lon,
@@ -134,7 +133,6 @@ public class WeatherService : IWeatherService
     {
         return new WeatherDataEntity
         {
-            Id = new Guid(),
             Timestamp = DateTime.Parse(forecastDay.Date),
             Latitude = location.Lat,
             Longitude = location.Lon,

@@ -6,7 +6,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
     public class TripDataEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Indexed]
         public string TripName { get; set; } = string.Empty;
@@ -21,7 +21,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
         [ForeignKey(typeof(WeatherDataEntity))]
         public Guid? WeatherEntityId { get; set; }
 
-        public int TemperatureF { get; set; } = 0;
+        public int WaterTemperature { get; set; } = 70;
 
         [Ignore]
         public WeatherDataEntity? WeatherEntity { get; set; }

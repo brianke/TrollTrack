@@ -39,6 +39,13 @@ namespace TrollTrack.Services
 
         #endregion
 
+        #region Custom Clarity methods
+        Task<int> SaveCustomClarityAsync(string clarity);
+        Task<List<string>> GetCustomClaritiesAsync();
+        Task<int> DeleteCustomClarityAsync(string clarity);
+
+        #endregion
+
         #region Database maintenance
 
         Task<long> GetDatabaseSizeAsync();

@@ -8,7 +8,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
     public class WeatherDataEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 

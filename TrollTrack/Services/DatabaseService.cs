@@ -43,7 +43,7 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<TripDataEntity>();
                 await _database.CreateTableAsync<RodEntity>();
                 await _database.CreateTableAsync<WeatherDataEntity>();
-                //await _database.CreateTableAsync<TrollingDataPoint>();
+                await _database.CreateTableAsync<CustomClarityEntity>();
 
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
@@ -447,6 +447,7 @@ namespace TrollTrack.Services
         }
 
         #endregion
+
         #region Catch Data Operations
 
         /// <summary>
@@ -601,6 +602,86 @@ namespace TrollTrack.Services
             {
                 System.Diagnostics.Debug.WriteLine($"Error getting statistics: {ex.Message}");
                 return new CatchStatistics();
+            }
+        }
+
+        #endregion
+
+        #region Custom Clarity Operations
+
+        public async Task<int> SaveCustomClarityAsync(string clarity)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                // Check if already exists
+                var existing = await db.Table<CustomClarityEntity>()
+                    .Where(c => c.Description == clarity)
+                    .FirstOrDefaultAsync();
+
+                if (existing != null)
+                {
+                    Debug.WriteLine($"Custom clarity '{clarity}' already exists");
+                    return 0;
+                }
+
+                var entity = new CustomClarityEntity
+                {
+                    Id = Guid.NewGuid(),
+                    Description = clarity,
+                    CreatedAt = DateTime.Now
+                };
+
+                await db.InsertAsync(entity);
+                Debug.WriteLine($"Saved custom clarity: {clarity}");
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error saving custom clarity: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<List<string>> GetCustomClaritiesAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entities = await db.Table<CustomClarityEntity>()
+                    .OrderBy(c => c.Description)
+                    .ToListAsync();
+
+                return entities.Select(e => e.Description).ToList();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error getting custom clarities: {ex.Message}");
+                return new List<string>();
+            }
+        }
+
+        public async Task<int> DeleteCustomClarityAsync(string clarity)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entity = await db.Table<CustomClarityEntity>()
+                    .Where(c => c.Description == clarity)
+                    .FirstOrDefaultAsync();
+
+                if (entity != null)
+                {
+                    return await db.DeleteAsync(entity);
+                }
+
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error deleting custom clarity: {ex.Message}");
+                throw;
             }
         }
 
@@ -808,6 +889,8 @@ namespace TrollTrack.Services
                 await db.DeleteAllAsync<LureDataEntity>();
                 await db.DeleteAllAsync<LureImageEntity>();
                 await db.DeleteAllAsync<TripDataEntity>();
+                await db.DeleteAllAsync<WeatherDataEntity>();
+                await db.DeleteAllAsync<CustomClarityEntity>();
 
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
             }
@@ -819,6 +902,7 @@ namespace TrollTrack.Services
         }
 
         #endregion
+
 
         public async ValueTask DisposeAsync()
         {

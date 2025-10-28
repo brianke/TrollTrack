@@ -6,7 +6,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
     public class LocationDataEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         public double Latitude { get; set; }
         public double Longitude { get; set; }

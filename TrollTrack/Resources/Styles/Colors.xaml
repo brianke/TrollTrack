@@ -19,7 +19,8 @@
     <Color x:Key="MidnightBlue">#190649</Color>
     <Color x:Key="OffBlack">#1f1f1f</Color>
 
-    <Color x:Key="CardBackground">#ADD8E6</Color>
+    <!--<Color x:Key="CardBackground">#ADD8E6</Color>-->
+    <Color x:Key="CardBackground">#ACACAC</Color>
     <Color x:Key="BorderAccent">#1E90FF</Color>
     <Color x:Key="InfoText">#00008B</Color>
 

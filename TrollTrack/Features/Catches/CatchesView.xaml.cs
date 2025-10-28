@@ -45,59 +45,40 @@ public partial class CatchesView : ContentPage
         // No additional cleanup needed here
     }
 
-    private void OnTripTapped(object sender, TappedEventArgs e)
+
+    private async void OnTripTapped(object sender, TappedEventArgs e)
     {
-        System.Diagnostics.Debug.WriteLine("=== OnTripTapped fired ===");
-
-        // The sender is the Border that was tapped
-        if (sender is Border border)
+        if (sender is Border border && border.BindingContext is TripDataEntity trip)
         {
-            System.Diagnostics.Debug.WriteLine($"Sender is Border, BindingContext type: {border.BindingContext?.GetType().Name ?? "NULL"}");
-
-            // The Border's BindingContext is the TripDataEntity from the DataTemplate
-            if (border.BindingContext is TripDataEntity trip)
-            {
-                System.Diagnostics.Debug.WriteLine($"Trip found: {trip.TripName}, ID: {trip.Id}, Active: {trip.IsActive}");
-
-                // Execute the ViewModel command with the trip
-                _viewModel.ViewTripDetailsCommand.Execute(trip);
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine($"BindingContext is not TripDataEntity, it's: {border.BindingContext?.GetType().Name ?? "NULL"}");
-            }
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine($"Sender is not Border, it's: {sender?.GetType().Name ?? "NULL"}");
+            await _viewModel.ViewTripDetailsCommand.ExecuteAsync(trip);
         }
     }
 
-    private void OnAddCatchTapped(object sender, TappedEventArgs e)
+    private async void OnAddCatchTapped(object sender, TappedEventArgs e)
     {
-        System.Diagnostics.Debug.WriteLine("=== OnAddCatchTapped fired ===");
-
-        // The sender is the Border that was tapped
-        if (sender is Border border)
+        if (sender is Border border && border.BindingContext is RodEntity rod)
         {
-            System.Diagnostics.Debug.WriteLine($"Sender is Border, BindingContext type: {border.BindingContext?.GetType().Name ?? "NULL"}");
+            // Show picker for fish species
+            string selectedFish = await DisplayActionSheet(
+                "Select Fish Species",
+                "Cancel",
+                null,
+                _viewModel.FishOptions.ToArray());
 
-            // The Border's BindingContext is the RodEntity from the DataTemplate
-            if (border.BindingContext is RodEntity rod)
+            // If user cancelled or no valid selection
+            if (string.IsNullOrWhiteSpace(selectedFish) || selectedFish == "Cancel")
             {
-                System.Diagnostics.Debug.WriteLine($"Found: {rod.Name}, ID: {rod.Id}");
+                return;
+            }
 
-                // Execute the ViewModel command with the trip
-                _viewModel.AddNewCatchCommand.Execute(rod);
-            }
-            else
+            // Set the selected fish in the ViewModel
+            _viewModel.SelectedFishOption = selectedFish;
+
+            // Execute the add catch command
+            if (_viewModel.AddNewCatchCommand.CanExecute(rod))
             {
-                System.Diagnostics.Debug.WriteLine($"BindingContext is not RodEntity, it's: {border.BindingContext?.GetType().Name ?? "NULL"}");
+                await _viewModel.AddNewCatchCommand.ExecuteAsync(rod);
             }
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine($"Sender is not Border, it's: {sender?.GetType().Name ?? "NULL"}");
         }
     }
 }

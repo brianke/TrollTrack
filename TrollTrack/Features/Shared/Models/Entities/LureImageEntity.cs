@@ -6,7 +6,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
     public class LureImageEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
         public string Path { get; set; } = string.Empty;
