@@ -36,15 +36,14 @@ namespace TrollTrack.Services
                 // Create tables for your existing models
                 await _database.CreateTableAsync<CatchDataEntity>();
                 await _database.CreateTableAsync<LocationDataEntity>();
-                await _database.CreateTableAsync<ProgramDataEntity>();
                 await _database.CreateTableAsync<FishInfoEntity>();
+                await _database.CreateTableAsync<DiverDataEntity>();
                 await _database.CreateTableAsync<LureDataEntity>();
                 await _database.CreateTableAsync<LureImageEntity>();
                 await _database.CreateTableAsync<TripDataEntity>();
                 await _database.CreateTableAsync<RodEntity>();
                 await _database.CreateTableAsync<WeatherDataEntity>();
                 await _database.CreateTableAsync<CustomClarityEntity>();
-
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }
@@ -448,6 +447,53 @@ namespace TrollTrack.Services
 
         #endregion
 
+        #region Location Methods
+
+        /// <summary>
+        /// Gets a location by its ID
+        /// This is used by CatchDataEntity async methods to fetch location data
+        /// </summary>
+        public async Task<LocationDataEntity?> GetLocationByIdAsync(Guid id)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var location = await db.GetAsync<LocationDataEntity>(id);
+                return location;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting location by ID: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Saves a location to the database
+        /// </summary>
+        public async Task<int> SaveLocationAsync(LocationDataEntity location)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                if (location.Id == Guid.Empty)
+                {
+                    location.Id = Guid.NewGuid();
+                }
+
+                await db.InsertOrReplaceAsync(location);
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving location: {ex.Message}");
+                throw;
+            }
+        }
+
+        #endregion
+        
         #region Catch Data Operations
 
         /// <summary>
@@ -607,6 +653,89 @@ namespace TrollTrack.Services
 
         #endregion
 
+        #region Rod Methods
+
+        public async Task<int> SaveRodAsync(RodEntity rodSetup)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                await db.InsertOrReplaceWithChildrenAsync(rodSetup, recursive: true);
+                return rodSetup.Id;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving rod: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<List<RodEntity>> GetAllRodsAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entities = await db.GetAllWithChildrenAsync<RodEntity>(recursive: true);
+                return entities.OrderBy(r => r.Id).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting all rods: {ex.Message}");
+                return new List<RodEntity>();
+            }
+        }
+
+        public async Task<RodEntity?> GetRodByIdAsync(int id)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entity = await db.GetWithChildrenAsync<RodEntity>(id, recursive: true);
+                return entity;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting rod by ID: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<int> DeleteRodAsync(int id)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entityToDelete = await db.GetAsync<RodEntity>(id);
+                if (entityToDelete != null)
+                {
+                    await db.DeleteAsync(entityToDelete);
+                    return 1;
+                }
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting rod: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<List<RodEntity>> GetActiveRodsAsync()
+        {
+            try
+            {
+                // For now, return all rods. You can add an IsActive field later if needed
+                return await GetAllRodsAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting active rods: {ex.Message}");
+                return new List<RodEntity>();
+            }
+        }
+
+        #endregion
+
         #region Custom Clarity Operations
 
         public async Task<int> SaveCustomClarityAsync(string clarity)
@@ -689,13 +818,27 @@ namespace TrollTrack.Services
 
         #region Lure Methods
 
+        public async Task<LureDataEntity?> GetLureByIdAsync(Guid id)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entity = await db.GetWithChildrenAsync<LureDataEntity>(id, recursive: true);
+                return entity;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting lure by ID: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<int> SaveLureAsync(LureDataEntity lureData)
         {
             try
             {
                 var db = await GetDatabaseAsync();
                 var entity = ConvertToLureEntity(lureData);
-
                 await db.InsertOrReplaceWithChildrenAsync(entity, recursive: true);
                 return 1;
             }
@@ -712,13 +855,84 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
                 var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
-
                 return entities.Select(ConvertFromLureEntity).ToList();
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error getting all lures: {ex.Message}");
                 return new List<LureDataEntity>();
+            }
+        }
+
+        #endregion
+
+        #region Diver Methods
+
+        public async Task<int> SaveDiverAsync(DiverDataEntity diver)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                if (diver.Id == Guid.Empty)
+                {
+                    diver.Id = Guid.NewGuid();
+                }
+                await db.InsertOrReplaceAsync(diver);
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving diver: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<List<DiverDataEntity>> GetAllDiversAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entities = await db.Table<DiverDataEntity>().ToListAsync();
+                return entities.OrderBy(d => d.Name).ToList();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting all divers: {ex.Message}");
+                return new List<DiverDataEntity>();
+            }
+        }
+
+        public async Task<DiverDataEntity?> GetDiverByIdAsync(Guid id)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                return await db.GetAsync<DiverDataEntity>(id);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting diver by ID: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<int> DeleteDiverAsync(Guid id)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entityToDelete = await db.GetAsync<DiverDataEntity>(id);
+                if (entityToDelete != null)
+                {
+                    await db.DeleteAsync(entityToDelete);
+                    return 1;
+                }
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting diver: {ex.Message}");
+                throw;
             }
         }
 
@@ -742,12 +956,20 @@ namespace TrollTrack.Services
             //    entity.ProgramDataId = entity.ProgramData.Id;
             //}
 
-            // TODO: FishInfo should be selected from predefined list, not created new each time
-            //entity.FishInfoId = FishData.GetFishInfoId(catchData.FishInfoId.ToString());
+            entity.LocationId = catchData.LocationId;
+            entity.FishInfoId = catchData.FishInfoId;
+            entity.LureId = catchData.LureId;
+            entity.LineOut = catchData.LineOut;
+            entity.DiverType = catchData.DiverType;
+            entity.Latitude = catchData.Latitude;
+            entity.Longitude = catchData.Longitude;
 
             return entity;
         }
 
+        /// <summary>
+        /// Updated ConvertFromCatchEntity - now uses RodSetup instead of ProgramData
+        /// </summary>
         private CatchDataEntity ConvertFromCatchEntity(CatchDataEntity entity)
         {
             var catchData = new CatchDataEntity
@@ -756,11 +978,6 @@ namespace TrollTrack.Services
                 Timestamp = entity.Timestamp
             };
 
-            //if (entity.ProgramData != null)
-            //{
-            //    // TODO: The ProgramData model is incomplete.
-            //    catchData.ProgramData = new ProgramDataEntity();
-            //}
 
             return catchData;
         }
@@ -882,16 +1099,17 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
 
-                await db.DeleteAllAsync<CatchDataEntity>();
-                await db.DeleteAllAsync<LocationDataEntity>();
-                await db.DeleteAllAsync<ProgramDataEntity>();
-                await db.DeleteAllAsync<FishInfoEntity>();
-                await db.DeleteAllAsync<LureDataEntity>();
-                await db.DeleteAllAsync<LureImageEntity>();
-                await db.DeleteAllAsync<TripDataEntity>();
-                await db.DeleteAllAsync<WeatherDataEntity>();
-                await db.DeleteAllAsync<CustomClarityEntity>();
-
+                await db.DeleteAllAsync<CatchDataEntity>();         
+                await db.DeleteAllAsync<LocationDataEntity>();      
+                await db.DeleteAllAsync<FishInfoEntity>();          
+                await db.DeleteAllAsync<DiverDataEntity>();         
+                await db.DeleteAllAsync<LureDataEntity>();          
+                await db.DeleteAllAsync<LureImageEntity>();         
+                await db.DeleteAllAsync<TripDataEntity>();          
+                await db.DeleteAllAsync<RodEntity>();               
+                await db.DeleteAllAsync<WeatherDataEntity>();       
+                await db.DeleteAllAsync<CustomClarityEntity>();     
+                                                                    
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
             }
             catch (Exception ex)

@@ -5,7 +5,6 @@ global using TrollTrack.Features.Analytics;
 global using TrollTrack.Features.Catches;
 global using TrollTrack.Features.Dashboard;
 global using TrollTrack.Features.Lures;
-global using TrollTrack.Features.Programs;
 global using TrollTrack.Features.Settings;
 global using TrollTrack.Services;
 global using Microsoft.Maui;

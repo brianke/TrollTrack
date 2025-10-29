@@ -100,8 +100,8 @@ public partial class DashboardViewModel : BaseViewModel
     [RelayCommand]
     private async Task LogCatchAsync() => await NavigateToAsync(RouteConstants.Catches);
 
-    [RelayCommand]
-    private async Task ChangeTrollingMethodAsync() => await NavigateToAsync(RouteConstants.Programs);
+    //[RelayCommand]
+    //private async Task ChangeTrollingMethodAsync() => await NavigateToAsync(RouteConstants.Programs);
 
     [RelayCommand]
     private async Task ViewCatchHistoryAsync() => await NavigateToAsync(RouteConstants.Catches);

@@ -1,5 +1,4 @@
-﻿using TrollTrack.Features.Catches;
-using TrollTrack.Features.Shared.Models.Entities;
+﻿using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Services
 {
@@ -32,10 +31,37 @@ namespace TrollTrack.Services
 
         #endregion
 
+        #region Location methods
+
+        Task<LocationDataEntity?> GetLocationByIdAsync(Guid id);
+        Task<int> SaveLocationAsync(LocationDataEntity location);
+
+        #endregion
+
         #region Lure methods
 
         Task<int> SaveLureAsync(LureDataEntity lureData);
         Task<List<LureDataEntity>> GetAllLureDataAsync();
+        Task<LureDataEntity?> GetLureByIdAsync(Guid id);
+
+        #endregion
+
+        #region Rod Setup methods
+
+        Task<int> SaveRodAsync(RodEntity rodSetup);
+        Task<List<RodEntity>> GetAllRodsAsync();
+        Task<RodEntity?> GetRodByIdAsync(int id);
+        Task<int> DeleteRodAsync(int id);
+        Task<List<RodEntity>> GetActiveRodsAsync();
+
+        #endregion
+
+        #region Diver methods
+
+        Task<int> SaveDiverAsync(DiverDataEntity diver);
+        Task<List<DiverDataEntity>> GetAllDiversAsync();
+        Task<DiverDataEntity?> GetDiverByIdAsync(Guid id);
+        Task<int> DeleteDiverAsync(Guid id);
 
         #endregion
 

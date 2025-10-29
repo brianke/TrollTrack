@@ -18,5 +18,6 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<CatchDataEntity>? Catches { get; set; }
+
     }
 }
