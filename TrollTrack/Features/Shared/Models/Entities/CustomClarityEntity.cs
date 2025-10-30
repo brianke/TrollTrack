@@ -1,5 +1,4 @@
-﻿// CustomClarityEntity.cs
-namespace TrollTrack.Features.Shared.Models.Entities
+﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("CustomClarities")]
     public class CustomClarityEntity

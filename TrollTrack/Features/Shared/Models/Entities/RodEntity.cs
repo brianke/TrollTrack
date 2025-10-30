@@ -1,6 +1,4 @@
-﻿using SQLiteNetExtensions.Attributes;
-
-namespace TrollTrack.Features.Shared.Models.Entities
+﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
     public class RodEntity
     {

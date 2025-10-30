@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace TrollTrack.Features.Shared.Models.Entities
+﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("FishInfo")]
     public class FishInfoEntity

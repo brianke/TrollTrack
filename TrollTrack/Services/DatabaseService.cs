@@ -960,7 +960,7 @@ namespace TrollTrack.Services
             entity.FishInfoId = catchData.FishInfoId;
             entity.LureId = catchData.LureId;
             entity.LineOut = catchData.LineOut;
-            entity.DiverType = catchData.DiverType;
+            entity.DiverDataId = catchData.DiverDataId;
             entity.Latitude = catchData.Latitude;
             entity.Longitude = catchData.Longitude;
 

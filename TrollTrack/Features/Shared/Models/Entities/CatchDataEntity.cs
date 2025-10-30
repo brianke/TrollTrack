@@ -1,6 +1,4 @@
-﻿using SQLiteNetExtensions.Attributes;
-
-namespace TrollTrack.Features.Shared.Models.Entities
+﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("CatchData")]
     public class CatchDataEntity
@@ -22,7 +20,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
         public Guid LureId { get; set; }
 
         [ForeignKey(typeof(DiverDataEntity))]
-        public DiverDataEntity? DiverType { get; set; } // Dipsy, Jet, Weight, etc.
+        public Guid? DiverDataId { get; set; }  // Foreign key to DiverDataEntity
 
         public int LineOut { get; set; }
 

@@ -1,7 +1,4 @@
-﻿using SQLiteNetExtensions.Attributes;
-using System.ComponentModel.DataAnnotations;
-
-namespace TrollTrack.Features.Shared.Models.Entities
+﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("LureData")]
     public class LureDataEntity

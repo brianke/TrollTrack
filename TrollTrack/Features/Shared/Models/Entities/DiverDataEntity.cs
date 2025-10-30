@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace TrollTrack.Features.Shared.Models.Entities
+﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
 
     /// <summary>
@@ -32,7 +30,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
     public class DiverDataEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = new Guid();
 
         [Required]
         public String Manufacturer { get; set; } = string.Empty;
