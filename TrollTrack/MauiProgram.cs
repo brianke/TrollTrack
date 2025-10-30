@@ -33,18 +33,13 @@ namespace TrollTrack
             builder.Services.AddTransient<SettingsViewModel>();
             builder.Services.AddTransient<CatchesViewModel>();
             builder.Services.AddTransient<LuresViewModel>();
-            builder.Services.AddTransient<ProgramsViewModel>();
             builder.Services.AddTransient<AnalyticsViewModel>();
-            //builder.Services.AddTransient<TripViewModel>();
 
             // Register Views
             builder.Services.AddTransient<DashboardView>();
             builder.Services.AddTransient<CatchesView>();
             builder.Services.AddTransient<LuresView>();
-            builder.Services.AddTransient<ProgramsView>();
             builder.Services.AddTransient<AnalyticsView>();
-            //builder.Services.AddTransient<TripView>();
-            //builder.Services.AddTransient<TripCatchesContainerView>();
 
 #if DEBUG
             builder.Logging.AddDebug();

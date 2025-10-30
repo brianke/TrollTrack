@@ -1,6 +1,4 @@
-﻿using SQLiteNetExtensions.Attributes;
-
-namespace TrollTrack.Features.Shared.Models.Entities
+﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("Locations")]
     public class LocationDataEntity
@@ -18,5 +16,6 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<CatchDataEntity>? Catches { get; set; }
+
     }
 }

@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using TrollTrack.Features.Shared.Models.Entities;
+﻿using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Features.Shared.Models
 {

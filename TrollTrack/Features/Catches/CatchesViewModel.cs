@@ -111,7 +111,7 @@ public partial class CatchesViewModel : BaseViewModel
         _ = LoadCustomClaritiesAsync();
 
         // Add "Custom..." at the end
-        _clarityOptions.Add("Custom...");
+        ClarityOptions.Add("Custom...");
 
         //_ = InitializeAsync();
 
@@ -224,10 +224,10 @@ public partial class CatchesViewModel : BaseViewModel
 
             foreach (var custom in customs)
             {
-                if (!_clarityOptions.Contains(custom))
+                if (!ClarityOptions.Contains(custom))
                 {
                     // Insert before "Custom..." which is the last item
-                    _clarityOptions.Insert(_clarityOptions.Count - 1, custom);
+                    ClarityOptions.Insert(ClarityOptions.Count - 1, custom);
                     Debug.WriteLine($"Loaded custom clarity: {custom}");
                 }
             }
@@ -425,17 +425,16 @@ public partial class CatchesViewModel : BaseViewModel
         await ExecuteSafelyAsync(async () =>
         {
             var currentLocation = await _locationService.GetCurrentLocationAsync();
-            var fishInfo = FishData.GetInfo(SelectedFishOption);
+            var fishInfo = FishData.GetInfoFromName(SelectedFishOption);
 
             var newCatch = new CatchDataEntity
             {
                 Id = Guid.NewGuid(),                
                 Timestamp = DateTime.Now,
-                Latitude = currentLocation.Latitude,
-                Longitude = currentLocation.Longitude,
+                LocationId = currentLocation.Id,
                 FishInfoId = fishInfo.Id,
-                TripId = ActiveTrip!.Id,  // Set the TripId
-                ProgramDataId = rod.ProgramDataId,           // Set the ProgramEntityId
+                Latitude = currentLocation.Latitude,
+                Longitude = currentLocation.Longitude
             };
 
             // Save catch
