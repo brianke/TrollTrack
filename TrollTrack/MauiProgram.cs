@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using TrollTrack.Features.RodSetup;
 
 namespace TrollTrack
 {
@@ -32,12 +33,14 @@ namespace TrollTrack
             builder.Services.AddTransient<DashboardViewModel>();
             builder.Services.AddTransient<SettingsViewModel>();
             builder.Services.AddTransient<CatchesViewModel>();
+            builder.Services.AddTransient<RodSetupViewModel>();
             builder.Services.AddTransient<LuresViewModel>();
             builder.Services.AddTransient<AnalyticsViewModel>();
 
             // Register Views
             builder.Services.AddTransient<DashboardView>();
             builder.Services.AddTransient<CatchesView>();
+            builder.Services.AddTransient<RodSetupPopup>();
             builder.Services.AddTransient<LuresView>();
             builder.Services.AddTransient<AnalyticsView>();
 

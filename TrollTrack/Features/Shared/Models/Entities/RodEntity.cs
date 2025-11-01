@@ -7,8 +7,8 @@
 
         public string Name { get; set; } = string.Empty;
 
-        // Foreign key to Trip - NO ManyToOne navigation property
-        [ForeignKey(typeof(TripDataEntity))]
-        public Guid TripId { get; set; }
+        // Reference to the lure being used on this rod
+        [ForeignKey(typeof(LureDataEntity))]
+        public Guid? LureId { get; set; }
     }
 }
