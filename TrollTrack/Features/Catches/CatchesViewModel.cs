@@ -1,4 +1,5 @@
-﻿using TrollTrack.Features.Shared;
+﻿using TrollTrack.Features.RodSetup;
+using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models;
 using TrollTrack.Features.Shared.Models.Entities;
 
@@ -7,6 +8,8 @@ namespace TrollTrack.Features.Catches;
 public partial class CatchesViewModel : BaseViewModel
 {
     private readonly IWeatherService _weatherService;
+    private RodSetupViewModel? _rodSetupViewModel;
+
 
     #region Trip Properties
 
@@ -136,6 +139,8 @@ public partial class CatchesViewModel : BaseViewModel
             // Load past trips
             await LoadRecentTripsAsync();
 
+            await LoadRodsAsync();
+
             //// Load catches for active trip or all catches
             //await LoadCatchesAsync();
 
@@ -146,8 +151,6 @@ public partial class CatchesViewModel : BaseViewModel
     #endregion
 
     #region Trip Management Commands
-
-
 
     [RelayCommand]
     private async Task StartNewTripAsync()
@@ -380,31 +383,114 @@ public partial class CatchesViewModel : BaseViewModel
 
     #region Rod Commands
 
-    [RelayCommand]
-    private async Task AddRod()
+    private async Task LoadRodsAsync()
     {
         await ExecuteSafelyAsync(async () =>
         {
-            IsLoading = true;
+            var rodList = await _databaseService.GetAllRodsAsync();
 
-            // Add new rod to trip
-            var _rod = new RodEntity
+            await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                Name = $"Rod {Rods.Count + 1}"
+                Rods.Clear();
+                foreach (var rod in rodList)
+                {
+                    Rods.Add(rod);
+                }
+            });
+
+            Debug.WriteLine($"Loaded {rodList.Count} rods");
+        }, "Loading rods...", showErrorAlert: false);
+    }
+
+    [RelayCommand]
+    private async Task AddRod()
+    {
+        try
+        {
+            // Create the lure selection view model
+            _rodSetupViewModel = new RodSetupViewModel(_locationService, _databaseService);
+
+            // Subscribe to the lure selected event
+            _rodSetupViewModel.LureSelected += OnLureSelected;
+
+            // Create and show the popup
+            var popup = new RodSetupPopup(_rodSetupViewModel);
+            await Application.Current?.MainPage?.Navigation.PushModalAsync(popup)!;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error opening lure selection popup: {ex.Message}");
+            await ShowAlertAsync("Error", "Failed to open lure selection. Please try again.");
+        }
+    }
+
+    /// <summary>
+    /// Handle lure selection from the popup
+    /// </summary>
+    private async void OnLureSelected(object? sender, LureDataEntity selectedLure)
+    {
+        try
+        {
+            // Unsubscribe from the event
+            if (_rodSetupViewModel != null)
+            {
+                _rodSetupViewModel.LureSelected -= OnLureSelected;
+            }
+
+            // Create a new rod with the selected lure
+            var newRod = new RodEntity
+            {
+                Name = $"Rod {Rods.Count + 1}",
+                LureId = selectedLure.Id
             };
 
-            Rods.Add(_rod);
-            Debug.WriteLine($"Added new rod: {_rod.Name}");
+            // Save the rod to the database
+            await _databaseService.SaveRodAsync(newRod);
 
-            IsLoading = false;
+            // Reload rods to show the new one
+            await LoadRodsAsync();
 
-        }, "Adding rod...");
+            Debug.WriteLine($"Rod added with lure: {selectedLure.Manufacturer} - {selectedLure.Color}");
+            await ShowAlertAsync("Success", $"Rod added with {selectedLure.Manufacturer} - {selectedLure.Color}");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error saving rod: {ex.Message}");
+            await ShowAlertAsync("Error", "Failed to save rod. Please try again.");
+        }
     }
+
+    /// <summary>
+    /// Command to remove a rod
+    /// </summary>
+    [RelayCommand]
+    private async Task RemoveRodAsync(RodEntity rod)
+    {
+        var mainPage = Application.Current?.MainPage;
+        if (mainPage == null) return;
+
+        bool confirm = await mainPage.DisplayAlert(
+            "Remove Rod",
+            $"Remove {rod.Name}?",
+            "Yes",
+            "No");
+        
+        if (confirm)
+        {
+            await ExecuteSafelyAsync(async () =>
+            {
+                await _databaseService.DeleteRodAsync(rod.Id);
+                await LoadRodsAsync();
+                Debug.WriteLine($"Rod removed: {rod.Name}");
+            }, "Removing rod...");
+        }
+    }
+
 
     #endregion
 
 
-    #region Catches COmmands
+    #region Catches Commands
     [RelayCommand]
     private async Task AddNewCatchAsync(RodEntity rod)
     {
@@ -434,7 +520,8 @@ public partial class CatchesViewModel : BaseViewModel
                 LocationId = currentLocation.Id,
                 FishInfoId = fishInfo.Id,
                 Latitude = currentLocation.Latitude,
-                Longitude = currentLocation.Longitude
+                Longitude = currentLocation.Longitude,
+                FishName = FishData.GetFishNameById(fishInfo.Id)
             };
 
             // Save catch

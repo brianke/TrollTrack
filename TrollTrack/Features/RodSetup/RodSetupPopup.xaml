@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:TrollTrack.Features.RodSetup"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             x:Class="TrollTrack.Features.RodSetup.RodSetupPopup"
+             x:DataType="vm:RodSetupViewModel"
+             Title="Rod Setup"
+             BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#1C1C1C}">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
+
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="10" Margin="0,10,0,20">
+            <Label Text="Select a Lure"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+            <Label Text="Choose the lure for this rod"
+                   FontSize="16"
+                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                   HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="1" 
+                          IsRunning="{Binding IsLoading}"
+                          IsVisible="{Binding IsLoading}"
+                          Color="{AppThemeBinding Light=#2E8BC0, Dark=#4A9FD8}"
+                          VerticalOptions="Center"
+                          HorizontalOptions="Center"/>
+
+        <!-- Lures Collection View -->
+        <ScrollView Grid.Row="1" IsVisible="{Binding IsNotBusy}">
+            <CollectionView ItemsSource="{Binding Lures}"
+                           SelectionMode="Single"
+                           SelectionChanged="OnLureSelected">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="12"/>
+                </CollectionView.ItemsLayout>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="e:LureDataEntity">
+                        <Border Padding="15"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#2C2C2C}"
+                                Stroke="{AppThemeBinding Light=#E0E0E0, Dark=#404040}"
+                                StrokeThickness="2">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+
+                            <!-- Add shadow effect -->
+                            <Border.Shadow>
+                                <Shadow Brush="{AppThemeBinding Light=#40000000, Dark=#60000000}"
+                                       Offset="0,2"
+                                       Radius="8"
+                                       Opacity="0.3"/>
+                            </Border.Shadow>
+
+                            <Grid ColumnDefinitions="100,*" ColumnSpacing="15">
+                                <!-- Lure Image -->
+                                <Border Grid.Column="0"
+                                       WidthRequest="100"
+                                       HeightRequest="100"
+                                       BackgroundColor="{AppThemeBinding Light=#FAFAFA, Dark=#3C3C3C}"
+                                       Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#555555}"
+                                       StrokeThickness="1"
+                                       Padding="5">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="10"/>
+                                    </Border.StrokeShape>
+                                    <Image Source="{Binding PrimaryImage.Path}"
+                                           Aspect="AspectFit"
+                                           VerticalOptions="Center"
+                                           HorizontalOptions="Center"/>
+                                </Border>
+
+                                <!-- Lure Details -->
+                                <VerticalStackLayout Grid.Column="1" 
+                                                    VerticalOptions="Center"
+                                                    Spacing="8">
+                                    <Label Text="{Binding Manufacturer}"
+                                           FontSize="20"
+                                           FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                                    <Label Text="{Binding Color}"
+                                           FontSize="16"
+                                           TextColor="{AppThemeBinding Light=#2E8BC0, Dark=#4A9FD8}"/>
+
+                                    <!-- Lure Specifications -->
+                                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="0,8,0,0">
+                                        <VerticalStackLayout Grid.Column="0">
+                                            <Label Text="Buoyancy"
+                                                   FontSize="11"
+                                                   TextColor="{AppThemeBinding Light=#888888, Dark=#999999}"/>
+                                            <Label Text="{Binding Buoyancy}"
+                                                   FontSize="13"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="1">
+                                            <Label Text="Length"
+                                                   FontSize="11"
+                                                   TextColor="{AppThemeBinding Light=#888888, Dark=#999999}"/>
+                                            <Label Text="{Binding Length, StringFormat='{0:F2} ft'}"
+                                                   FontSize="13"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"/>
+                                        </VerticalStackLayout>
+                                        <VerticalStackLayout Grid.Column="2">
+                                            <Label Text="Weight"
+                                                   FontSize="11"
+                                                   TextColor="{AppThemeBinding Light=#888888, Dark=#999999}"/>
+                                            <Label Text="{Binding Weight, StringFormat='{0:F2}oz'}"
+                                                   FontSize="13"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"/>
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+                <!-- Empty View when no lures -->
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" 
+                                        HorizontalOptions="Center"
+                                        Spacing="15"
+                                        Padding="40">
+                        <Label Text="📦"
+                               FontSize="60"
+                               HorizontalOptions="Center"/>
+                        <Label Text="No Lures Available"
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                        <Label Text="Add lures from the Lures tab first"
+                               FontSize="14"
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#888888, Dark=#999999}"/>
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </ScrollView>
+
+        <!-- Cancel Button -->
+        <Button Grid.Row="2"
+                Text="Cancel"
+                Clicked="OnCancelClicked"
+                BackgroundColor="{AppThemeBinding Light=#E0E0E0, Dark=#404040}"
+                TextColor="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"
+                FontSize="16"
+                FontAttributes="Bold"
+                CornerRadius="10"
+                HeightRequest="50"
+                Margin="0,20,0,10"/>
+    </Grid>
+</ContentPage>

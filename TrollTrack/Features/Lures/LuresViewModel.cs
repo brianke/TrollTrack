@@ -66,35 +66,31 @@ namespace TrollTrack.Features.Lures
         //public ICommand OpenImageCommand { get; }
         //public ICommand CloseImageCommand { get; }
 
-        private async Task LoadLuresAsync()
+        public async Task LoadLuresAsync()
         {
-            await ExecuteSafelyAsync(async () =>
+            IsLoading = true;
+
+            var lureList = await _databaseService.GetAllLureDataAsync();
+
+            if (lureList == null || !lureList.Any())
             {
-                IsLoading = true;
+                Debug.WriteLine("No lures found in database");
+                await ShowAlertAsync("No Lures", "No lures found. Please add lures first from the Lures tab.");
+                IsLoading = false;
+                return;
+            }
 
-                using var stream = await FileSystem.OpenAppPackageFileAsync("lures.json");
-                using var reader = new StreamReader(stream);
-                var json = await reader.ReadToEndAsync();
-                var lureList = JsonSerializer.Deserialize<List<LureDataEntity>>(json);
-
-                if (lureList == null)
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Lures.Clear();
+                foreach (var lure in lureList)
                 {
-                    System.Diagnostics.Debug.WriteLine("No lures found in JSON.");
-                    return;
+                    Lures.Add(lure);
                 }
+            });
 
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    Lures.Clear();
-                    foreach (var lure in lureList)
-                    {
-                        Lures.Add(lure);
-                    }
-
-                });
-
-                System.Diagnostics.Debug.WriteLine($"Loaded {lureList.Count} lures");
-            }, "Loading lures...", showErrorAlert: false);
+            Debug.WriteLine($"Loaded {lureList.Count} lures for selection");
+            IsLoading = false;
         }
 
         [RelayCommand]

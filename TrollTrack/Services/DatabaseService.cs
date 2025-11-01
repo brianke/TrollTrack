@@ -1,4 +1,6 @@
 using SQLiteNetExtensionsAsync.Extensions;
+using System.Collections.Generic;
+using System.Text.Json;
 using TrollTrack.Configuration;
 using TrollTrack.Features.Shared.Models.Entities;
 
@@ -855,7 +857,24 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
                 var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
-                return entities.Select(ConvertFromLureEntity).ToList();
+                var lures = entities.Select(ConvertFromLureEntity).ToList();
+
+                using var stream = await FileSystem.OpenAppPackageFileAsync("lures.json");
+                using var reader = new StreamReader(stream);
+                var json = await reader.ReadToEndAsync();
+                var lureList = JsonSerializer.Deserialize<List<LureDataEntity>>(json);
+
+                if (lureList != null)
+                {
+                    foreach (var lure in lureList)
+                    {
+                        lures.Add(lure);
+                    }
+                }
+                
+                System.Diagnostics.Debug.WriteLine($"Loaded {lureList.Count} lures");
+                return lureList;
+
             }
             catch (Exception ex)
             {
