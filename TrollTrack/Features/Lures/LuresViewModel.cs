@@ -68,8 +68,6 @@ namespace TrollTrack.Features.Lures
 
         public async Task LoadLuresAsync()
         {
-            IsLoading = true;
-
             var lureList = await _databaseService.GetAllLureDataAsync();
 
             if (lureList == null || !lureList.Any())

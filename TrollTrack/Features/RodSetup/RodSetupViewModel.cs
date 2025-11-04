@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Threading;
 using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models.Entities;
 
@@ -18,14 +19,31 @@ namespace TrollTrack.Features.RodSetup
         [ObservableProperty]
         private LureDataEntity? _selectedLure;
 
+        [ObservableProperty]
+        private DiverDataEntity? _selectedDiver;
+
+        [ObservableProperty]
+        private int _lineOut = 0;
+
+        /// <summary>
+        /// Computed property to check if a lure has been selected
+        /// </summary>
+        public bool HasSelectedLure => SelectedLure != null;
+
+        /// <summary>
+        /// Computed property to check if rod can be added (lure selected and valid line out)
+        /// </summary>
+        public bool CanAddRod => SelectedLure != null && LineOut > 0;
+
+
         #endregion
 
         #region Events
 
         /// <summary>
-        /// Event raised when a lure is selected
+        /// Event raised when a rod setup is confirmed with lure and line out
         /// </summary>
-        public event EventHandler<LureDataEntity>? LureSelected;
+        public event EventHandler<RodSetupData>? RodSetupConfirmed;
 
         #endregion
 
@@ -35,6 +53,29 @@ namespace TrollTrack.Features.RodSetup
             : base(locationService, databaseService)
         {
             Title = "Select Lure";
+        }
+
+        #endregion
+
+        #region Property Change Handlers
+
+        /// <summary>
+        /// Handle when selected lure changes
+        /// </summary>
+        partial void OnSelectedLureChanged(LureDataEntity? value)
+        {
+            OnPropertyChanged(nameof(HasSelectedLure));
+            OnPropertyChanged(nameof(CanAddRod));
+            Debug.WriteLine($"Selected lure changed: {value?.Manufacturer} - {value?.Color}");
+        }
+
+        /// <summary>
+        /// Handle when line out changes
+        /// </summary>
+        partial void OnLineOutChanged(int value)
+        {
+            OnPropertyChanged(nameof(CanAddRod));
+            Debug.WriteLine($"Line out changed: {value} feet");
         }
 
         #endregion
@@ -61,8 +102,8 @@ namespace TrollTrack.Features.RodSetup
         /// </summary>
         public async Task LoadLuresAsync()
         {
-            //await ExecuteSafelyAsync(async () =>
-            //{
+            await ExecuteSafelyAsync(async () =>
+            {
                 IsLoading = true;
 
                 var lureList = await _databaseService.GetAllLureDataAsync();
@@ -86,19 +127,57 @@ namespace TrollTrack.Features.RodSetup
 
                 Debug.WriteLine($"Loaded {lureList.Count} lures for selection");
                 IsLoading = false;
-            //}, "Loading lures...", showErrorAlert: false);
+            }, "Loading lures...", showErrorAlert: false);
         }
 
         /// <summary>
-        /// Select a lure and raise the LureSelected event
+        /// Confirm the rod setup and raise the event
         /// </summary>
-        public void SelectLure(LureDataEntity lure)
+        public void ConfirmRodSetup()
         {
-            SelectedLure = lure;
-            LureSelected?.Invoke(this, lure);
-            Debug.WriteLine($"Lure selected: {lure.Manufacturer} - {lure.Color}");
+            if (SelectedLure == null)
+            {
+                Debug.WriteLine("ERROR: ConfirmRodSetup called with no lure selected");
+                return;
+            }
+
+            if (LineOut <= 0)
+            {
+                Debug.WriteLine("ERROR: ConfirmRodSetup called with invalid line out");
+                return;
+            }
+
+            var rodSetupData = new RodSetupData
+            {
+                Lure = SelectedLure,
+                LineOut = LineOut
+            };
+
+            Debug.WriteLine($"Rod setup confirmed: {SelectedLure.Manufacturer} - {SelectedLure.Color}, Line Out: {LineOut} feet");
+
+            RodSetupConfirmed?.Invoke(this, rodSetupData);
+        }
+
+        /// <summary>
+        /// Cancel the rod setup
+        /// </summary>
+        public void CancelRodSetup()
+        {
+            Debug.WriteLine("Rod setup cancelled");
+            SelectedLure = null;
+            LineOut = 0;
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Data class to pass rod setup information
+    /// </summary>
+    public class RodSetupData
+    {
+        public LureDataEntity Lure { get; set; } = null!;
+
+        public int LineOut { get; set; }
     }
 }

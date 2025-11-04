@@ -396,9 +396,12 @@ public partial class CatchesViewModel : BaseViewModel
                 {
                     Rods.Add(rod);
                 }
+
+                // Notify UI that HasNoRods property has changed
+                OnPropertyChanged(nameof(HasNoRods));
             });
 
-            Debug.WriteLine($"Loaded {rodList.Count} rods");
+            Debug.WriteLine($"Loaded {rodList.Count} rods with their lure info");
         }, "Loading rods...", showErrorAlert: false);
     }
 
@@ -407,56 +410,76 @@ public partial class CatchesViewModel : BaseViewModel
     {
         try
         {
-            // Create the lure selection view model
+            Debug.WriteLine("=== AddRod Command Started ===");
+
+            // Create the rod setup view model
             _rodSetupViewModel = new RodSetupViewModel(_locationService, _databaseService);
 
-            // Subscribe to the lure selected event
-            _rodSetupViewModel.LureSelected += OnLureSelected;
+            // Subscribe to the rod setup confirmed event (not just lure selected)
+            _rodSetupViewModel.RodSetupConfirmed += OnRodSetupConfirmed;
+            Debug.WriteLine("Subscribed to RodSetupConfirmed event");
 
             // Create and show the popup
             var popup = new RodSetupPopup(_rodSetupViewModel);
+            Debug.WriteLine("Pushing modal popup");
+
             await Application.Current?.MainPage?.Navigation.PushModalAsync(popup)!;
+            Debug.WriteLine("Modal popup displayed");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error opening lure selection popup: {ex.Message}");
-            await ShowAlertAsync("Error", "Failed to open lure selection. Please try again.");
+            Debug.WriteLine($"!!! ERROR in AddRod: {ex.Message}");
+            await ShowAlertAsync("Error", "Failed to open rod setup. Please try again.");
         }
     }
 
     /// <summary>
-    /// Handle lure selection from the popup
+    /// Handle rod setup confirmation from the popup (includes lure and line out)
     /// </summary>
-    private async void OnLureSelected(object? sender, LureDataEntity selectedLure)
+    private async void OnRodSetupConfirmed(object? sender, RodSetupData rodSetupData)
     {
         try
         {
             // Unsubscribe from the event
             if (_rodSetupViewModel != null)
             {
-                _rodSetupViewModel.LureSelected -= OnLureSelected;
+                _rodSetupViewModel.RodSetupConfirmed -= OnRodSetupConfirmed;
             }
 
-            // Create a new rod with the selected lure
+            Debug.WriteLine($"=== Rod Setup Confirmed ===");
+            Debug.WriteLine($"Lure: {rodSetupData.Lure.Manufacturer} - {rodSetupData.Lure.Color}");
+            Debug.WriteLine($"Line Out: {rodSetupData.LineOut} feet");
+
+            // Create a new rod with the selected lure and line out
             var newRod = new RodEntity
             {
                 Name = $"Rod {Rods.Count + 1}",
-                LureId = selectedLure.Id
+                LureId = rodSetupData.Lure.Id,
+                LineOut = rodSetupData.LineOut
             };
 
+            Debug.WriteLine($"Creating rod with Name: {newRod.Name}, LureId: {newRod.LureId}, LineOut: {newRod.LineOut}");
+
             // Save the rod to the database
-            await _databaseService.SaveRodAsync(newRod);
+            var result = await _databaseService.SaveRodAsync(newRod);
+            Debug.WriteLine($"Database save returned: {result}");
 
             // Reload rods to show the new one
             await LoadRodsAsync();
 
-            Debug.WriteLine($"Rod added with lure: {selectedLure.Manufacturer} - {selectedLure.Color}");
-            await ShowAlertAsync("Success", $"Rod added with {selectedLure.Manufacturer} - {selectedLure.Color}");
+            // Verify the rod was added
+            Debug.WriteLine($"Total rods after reload: {Rods.Count}");
+
+            await ShowAlertAsync("Success",
+                $"Rod added:\n" +
+                $"{rodSetupData.Lure.Manufacturer} - {rodSetupData.Lure.Color}\n" +
+                $"Line Out: {rodSetupData.LineOut} feet");
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Error saving rod: {ex.Message}");
-            await ShowAlertAsync("Error", "Failed to save rod. Please try again.");
+            Debug.WriteLine($"!!! ERROR in OnRodSetupConfirmed: {ex.Message}");
+            Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+            await ShowAlertAsync("Error", $"Failed to save rod: {ex.Message}");
         }
     }
 
@@ -474,7 +497,7 @@ public partial class CatchesViewModel : BaseViewModel
             $"Remove {rod.Name}?",
             "Yes",
             "No");
-        
+
         if (confirm)
         {
             await ExecuteSafelyAsync(async () =>
@@ -486,11 +509,11 @@ public partial class CatchesViewModel : BaseViewModel
         }
     }
 
-
     #endregion
 
 
     #region Catches Commands
+
     [RelayCommand]
     private async Task AddNewCatchAsync(RodEntity rod)
     {
