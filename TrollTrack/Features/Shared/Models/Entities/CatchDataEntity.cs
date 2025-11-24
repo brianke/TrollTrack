@@ -35,5 +35,11 @@
 
         [Ignore]
         public string FishName { get; set; }
+
+        public CatchDataEntity()
+        {
+            Timestamp = DateTime.Now;
+        }
+
     }
 }

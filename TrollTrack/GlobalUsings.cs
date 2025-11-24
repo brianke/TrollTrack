@@ -1,4 +1,5 @@
 ﻿//global using Microsoft.Maui.Essentials;
+global using CommunityToolkit.Maui;
 global using CommunityToolkit.Mvvm.ComponentModel;
 global using CommunityToolkit.Mvvm.Input;
 global using TrollTrack.Features.Analytics;

@@ -28,6 +28,7 @@ namespace TrollTrack
             builder.Services.AddSingleton<IWeatherService, WeatherService>();
             builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
             builder.Services.AddSingleton<ITripService, TripService>();
+            builder.Services.AddSingleton<IRodSetupService, RodSetupService>();
 
             // Register ViewModels
             builder.Services.AddTransient<DashboardViewModel>();
@@ -40,6 +41,7 @@ namespace TrollTrack
             // Register Views
             builder.Services.AddTransient<DashboardView>();
             builder.Services.AddTransient<CatchesView>();
+            builder.Services.AddTransient<NewTripView>();
             builder.Services.AddTransient<RodSetupPopup>();
             builder.Services.AddTransient<LuresView>();
             builder.Services.AddTransient<AnalyticsView>();

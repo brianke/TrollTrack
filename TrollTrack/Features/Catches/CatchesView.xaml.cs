@@ -45,40 +45,4 @@ public partial class CatchesView : ContentPage
         // No additional cleanup needed here
     }
 
-
-    private async void OnTripTapped(object sender, TappedEventArgs e)
-    {
-        if (sender is Border border && border.BindingContext is TripDataEntity trip)
-        {
-            await _viewModel.ViewTripDetailsCommand.ExecuteAsync(trip);
-        }
-    }
-
-    private async void OnAddCatchTapped(object sender, TappedEventArgs e)
-    {
-        if (sender is Border border && border.BindingContext is RodEntity rod)
-        {
-            // Show picker for fish species
-            string selectedFish = await DisplayActionSheet(
-                "Select Fish Species",
-                "Cancel",
-                null,
-                _viewModel.FishOptions.ToArray());
-
-            // If user cancelled or no valid selection
-            if (string.IsNullOrWhiteSpace(selectedFish) || selectedFish == "Cancel")
-            {
-                return;
-            }
-
-            // Set the selected fish in the ViewModel
-            _viewModel.SelectedFishOption = selectedFish;
-
-            // Execute the add catch command
-            if (_viewModel.AddNewCatchCommand.CanExecute(rod))
-            {
-                await _viewModel.AddNewCatchCommand.ExecuteAsync(rod);
-            }
-        }
-    }
 }

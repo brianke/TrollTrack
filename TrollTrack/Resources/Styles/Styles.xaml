@@ -241,6 +241,15 @@
         <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
+    <Style x:Key="RodInfo" TargetType="Label">
+        <Setter Property="WidthRequest" Value="90" />
+        <Setter Property="HeightRequest" Value="60" />
+        <Setter Property="BackgroundColor" Value="{StaticResource BorderAccent}" />
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
     <Style x:Key="CardTitle" TargetType="Label">
         <Setter Property="FontSize" Value="18" />
         <Setter Property="FontAttributes" Value="Bold" />

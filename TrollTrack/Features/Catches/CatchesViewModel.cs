@@ -9,6 +9,7 @@ public partial class CatchesViewModel : BaseViewModel
 {
     private readonly IWeatherService _weatherService;
     private RodSetupViewModel? _rodSetupViewModel;
+    private readonly IRodSetupService _rodSetupService;
 
 
     #region Trip Properties
@@ -60,7 +61,7 @@ public partial class CatchesViewModel : BaseViewModel
     #region Rod Properites
 
     [ObservableProperty]
-    private ObservableCollection<RodEntity> _rods = [];
+    private ObservableCollection<RodSetupEntity> _rods = [];
 
     public bool HasNoRods => Rods == null || Rods.Count == 0;
 
@@ -88,10 +89,11 @@ public partial class CatchesViewModel : BaseViewModel
 
     #region Constructor
 
-    public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService, ITripService tripService, IWeatherService weatherService)
+    public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService, ITripService tripService, IWeatherService weatherService, IRodSetupService rodSetupService)
         : base(locationService, databaseService)
     {
         _weatherService = weatherService;
+        _rodSetupService = rodSetupService;
 
         Title = "Trips";
         SecchiNumberList = new ObservableCollection<int>(Enumerable.Range(0, 100));
@@ -385,9 +387,9 @@ public partial class CatchesViewModel : BaseViewModel
 
     private async Task LoadRodsAsync()
     {
-        await ExecuteSafelyAsync(async () =>
-        {
-            var rodList = await _databaseService.GetAllRodsAsync();
+        //await ExecuteSafelyAsync(async () =>
+        //{
+            var rodList = await _databaseService.GetAllRodSetupsAsync();
 
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -402,7 +404,7 @@ public partial class CatchesViewModel : BaseViewModel
             });
 
             Debug.WriteLine($"Loaded {rodList.Count} rods with their lure info");
-        }, "Loading rods...", showErrorAlert: false);
+        //}, "Loading rods...", showErrorAlert: false);
     }
 
     [RelayCommand]
@@ -451,17 +453,18 @@ public partial class CatchesViewModel : BaseViewModel
             Debug.WriteLine($"Line Out: {rodSetupData.LineOut} feet");
 
             // Create a new rod with the selected lure and line out
-            var newRod = new RodEntity
+            var newRod = new RodSetupEntity
             {
                 Name = $"Rod {Rods.Count + 1}",
                 LureId = rodSetupData.Lure.Id,
-                LineOut = rodSetupData.LineOut
+                LineOut = rodSetupData.LineOut,
+                Lure = rodSetupData.Lure
             };
 
             Debug.WriteLine($"Creating rod with Name: {newRod.Name}, LureId: {newRod.LureId}, LineOut: {newRod.LineOut}");
 
             // Save the rod to the database
-            var result = await _databaseService.SaveRodAsync(newRod);
+            var result = await _databaseService.SaveRodSetupAsync(newRod);
             Debug.WriteLine($"Database save returned: {result}");
 
             // Reload rods to show the new one
@@ -487,7 +490,7 @@ public partial class CatchesViewModel : BaseViewModel
     /// Command to remove a rod
     /// </summary>
     [RelayCommand]
-    private async Task RemoveRodAsync(RodEntity rod)
+    private async Task RemoveRodAsync(RodSetupEntity rod)
     {
         var mainPage = Application.Current?.MainPage;
         if (mainPage == null) return;
@@ -502,20 +505,130 @@ public partial class CatchesViewModel : BaseViewModel
         {
             await ExecuteSafelyAsync(async () =>
             {
-                await _databaseService.DeleteRodAsync(rod.Id);
+                await _databaseService.DeleteRodSetupAsync(rod.Id);
                 await LoadRodsAsync();
                 Debug.WriteLine($"Rod removed: {rod.Name}");
             }, "Removing rod...");
         }
     }
 
+    [RelayCommand]
+    private async Task EditRod(RodSetupEntity rod)
+    {
+        if (rod == null) return;
+
+        // Show action sheet with options
+        string action = await Shell.Current.DisplayActionSheet(
+            $"Rod: {rod.Name}",
+            "Cancel",
+            "Delete",
+            "Edit Details",
+            "Change Lure",
+            "Update Line Out");
+
+        switch (action)
+        {
+            case "Edit Details":
+                await EditRodDetails(rod);
+                break;
+            case "Change Lure":
+                await ChangeLure(rod);
+                break;
+            case "Update Line Out":
+                await UpdateLineOut(rod);
+                break;
+            case "Delete":
+                await DeleteRod(rod);
+                break;
+        }
+    }
+
+    private async Task EditRodDetails(RodSetupEntity rod)
+    {
+        // Navigate to Edit Rod page
+        var parameters = new Dictionary<string, object>
+            {
+                { "RodId", rod.Id },
+                { "TripId", ActiveTrip?.Id ?? new Guid() }
+            };
+
+        await Shell.Current.GoToAsync("EditRodPage", parameters);
+    }
+
+    private async Task ChangeLure(RodSetupEntity rod)
+    {
+        // Navigate to lure selection page
+        var parameters = new Dictionary<string, object>
+            {
+                { "RodId", rod.Id },
+                { "Mode", "SelectLure" }
+            };
+
+        await Shell.Current.GoToAsync("SelectLurePage", parameters);
+    }
+
+    private async Task UpdateLineOut(RodSetupEntity rod)
+    {
+        // Show prompt to update line out
+        string result = await Shell.Current.DisplayPromptAsync(
+            "Update Line Out",
+            $"Current: {rod.LineOut} feet\nEnter new line out distance:",
+            "Update",
+            "Cancel",
+            "Enter feet",
+            keyboard: Keyboard.Numeric,
+            initialValue: rod.LineOut.ToString());
+
+        if (!string.IsNullOrEmpty(result) && int.TryParse(result, out int newLineOut))
+        {
+            try
+            {
+                rod.LineOut = newLineOut;
+                await _rodSetupService.UpdateSetupAsync(rod);
+
+                // Refresh the rod in the collection
+                var index = Rods.IndexOf(rod);
+                if (index >= 0)
+                {
+                    Rods[index] = rod;
+                }
+
+                await Shell.Current.DisplayAlert("Success",
+                    "Line out updated successfully", "OK");
+            }
+            catch (Exception ex)
+            {
+                await Shell.Current.DisplayAlert("Error",
+                    $"Failed to update line out: {ex.Message}", "OK");
+            }
+        }
+    }
+
+
+
+    private async Task DeleteRod(RodSetupEntity rod)
+    {
+        bool confirm = await Shell.Current.DisplayAlert(
+            "Delete Rod",
+            $"Are you sure you want to remove '{rod.Name}'?",
+            "Yes",
+            "No");
+
+        if (confirm)
+        {
+            Rods.Remove(rod);
+
+            // Notify UI that HasNoRods property has changed
+            OnPropertyChanged(nameof(HasNoRods));
+        }
+    }
     #endregion
 
 
     #region Catches Commands
 
     [RelayCommand]
-    private async Task AddNewCatchAsync(RodEntity rod)
+    private async Task AddNewCatchAsync(RodSetupEntity rod)
     {
         if (string.IsNullOrWhiteSpace(SelectedFishOption))
         {
@@ -542,6 +655,9 @@ public partial class CatchesViewModel : BaseViewModel
                 Timestamp = DateTime.Now,
                 LocationId = currentLocation.Id,
                 FishInfoId = fishInfo.Id,
+                LureId = rod.Lure.Id,
+                DiverDataId = rod.DiverId,
+                LineOut = rod.LineOut,
                 Latitude = currentLocation.Latitude,
                 Longitude = currentLocation.Longitude,
                 FishName = FishData.GetFishNameById(fishInfo.Id)

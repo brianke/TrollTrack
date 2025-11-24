@@ -46,15 +46,22 @@ namespace TrollTrack.Services
 
         #endregion
 
-        #region Rod Setup methods
+        #region Rod Setup Operations
 
-        Task<int> SaveRodAsync(RodEntity rodSetup);
-        Task<List<RodEntity>> GetAllRodsAsync();
-        Task<RodEntity?> GetRodByIdAsync(int id);
-        Task<int> DeleteRodAsync(int id);
-        Task<List<RodEntity>> GetActiveRodsAsync();
+        Task<List<RodSetupEntity>> GetAllRodSetupsAsync();
+        Task<RodSetupEntity?> GetRodSetupByIdAsync(int setupId);
+        Task<int> SaveRodSetupAsync(RodSetupEntity setup);
+        Task<int> UpdateRodSetupAsync(RodSetupEntity setup);
+        Task<int> DeleteRodSetupAsync(int setupId);
+        //Task<List<RodSetupEntity>> GetRecentlyUsedRodSetupsAsync(int count = 10);
+        //Task<List<RodSetupEntity>> GetMostUsedRodSetupsAsync(int count = 10);
+        //Task<int> IncrementRodSetupUsageAsync(int setupId);
+        Task<List<RodSetupEntity>> SaveMultipleRodSetupsAsync(List<RodSetupEntity> setups);
+        Task<int> DeleteMultipleRodSetupsAsync(List<int> setupIds);
 
         #endregion
+
+
 
         #region Diver methods
 

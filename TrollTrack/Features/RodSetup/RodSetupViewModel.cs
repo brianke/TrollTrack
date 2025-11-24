@@ -102,8 +102,8 @@ namespace TrollTrack.Features.RodSetup
         /// </summary>
         public async Task LoadLuresAsync()
         {
-            await ExecuteSafelyAsync(async () =>
-            {
+            //await ExecuteSafelyAsync(async () =>
+            //{
                 IsLoading = true;
 
                 var lureList = await _databaseService.GetAllLureDataAsync();
@@ -127,7 +127,7 @@ namespace TrollTrack.Features.RodSetup
 
                 Debug.WriteLine($"Loaded {lureList.Count} lures for selection");
                 IsLoading = false;
-            }, "Loading lures...", showErrorAlert: false);
+            //}, "Loading lures...", showErrorAlert: false);
         }
 
         /// <summary>

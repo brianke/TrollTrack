@@ -136,7 +136,15 @@
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.110" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Compile Update="Features\Catches\ActiveTripView.xaml.cs">
+	    <DependentUpon>NewTripView.xaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+	<ItemGroup>
 	  <MauiXaml Update="Features\Catches\CatchesView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\Catches\ActiveTripView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Features\RodSetup\RodSetupPopup.xaml">

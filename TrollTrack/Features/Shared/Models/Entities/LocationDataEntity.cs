@@ -14,8 +14,8 @@
         public double? Speed { get; set; }
         public DateTimeOffset Timestamp { get; set; }
 
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<CatchDataEntity>? Catches { get; set; }
+        //[OneToMany(CascadeOperations = CascadeOperation.All)]
+        //public List<CatchDataEntity>? Catches { get; set; }
 
     }
 }

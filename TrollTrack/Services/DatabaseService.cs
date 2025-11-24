@@ -43,7 +43,7 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<LureDataEntity>();
                 await _database.CreateTableAsync<LureImageEntity>();
                 await _database.CreateTableAsync<TripDataEntity>();
-                await _database.CreateTableAsync<RodEntity>();
+                await _database.CreateTableAsync<RodSetupEntity>();
                 await _database.CreateTableAsync<WeatherDataEntity>();
                 await _database.CreateTableAsync<CustomClarityEntity>();
 
@@ -655,88 +655,339 @@ namespace TrollTrack.Services
 
         #endregion
 
-        #region Rod Methods
+    #region Rod Setup Operations
 
-        public async Task<int> SaveRodAsync(RodEntity rodSetup)
+        /// <summary>
+        /// Get all rod setups
+        /// </summary>
+        public async Task<List<RodSetupEntity>> GetAllRodSetupsAsync()
         {
             try
             {
                 var db = await GetDatabaseAsync();
-                await db.InsertOrReplaceWithChildrenAsync(rodSetup, recursive: true);
-                return rodSetup.Id;
+                var setups = await db.Table<RodSetupEntity>()
+                    //.OrderByDescending(r => r.IsFavorite)
+                    //.ThenByDescending(r => r.LastUsed)
+                    .ToListAsync();
+
+                // Load lure information for each setup
+                foreach (var setup in setups)
+                {
+                    if (setup.LureId.HasValue)
+                    {
+                        setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+                    }
+                    if (setup.DiverId.HasValue)
+                    {
+                        setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+                    }
+                }
+
+                return setups;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error saving rod: {ex.Message}");
-                throw;
+                System.Diagnostics.Debug.WriteLine($"Error getting all rod setups: {ex.Message}");
+                return new List<RodSetupEntity>();
             }
         }
 
-        public async Task<List<RodEntity>> GetAllRodsAsync()
+        /// <summary>
+        /// Get a specific rod setup by ID
+        /// </summary>
+        public async Task<RodSetupEntity?> GetRodSetupByIdAsync(int setupId)
         {
             try
             {
                 var db = await GetDatabaseAsync();
-                var entities = await db.GetAllWithChildrenAsync<RodEntity>(recursive: true);
-                return entities.OrderBy(r => r.Id).ToList();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error getting all rods: {ex.Message}");
-                return new List<RodEntity>();
-            }
-        }
+                var setup = await db.Table<RodSetupEntity>()
+                    .Where(r => r.Id == setupId)
+                    .FirstOrDefaultAsync();
 
-        public async Task<RodEntity?> GetRodByIdAsync(int id)
-        {
-            try
-            {
-                var db = await GetDatabaseAsync();
-                var entity = await db.GetWithChildrenAsync<RodEntity>(id, recursive: true);
-                return entity;
+                if (setup != null)
+                {
+                    // Load lure information
+                    if (setup.LureId.HasValue)
+                    {
+                        setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+                    }
+                    if (setup.DiverId.HasValue)
+                    {
+                        setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+                    }
+                }
+
+                return setup;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error getting rod by ID: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error getting rod setup by ID: {ex.Message}");
                 return null;
             }
         }
 
-        public async Task<int> DeleteRodAsync(int id)
+        /// <summary>
+        /// Save or update a rod setup
+        /// </summary>
+        public async Task<int> SaveRodSetupAsync(RodSetupEntity setup)
         {
             try
             {
                 var db = await GetDatabaseAsync();
-                var entityToDelete = await db.GetAsync<RodEntity>(id);
-                if (entityToDelete != null)
+
+                if (setup.Id == 0 || setup.Id == default)
                 {
-                    await db.DeleteAsync(entityToDelete);
-                    return 1;
+                    // This is a new record - INSERT
+                    //setup.CreatedAt = DateTime.Now;
+                    //setup.LastUsed = DateTime.Now;
+                    //setup.TimesUsed = 0;
+                    //setup.CatchCount = 0;
+
+                    await db.InsertAsync(setup);
+                    // setup.Id now contains the auto-generated ID
                 }
-                return 0;
+                else
+                {
+                    // This is an existing record - UPDATE
+                    var existing = await db.GetAsync<RodSetupEntity>(setup.Id);
+                    if (existing != null)
+                    {
+                        await db.UpdateAsync(setup);
+                    }
+                    else
+                    {
+                        // Weird case: Id is set but doesn't exist
+                        setup.Id = 0; // Reset to trigger INSERT
+                        await db.InsertAsync(setup);
+                    }
+                }
+
+                return setup.Id;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error deleting rod: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error saving rod setup: {ex.Message}");
                 throw;
             }
         }
 
-        public async Task<List<RodEntity>> GetActiveRodsAsync()
+        /// <summary>
+        /// Update an existing rod setup
+        /// </summary>
+        public async Task<int> UpdateRodSetupAsync(RodSetupEntity setup)
         {
             try
             {
-                // For now, return all rods. You can add an IsActive field later if needed
-                return await GetAllRodsAsync();
+                if (setup.Id <= 0)
+                {
+                    throw new ArgumentException("Invalid setup ID");
+                }
+
+                if (string.IsNullOrWhiteSpace(setup.Name))
+                {
+                    throw new ArgumentException("Rod setup name is required");
+                }
+
+                var db = await GetDatabaseAsync();
+                await db.UpdateAsync(setup);
+                return 1;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error getting active rods: {ex.Message}");
-                return new List<RodEntity>();
+                System.Diagnostics.Debug.WriteLine($"Error updating rod setup: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Delete a rod setup by ID
+        /// </summary>
+        public async Task<int> DeleteRodSetupAsync(int setupId)
+        {
+            try
+            {
+                if (setupId <= 0)
+                {
+                    throw new ArgumentException("Invalid setup ID");
+                }
+
+                var db = await GetDatabaseAsync();
+                await db.DeleteAsync<RodSetupEntity>(setupId);
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting rod setup: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Get recently used rod setups
+        /// </summary>
+        //public async Task<List<RodSetupEntity>> GetRecentlyUsedRodSetupsAsync(int count = 10)
+        //{
+        //    try
+        //    {
+        //        var db = await GetDatabaseAsync();
+        //        var setups = await db.Table<RodSetupEntity>()
+        //            .OrderByDescending(r => r.LastUsed)
+        //            .Take(count)
+        //            .ToListAsync();
+
+        //        // Load lure information
+        //        foreach (var setup in setups)
+        //        {
+        //            if (setup.LureId.HasValue)
+        //            {
+        //                setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+        //            }
+        //            if (setup.DiverId.HasValue)
+        //            {
+        //                setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+        //            }
+        //        }
+
+        //        return setups;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        System.Diagnostics.Debug.WriteLine($"Error getting recently used rod setups: {ex.Message}");
+        //        return new List<RodSetupEntity>();
+        //    }
+        //}
+
+        /// <summary>
+        /// Get most frequently used rod setups
+        /// </summary>
+        //public async Task<List<RodSetupEntity>> GetMostUsedRodSetupsAsync(int count = 10)
+        //{
+        //    try
+        //    {
+        //        var db = await GetDatabaseAsync();
+        //        var setups = await db.Table<RodSetupEntity>()
+        //            .OrderByDescending(r => r.TimesUsed)
+        //            .ThenByDescending(r => r.LastUsed)
+        //            .Take(count)
+        //            .ToListAsync();
+
+        //        // Load lure information
+        //        foreach (var setup in setups)
+        //        {
+        //            if (setup.LureId.HasValue)
+        //            {
+        //                setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+        //            }
+        //            if (setup.DiverId.HasValue)
+        //            {
+        //                setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+        //            }
+        //        }
+
+        //        return setups;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        System.Diagnostics.Debug.WriteLine($"Error getting most used rod setups: {ex.Message}");
+        //        return new List<RodSetupEntity>();
+        //    }
+        //}
+
+        /// <summary>
+        /// Increment usage counter for a rod setup
+        /// </summary>
+        //public async Task<int> IncrementRodSetupUsageAsync(int setupId)
+        //{
+        //    try
+        //    {
+        //        var setup = await GetRodSetupByIdAsync(setupId);
+        //        if (setup != null)
+        //        {
+        //            setup.TimesUsed++;
+        //            setup.LastUsed = DateTime.Now;
+        //            await UpdateRodSetupAsync(setup);
+        //            return 1;
+        //        }
+        //        return 0;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        System.Diagnostics.Debug.WriteLine($"Error incrementing rod setup usage: {ex.Message}");
+        //        throw;
+        //    }
+        //}
+
+        /// <summary>
+        /// Save multiple rod setups in a transaction
+        /// </summary>
+        public async Task<List<RodSetupEntity>> SaveMultipleRodSetupsAsync(List<RodSetupEntity> setups)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var savedSetups = new List<RodSetupEntity>();
+
+                await db.RunInTransactionAsync(tran =>
+                {
+                    foreach (var setup in setups)
+                    {
+                        if (setup.Id > 0)
+                        {
+                            tran.Update(setup);
+                        }
+                        else
+                        {
+                            //setup.CreatedAt = DateTime.Now;
+                            //setup.LastUsed = DateTime.Now;
+                            //setup.TimesUsed = 0;
+                            //setup.CatchCount = 0;
+                            tran.Insert(setup);
+                        }
+                        savedSetups.Add(setup);
+                    }
+                });
+
+                return savedSetups;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving multiple rod setups: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Delete multiple rod setups in a transaction
+        /// </summary>
+        public async Task<int> DeleteMultipleRodSetupsAsync(List<int> setupIds)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var count = 0;
+
+                await db.RunInTransactionAsync(tran =>
+                {
+                    foreach (var id in setupIds)
+                    {
+                        tran.Delete<RodSetupEntity>(id);
+                        count++;
+                    }
+                });
+
+                return count;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error deleting multiple rod setups: {ex.Message}");
+                throw;
             }
         }
 
         #endregion
+
+
+
 
         #region Custom Clarity Operations
 
@@ -1118,16 +1369,16 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
 
-                await db.DeleteAllAsync<CatchDataEntity>();         
+                await db.DeleteAllAsync<CatchDataEntity>();
+                await db.DeleteAllAsync<CustomClarityEntity>();
                 await db.DeleteAllAsync<LocationDataEntity>();      
                 await db.DeleteAllAsync<FishInfoEntity>();          
                 await db.DeleteAllAsync<DiverDataEntity>();         
                 await db.DeleteAllAsync<LureDataEntity>();          
                 await db.DeleteAllAsync<LureImageEntity>();         
-                await db.DeleteAllAsync<TripDataEntity>();          
-                await db.DeleteAllAsync<RodEntity>();               
+                await db.DeleteAllAsync<TripDataEntity>();
+                await db.DeleteAllAsync<RodSetupEntity>();
                 await db.DeleteAllAsync<WeatherDataEntity>();       
-                await db.DeleteAllAsync<CustomClarityEntity>();     
                                                                     
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
             }
