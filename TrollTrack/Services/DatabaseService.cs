@@ -673,9 +673,9 @@ namespace TrollTrack.Services
                 // Load lure information for each setup
                 foreach (var setup in setups)
                 {
-                    if (setup.LureId.HasValue)
+                    if (setup.LureId != Guid.Empty)
                     {
-                        setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+                        setup.Lure = await GetLureByIdAsync(setup.LureId);
                     }
                     if (setup.DiverId.HasValue)
                     {
@@ -707,9 +707,9 @@ namespace TrollTrack.Services
                 if (setup != null)
                 {
                     // Load lure information
-                    if (setup.LureId.HasValue)
+                    if (setup.LureId != Guid.Empty)
                     {
-                        setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+                        setup.Lure = await GetLureByIdAsync(setup.LureId);
                     }
                     if (setup.DiverId.HasValue)
                     {
