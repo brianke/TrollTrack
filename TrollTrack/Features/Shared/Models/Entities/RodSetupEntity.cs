@@ -1,5 +1,7 @@
 ﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
+    [Table("RodSetups")]
+
     public class RodSetupEntity
     {
         [PrimaryKey, AutoIncrement]

@@ -20,7 +20,7 @@ namespace TrollTrack.Services
         #region Catch methods
 
         Task<int> SaveCatchAsync(CatchDataEntity catchData);
-        Task<List<CatchDataEntity>> GetCatchDataAsync();
+        Task<List<CatchDataEntity>> GetAllCatchDataAsync();
         Task<List<CatchDataEntity>> GetCatchDataByDateRangeAsync(DateTime startDate, DateTime endDate);
         Task<List<CatchDataEntity>> GetCatchesForTripAsync(Guid tripId);
         Task<List<CatchDataEntity>> GetTodaysCatchesAsync();

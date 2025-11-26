@@ -1,5 +1,7 @@
 ﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
+    [Table("Trips")]
+
     public class TripDataEntity
     {
         [PrimaryKey]

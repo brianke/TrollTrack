@@ -9,6 +9,8 @@ namespace TrollTrack.Services
 {
     public class LocationService : ILocationService
     {
+        private readonly IDatabaseService _databaseService;
+
         // set default locaiton which will be used as a return value if actual position cannot be obtained
         private static LocationDataEntity defaultLocation = new LocationDataEntity
         {
@@ -33,6 +35,11 @@ namespace TrollTrack.Services
 
         // List for tracking location history
         private readonly List<LocationDataEntity> _locationHistory = new();
+
+        public LocationService(IDatabaseService databaseService)
+        {
+            _databaseService = databaseService;
+        }
 
         /// <summary>
         /// Get the current location asynchronously

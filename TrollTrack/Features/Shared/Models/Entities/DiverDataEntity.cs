@@ -26,7 +26,7 @@
     }
 
 
-    [Table("DiverData")]
+    [Table("Divers")]
     public class DiverDataEntity
     {
         [PrimaryKey]

@@ -2,6 +2,7 @@ using SQLiteNetExtensionsAsync.Extensions;
 using System.Collections.Generic;
 using System.Text.Json;
 using TrollTrack.Configuration;
+using TrollTrack.Features.Shared.Models;
 using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Services
@@ -390,24 +391,19 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var catches = await db.Table<CatchDataEntity>()
+                var entities = await _database.Table<CatchDataEntity>()
                     .Where(c => c.TripId == tripId)
-                    .OrderByDescending(c => c.Timestamp)
                     .ToListAsync();
 
-                // Load children for each catch
-                foreach (var catchEntity in catches)
-                {
-                    await db.GetChildrenAsync(catchEntity, recursive: true);
-                }
+                Debug.WriteLine($"Retrieved {entities.Count} catches for trip {tripId}");
 
-                return catches;
+                var orderedEntities = entities.OrderByDescending(e => e.Timestamp);
+                return (await Task.WhenAll(orderedEntities.Select(ConvertFromCatchEntity))).ToList();
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error getting catches for trip: {ex.Message}");
-                return new List<CatchDataEntity>();
+                Debug.WriteLine($"Error getting catches for trip: {ex.Message}");
+                throw;
             }
         }
 
@@ -506,9 +502,9 @@ namespace TrollTrack.Services
             try
             {
                 var db = await GetDatabaseAsync();
-                var entity = ConvertToCatchEntity(catchData);
+                //var entity = ConvertToCatchEntity(catchData);
 
-                await db.InsertOrReplaceWithChildrenAsync(entity, recursive: true);
+                await db.InsertOrReplaceWithChildrenAsync(catchData, recursive: true);
                 return 1;
             }
             catch (Exception ex)
@@ -521,16 +517,15 @@ namespace TrollTrack.Services
         /// <summary>
         /// Get all catch records
         /// </summary>
-        public async Task<List<CatchDataEntity>> GetCatchDataAsync()
+        public async Task<List<CatchDataEntity>> GetAllCatchDataAsync()
         {
             try
             {
                 var db = await GetDatabaseAsync();
                 var entities = await db.GetAllWithChildrenAsync<CatchDataEntity>(recursive: true);
 
-                return entities.OrderByDescending(e => e.Timestamp)
-                               .Select(ConvertFromCatchEntity)
-                               .ToList();
+                var orderedEntities = entities.OrderByDescending(e => e.Timestamp);
+                return (await Task.WhenAll(orderedEntities.Select(ConvertFromCatchEntity))).ToList();
             }
             catch (Exception ex)
             {
@@ -549,9 +544,8 @@ namespace TrollTrack.Services
                 var db = await GetDatabaseAsync();
                 var entities = await db.GetAllWithChildrenAsync<CatchDataEntity>(c => c.Timestamp >= startDate && c.Timestamp <= endDate, recursive: true);
 
-                return entities.OrderByDescending(e => e.Timestamp)
-                               .Select(ConvertFromCatchEntity)
-                               .ToList();
+                var orderedEntities = entities.OrderByDescending(e => e.Timestamp);
+                return (await Task.WhenAll(orderedEntities.Select(ConvertFromCatchEntity))).ToList();
             }
             catch (Exception ex)
             {
@@ -583,7 +577,7 @@ namespace TrollTrack.Services
                 if (entity == null)
                     return null;
 
-                return ConvertFromCatchEntity(entity);
+                return await ConvertFromCatchEntity(entity);
             }
             catch (Exception ex)
             {
@@ -1214,23 +1208,12 @@ namespace TrollTrack.Services
         {
             var entity = catchData;
 
-            //if (catchData.ProgramData != null)
-            //{
-            //    // TODO: The ProgramData model is incomplete.
-            //    entity.ProgramData = new ProgramDataEntity
-            //    {
-            //        Id = Guid.NewGuid(),
-            //        Name = "Placeholder Program",
-            //        Description = "Placeholder Description"
-            //    };
-            //    entity.ProgramDataId = entity.ProgramData.Id;
-            //}
-
             entity.LocationId = catchData.LocationId;
             entity.FishInfoId = catchData.FishInfoId;
             entity.LureId = catchData.LureId;
             entity.LineOut = catchData.LineOut;
             entity.DiverDataId = catchData.DiverDataId;
+            entity.TripId = catchData.TripId;
             entity.Latitude = catchData.Latitude;
             entity.Longitude = catchData.Longitude;
 
@@ -1240,12 +1223,17 @@ namespace TrollTrack.Services
         /// <summary>
         /// Updated ConvertFromCatchEntity - now uses RodSetup instead of ProgramData
         /// </summary>
-        private CatchDataEntity ConvertFromCatchEntity(CatchDataEntity entity)
+        private async Task<CatchDataEntity> ConvertFromCatchEntity(CatchDataEntity entity)
         {
+            LocationDataEntity? _location = await GetLocationByIdAsync(entity.LocationId);
+
             var catchData = new CatchDataEntity
             {
                 Id = entity.Id,
-                Timestamp = entity.Timestamp
+                Timestamp = entity.Timestamp,
+                FishName = FishData.GetFishNameById(entity.FishInfoId),
+                Latitude = _location != null ? _location.Latitude : 0.00,
+                Longitude = _location != null ? _location.Longitude : 0.00,
             };
 
 

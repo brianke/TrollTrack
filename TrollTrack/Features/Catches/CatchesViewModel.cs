@@ -143,10 +143,9 @@ public partial class CatchesViewModel : BaseViewModel
 
             await LoadRodsAsync();
 
-            //// Load catches for active trip or all catches
-            //await LoadCatchesAsync();
-
             IsInitializing = false;
+            Debug.WriteLine($"Initialization complete - Active trip: {HasActiveTrip}, Catches: {Catches.Count}, Rods: {Rods.Count}");
+
         }, "Initializing catches...");
     }
 
@@ -320,10 +319,23 @@ public partial class CatchesViewModel : BaseViewModel
         if (HasActiveTrip)
         {
             Title = $"Catches - {ActiveTrip?.TripName}";
+
+            // Load catches for the active trip
+            await LoadCatchesAsync();
+
+            Debug.WriteLine($"Active trip loaded: {ActiveTrip?.TripName} with {Catches.Count} catches");
         }
         else
         {
             Title = "Catches";
+
+            // Clear catches if no active trip
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Catches.Clear();
+                TotalCatches = 0;
+                TodaysCatches = 0;
+            });
         }
     }
 
@@ -379,6 +391,55 @@ public partial class CatchesViewModel : BaseViewModel
     //    Debug.WriteLine($"CanViewTripDetails called - trip is null: {trip == null}");
     //    return trip != null;
     //}
+
+    /// <summary>
+    /// Load catches for the active trip
+    /// </summary>
+    private async Task LoadCatchesAsync()
+    {
+        if (!HasActiveTrip || ActiveTrip == null)
+        {
+            Debug.WriteLine("No active trip - clearing catches");
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Catches.Clear();
+                TotalCatches = 0;
+                TodaysCatches = 0;
+            });
+            return;
+        }
+
+        try
+        {
+            Debug.WriteLine($"Loading catches for trip: {ActiveTrip.TripName}");
+
+            // Get catches for this trip from the database
+            var catches = await _databaseService.GetCatchesForTripAsync(ActiveTrip.Id);
+
+            Debug.WriteLine($"Loaded {catches.Count} catches from database");
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Catches.Clear();
+
+                foreach (var catchData in catches.OrderByDescending(c => c.Timestamp))
+                {
+                    Catches.Add(catchData);
+                }
+
+                // Update counts
+                TotalCatches = catches.Count;
+                TodaysCatches = catches.Count(c => c.Timestamp.Date == DateTime.Today);
+
+                Debug.WriteLine($"Catches loaded: Total={TotalCatches}, Today={TodaysCatches}");
+            });
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Error loading catches: {ex.Message}");
+            await ShowAlertAsync("Error", "Failed to load catches. Please try again.");
+        }
+    }
 
     #endregion Trip Management Commands
 
@@ -646,17 +707,24 @@ public partial class CatchesViewModel : BaseViewModel
 
         await ExecuteSafelyAsync(async () =>
         {
+            // Get current location
             var currentLocation = await _locationService.GetCurrentLocationAsync();
+
+            // ✅ IMPORTANT: Save the location to the database FIRST
+            await _databaseService.SaveLocationAsync(currentLocation);
+            Debug.WriteLine($"Location saved: {currentLocation.Latitude}, {currentLocation.Longitude} (ID: {currentLocation.Id})");
+
             var fishInfo = FishData.GetInfoFromName(SelectedFishOption);
 
             var newCatch = new CatchDataEntity
             {
-                Id = Guid.NewGuid(),                
+                Id = Guid.NewGuid(),
+                TripId = ActiveTrip.Id,  // ✅ Make sure to set TripId!
                 Timestamp = DateTime.Now,
-                LocationId = currentLocation.Id,
+                LocationId = currentLocation.Id,  // Now this ID exists in the database
                 FishInfoId = fishInfo.Id,
                 LureId = rod.LureId,
-                //DiverDataId = rod.DiverId,
+                DiverDataId = rod.DiverId,
                 LineOut = rod.LineOut,
                 Latitude = currentLocation.Latitude,
                 Longitude = currentLocation.Longitude,
@@ -665,6 +733,7 @@ public partial class CatchesViewModel : BaseViewModel
 
             // Save catch
             await _databaseService.SaveCatchAsync(newCatch);
+            Debug.WriteLine($"Catch saved: {newCatch.FishName} at location {newCatch.LocationId}");
 
             // Add catch to active trip's collection for UI
             if (ActiveTrip.Catches == null)

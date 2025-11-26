@@ -1,6 +1,6 @@
 ﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
-    [Table("LureData")]
+    [Table("Lures")]
     public class LureDataEntity
     {
         [PrimaryKey]
