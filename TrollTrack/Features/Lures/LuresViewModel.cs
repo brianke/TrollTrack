@@ -9,7 +9,10 @@ namespace TrollTrack.Features.Lures
         #region Observable Properties
 
         [ObservableProperty]
-        public ObservableCollection<LureDataEntity> lures = new ();
+        public ObservableCollection<LureDataEntity> lures = new();
+
+        [ObservableProperty]
+        public ObservableCollection<DiverDataEntity> divers = new();
 
         // Modal properties
         [ObservableProperty]
@@ -51,11 +54,14 @@ namespace TrollTrack.Features.Lures
                 Debug.WriteLine("Starting lures initialization...");
                 IsInitializing = true;
 
-                // Load lures when ViewModel is created
-                await LoadLuresAsync();
+            // Load lures when ViewModel is created
+            await LoadLuresAsync();
 
-                // Update Title
-                Title = "Lures";
+            // Load divers when ViewModel is created
+            await LoadDiversAsync();
+
+            // Update Title
+            Title = "Lures";
             //}, "Initializing lures...", showErrorAlert: false);
         }
 
@@ -88,6 +94,32 @@ namespace TrollTrack.Features.Lures
             });
 
             Debug.WriteLine($"Loaded {lureList.Count} lures for selection");
+            IsLoading = false;
+        }
+
+
+        public async Task LoadDiversAsync()
+        {
+            var diverList = await _databaseService.GetAllDiversAsync();
+
+            if (diverList == null || !diverList.Any())
+            {
+                Debug.WriteLine("No divers found in database");
+                await ShowAlertAsync("No Divers", "No divers found. Please add divers first from the Lures tab.");
+                IsLoading = false;
+                return;
+            }
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Divers.Clear();
+                foreach (var lure in diverList)
+                {
+                    Divers.Add(lure);
+                }
+            });
+
+            Debug.WriteLine($"Loaded {diverList.Count} divers for selection");
             IsLoading = false;
         }
 

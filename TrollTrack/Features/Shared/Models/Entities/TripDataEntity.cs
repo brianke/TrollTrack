@@ -29,12 +29,6 @@
 
         public string Clarity { get; set; } = string.Empty;
 
-        // OneToMany relationship - Trip owns the rods
-        //[OneToMany(CascadeOperations = CascadeOperation.All)]
-        //[Ignore, OneToMany]
-        //public List<RodEntity>? Rods { get; set; }
-
-
         // OneToMany relationship - Trip owns the catches
         [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<CatchDataEntity>? Catches { get; set; }

@@ -519,7 +519,9 @@ public partial class CatchesViewModel : BaseViewModel
                 Name = $"Rod {Rods.Count + 1}",
                 LureId = rodSetupData.Lure.Id,
                 LineOut = rodSetupData.LineOut,
-                Lure = rodSetupData.Lure
+                Lure = rodSetupData.Lure,
+                Diver = rodSetupData.Diver,
+                DiverId = rodSetupData.Diver.Id,
             };
 
             Debug.WriteLine($"Creating rod with Name: {newRod.Name}, LureId: {newRod.LureId}, LineOut: {newRod.LineOut}");

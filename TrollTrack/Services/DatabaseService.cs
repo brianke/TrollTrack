@@ -1157,7 +1157,28 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
                 var entities = await db.Table<DiverDataEntity>().ToListAsync();
-                return entities.OrderBy(d => d.Name).ToList();
+                var divers = entities.OrderBy(d => d.Name).ToList();
+
+                //var db = await GetDatabaseAsync();
+                //var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
+                //var lures = entities.Select(ConvertFromLureEntity).ToList();
+
+                using var stream = await FileSystem.OpenAppPackageFileAsync("divers.json");
+                using var reader = new StreamReader(stream);
+                var json = await reader.ReadToEndAsync();
+                var diverList = JsonSerializer.Deserialize<List<DiverDataEntity>>(json);
+
+                if (diverList != null)
+                {
+                    foreach (var lure in diverList)
+                    {
+                        divers.Add(lure);
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Loaded {diverList.Count} divers");
+                return diverList.OrderBy(d => d.Name).ToList(); ;
+
             }
             catch (Exception ex)
             {
@@ -1221,7 +1242,7 @@ namespace TrollTrack.Services
         }
 
         /// <summary>
-        /// Updated ConvertFromCatchEntity - now uses RodSetup instead of ProgramData
+        /// Updated ConvertFromCatchEntity
         /// </summary>
         private async Task<CatchDataEntity> ConvertFromCatchEntity(CatchDataEntity entity)
         {

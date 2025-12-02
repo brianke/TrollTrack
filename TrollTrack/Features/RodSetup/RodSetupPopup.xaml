@@ -70,6 +70,32 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Diver Entry Section -->
+                <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}"
+                        Padding="20"
+                        Margin="0,0,0,10">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="15"/>
+                    </Border.StrokeShape>
+                    <Border.Shadow>
+                        <Shadow Brush="{AppThemeBinding Light=#40000000, Dark=#80000000}"
+                                Offset="0,2"
+                                Radius="8"
+                                Opacity="0.3"/>
+                    </Border.Shadow>
+
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="Diver Used"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+
+                        <Picker ItemsSource="{Binding Divers}"
+                                SelectedItem="{Binding SelectedDiver, Mode=TwoWay}"
+                                ItemDisplayBinding="{Binding DisplayName}"/>
+                    </VerticalStackLayout>
+                </Border>
+                
                 <!-- Lure Selection Section -->
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Select Lure"
