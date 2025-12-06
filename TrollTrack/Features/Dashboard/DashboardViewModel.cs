@@ -91,13 +91,12 @@ public partial class DashboardViewModel : BaseViewModel
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"DashboardViewModel Initialization failed: {ex.Message}");
+            Debug.WriteLine($"DashboardViewModel LoadDataASync() failed: {ex.Message}");
         }
         finally
         {
             IsBusy = false;
         }
-
     }
 
     #endregion
@@ -106,7 +105,18 @@ public partial class DashboardViewModel : BaseViewModel
 
     private async Task NavigateToAsync(string route)
     {
-        await ExecuteSafelyAsync(() => Shell.Current.GoToAsync(route), "Navigating...");
+        try
+        {
+            await ExecuteSafelyAsync(() => Shell.Current.GoToAsync(route), "Navigating...");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"DashboardViewModel NavigateToAsync() failed: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]

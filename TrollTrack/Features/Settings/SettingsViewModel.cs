@@ -52,12 +52,23 @@ public partial class SettingsViewModel : BaseViewModel
 
         if (confirmed)
         {
-            await ExecuteSafelyAsync(async () =>
+            try
             {
-                await _databaseService.ClearAllTablesAsync();
-                await LoadDatabaseInfoAsync();
-                await ShowAlertAsync("Success", "All data has been cleared.");
-            }, "Clearing data...");
+                await ExecuteSafelyAsync(async () =>
+                {
+                    await _databaseService.ClearAllTablesAsync();
+                    await LoadDatabaseInfoAsync();
+                    await ShowAlertAsync("Success", "All data has been cleared.");
+                }, "Clearing data...");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"SettingsViewModel ClearAllDataAsync() failed: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
     }
 

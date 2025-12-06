@@ -45,7 +45,10 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         // Display name for picker
         [Ignore]
-        public string DisplayName => $"{Name} - {Setting} Setting";
+        public string DisplayName => 
+            string.IsNullOrWhiteSpace(Setting)
+                ? Name
+                : $"{Name} - {Setting} Setting";
 
         // Display name for picker
         //[Ignore]

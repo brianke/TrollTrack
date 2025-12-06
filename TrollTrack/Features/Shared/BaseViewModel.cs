@@ -178,7 +178,18 @@ namespace TrollTrack.Features.Shared
         public async Task UpdateLocationAsync()
         {
             ThrowIfDisposed();
-            await ExecuteSafelyAsync(() => GetAndSetLocationAsync(showAlerts: true), "Getting location...");
+            try
+            {
+                await ExecuteSafelyAsync(() => GetAndSetLocationAsync(showAlerts: true), "Getting location...");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"BaseViewModel UpdateLocationAsync() failed: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
 
         protected virtual async Task OnLocationUpdatedAsync(LocationDataEntity location)

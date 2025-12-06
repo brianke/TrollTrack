@@ -32,7 +32,7 @@ namespace TrollTrack.Features.Lures
             //CloseImageCommand = new RelayCommand(CloseImage);
 
             // Load data when ViewModel is created
-            //_ = InitializeAsync();
+            _ = InitializeAsync();
 
             // Add this to verify the command exists
             //Debug.WriteLine($"OpenImageCommand is null: {OpenImageCommand == null}");
@@ -49,20 +49,32 @@ namespace TrollTrack.Features.Lures
         /// <returns></returns>
         public async Task InitializeAsync()
         {
-            //await ExecuteSafelyAsync(async () =>
-            //{
-                Debug.WriteLine("Starting lures initialization...");
-                IsInitializing = true;
+            try
+            {
+                await ExecuteSafelyAsync(async () =>
+                {
+                    Debug.WriteLine("Starting lures initialization...");
+                    IsInitializing = true;
 
-            // Load lures when ViewModel is created
-            await LoadLuresAsync();
+                    // Load lures when ViewModel is created
+                    await LoadLuresAsync();
 
-            // Load divers when ViewModel is created
-            await LoadDiversAsync();
+                    // Load divers when ViewModel is created
+                    await LoadDiversAsync();
 
-            // Update Title
-            Title = "Lures";
-            //}, "Initializing lures...", showErrorAlert: false);
+                    // Update Title
+                    Title = "Lures";
+                }, "Initializing lures...", showErrorAlert: false);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LuresViewModel InitializeAsync() failed: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+
         }
 
         #endregion

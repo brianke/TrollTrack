@@ -8,9 +8,9 @@ namespace TrollTrack.Features.Catches;
 public partial class CatchesViewModel : BaseViewModel
 {
     private readonly IWeatherService _weatherService;
-    private RodSetupViewModel? _rodSetupViewModel;
     private readonly IRodSetupService _rodSetupService;
-
+    private RodSetupViewModel? _rodSetupVM;
+    private LuresViewModel? _luresVM;
 
     #region Trip Properties
 
@@ -89,11 +89,12 @@ public partial class CatchesViewModel : BaseViewModel
 
     #region Constructor
 
-    public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService, ITripService tripService, IWeatherService weatherService, IRodSetupService rodSetupService)
+    public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService, ITripService tripService, IWeatherService weatherService, IRodSetupService rodSetupService, LuresViewModel? luresViewModel)
         : base(locationService, databaseService)
     {
         _weatherService = weatherService;
         _rodSetupService = rodSetupService;
+        _luresVM = luresViewModel;
 
         Title = "Trips";
         SecchiNumberList = new ObservableCollection<int>(Enumerable.Range(0, 100));
@@ -130,23 +131,35 @@ public partial class CatchesViewModel : BaseViewModel
 
     public async Task InitializeAsync()
     {
-        await ExecuteSafelyAsync(async () =>
+        try
         {
-            IsInitializing = true;
-            FishOptions = FishData.GetAllFishNames();
+            await ExecuteSafelyAsync(async () =>
+            {
+                IsInitializing = true;
+                FishOptions = FishData.GetAllFishNames();
 
-            // Load active trip
-            await LoadActiveTripAsync();
+                // Load active trip
+                await LoadActiveTripAsync();
 
-            // Load past trips
-            await LoadRecentTripsAsync();
+                // Load past trips
+                await LoadRecentTripsAsync();
 
-            await LoadRodsAsync();
+                await LoadRodsAsync();
 
-            IsInitializing = false;
-            Debug.WriteLine($"Initialization complete - Active trip: {HasActiveTrip}, Catches: {Catches.Count}, Rods: {Rods.Count}");
+                IsInitializing = false;
+                Debug.WriteLine($"Initialization complete - Active trip: {HasActiveTrip}, Catches: {Catches.Count}, Rods: {Rods.Count}");
 
-        }, "Initializing catches...");
+            }, "Initializing catches...");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"CatchesViewModel InitializeAsync() failed: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
     }
 
     #endregion
@@ -156,58 +169,70 @@ public partial class CatchesViewModel : BaseViewModel
     [RelayCommand]
     private async Task StartNewTripAsync()
     {
-        if (string.IsNullOrWhiteSpace(NewTripName))
+        try
         {
-            await ShowAlertAsync("Trip Name Required", "Please enter a name for your trip.");
-            return;
+            if (string.IsNullOrWhiteSpace(NewTripName))
+            {
+                await ShowAlertAsync("Trip Name Required", "Please enter a name for your trip.");
+                return;
+            }
+
+            await ExecuteSafelyAsync(async () =>
+            {
+                // Get current location and weather
+                var location = await _locationService.GetCurrentLocationAsync();
+                var weather = await _weatherService.GetCurrentWeatherAsync(
+                    location.Latitude,
+                    location.Longitude);
+
+                // Create new trip
+                var trip = new TripDataEntity
+                {
+                    Id = Guid.NewGuid(),
+                    TripName = NewTripName,
+                    TripDate = NewTripDate,
+                    StartTime = DateTime.Now,
+                    IsActive = true,
+                    WeatherEntity = weather,
+                    WeatherEntityId = weather?.Id,
+                    WaterTemperature = WaterTemp,
+                    SecchiDepth = SecchiDepth,
+                    Clarity = Clarity,
+                    Notes = TripNotes,
+                    Catches = new List<CatchDataEntity>()
+                };
+
+                // Save to database
+                await _databaseService.SaveTripAsync(trip);
+
+                // Set as active trip
+                ActiveTrip = trip;
+                HasActiveTrip = true;
+
+                // Start duration timer
+                //StartDurationTimer();
+
+                // Clear form
+                NewTripName = string.Empty;
+                NewTripDate = DateTime.Today;
+
+                // Reload recent trips
+                await LoadRecentTripsAsync();
+
+                Title = "Trip Catches";
+
+                Debug.WriteLine($"Started new trip: {trip.TripName}");
+            }, "Starting trip...");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"CatchesViewModel StartNewTripAsync() failed: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
         }
 
-        await ExecuteSafelyAsync(async () =>
-        {
-            // Get current location and weather
-            var location = await _locationService.GetCurrentLocationAsync();
-            var weather = await _weatherService.GetCurrentWeatherAsync(
-                location.Latitude,
-                location.Longitude);
-
-            // Create new trip
-            var trip = new TripDataEntity
-            {
-                Id = Guid.NewGuid(),
-                TripName = NewTripName,
-                TripDate = NewTripDate,
-                StartTime = DateTime.Now,
-                IsActive = true,
-                WeatherEntity = weather,
-                WeatherEntityId = weather?.Id,
-                WaterTemperature = WaterTemp,
-                SecchiDepth = SecchiDepth,
-                Clarity = Clarity,
-                Notes = TripNotes,
-                Catches = new List<CatchDataEntity>()
-            };
-
-            // Save to database
-            await _databaseService.SaveTripAsync(trip);
-
-            // Set as active trip
-            ActiveTrip = trip;
-            HasActiveTrip = true;
-
-            // Start duration timer
-            //StartDurationTimer();
-
-            // Clear form
-            NewTripName = string.Empty;
-            NewTripDate = DateTime.Today;
-
-            // Reload recent trips
-            await LoadRecentTripsAsync();
-
-            Title = "Trip Catches";
-
-            Debug.WriteLine($"Started new trip: {trip.TripName}");
-        }, "Starting trip...");
     }
 
     // Handle when clarity changes
@@ -280,34 +305,45 @@ public partial class CatchesViewModel : BaseViewModel
     [RelayCommand]
     private async Task EndActiveTripAsync()
     {
-        if (!HasActiveTrip || ActiveTrip == null)
-            return;
-
-        var confirm = await ShowConfirmationAsync(
-            "End Trip?",
-            $"Are you sure you want to end '{ActiveTrip.TripName}'?",
-            "End Trip",
-            "Cancel");
-
-        if (!confirm)
-            return;
-
-        await ExecuteSafelyAsync(async () =>
+        try
         {
-            ActiveTrip.EndTime = DateTime.Now;
-            ActiveTrip.IsActive = false;
+            if (!HasActiveTrip || ActiveTrip == null)
+                return;
 
-            await _databaseService.UpdateTripAsync(ActiveTrip);
+            var confirm = await ShowConfirmationAsync(
+                "End Trip?",
+                $"Are you sure you want to end '{ActiveTrip.TripName}'?",
+                "End Trip",
+                "Cancel");
 
-            // Clear active trip
-            ActiveTrip = null;
-            HasActiveTrip = false;
+            if (!confirm)
+                return;
 
-            // Reload trips
-            await LoadRecentTripsAsync();
+            await ExecuteSafelyAsync(async () =>
+            {
+                ActiveTrip.EndTime = DateTime.Now;
+                ActiveTrip.IsActive = false;
 
-            Debug.WriteLine("Trip ended successfully");
-        }, "Ending trip...");
+                await _databaseService.UpdateTripAsync(ActiveTrip);
+
+                // Clear active trip
+                ActiveTrip = null;
+                HasActiveTrip = false;
+
+                // Reload trips
+                await LoadRecentTripsAsync();
+
+                Debug.WriteLine("Trip ended successfully");
+            }, "Ending trip...");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"CatchesViewModel EndActiveTripAsync() failed: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     private async Task LoadActiveTripAsync()
@@ -476,14 +512,14 @@ public partial class CatchesViewModel : BaseViewModel
             Debug.WriteLine("=== AddRod Command Started ===");
 
             // Create the rod setup view model
-            _rodSetupViewModel = new RodSetupViewModel(_locationService, _databaseService);
+            _rodSetupVM = new RodSetupViewModel(_locationService, _databaseService, _luresVM);
 
             // Subscribe to the rod setup confirmed event (not just lure selected)
-            _rodSetupViewModel.RodSetupConfirmed += OnRodSetupConfirmed;
+            _rodSetupVM.RodSetupConfirmed += OnRodSetupConfirmed;
             Debug.WriteLine("Subscribed to RodSetupConfirmed event");
 
             // Create and show the popup
-            var popup = new RodSetupPopup(_rodSetupViewModel);
+            var popup = new RodSetupPopup(_rodSetupVM);
             Debug.WriteLine("Pushing modal popup");
 
             await Application.Current?.MainPage?.Navigation.PushModalAsync(popup)!;
@@ -504,9 +540,9 @@ public partial class CatchesViewModel : BaseViewModel
         try
         {
             // Unsubscribe from the event
-            if (_rodSetupViewModel != null)
+            if (_rodSetupVM != null)
             {
-                _rodSetupViewModel.RodSetupConfirmed -= OnRodSetupConfirmed;
+                _rodSetupVM.RodSetupConfirmed -= OnRodSetupConfirmed;
             }
 
             Debug.WriteLine($"=== Rod Setup Confirmed ===");
@@ -566,12 +602,23 @@ public partial class CatchesViewModel : BaseViewModel
 
         if (confirm)
         {
-            await ExecuteSafelyAsync(async () =>
+            try
             {
-                await _databaseService.DeleteRodSetupAsync(rod.Id);
-                await LoadRodsAsync();
-                Debug.WriteLine($"Rod removed: {rod.Name}");
-            }, "Removing rod...");
+                await ExecuteSafelyAsync(async () =>
+                {
+                    await _databaseService.DeleteRodSetupAsync(rod.Id);
+                    await LoadRodsAsync();
+                    Debug.WriteLine($"Rod removed: {rod.Name}");
+                }, "Removing rod...");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"CatchesViewModel RemoveRodAsync() failed: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
         }
     }
 
@@ -693,69 +740,81 @@ public partial class CatchesViewModel : BaseViewModel
     [RelayCommand]
     private async Task AddNewCatchAsync(RodSetupEntity rod)
     {
-        if (string.IsNullOrWhiteSpace(SelectedFishOption))
+        try
         {
-            await ShowAlertAsync("No Species Selected", "Please select a fish species before logging a catch.");
-            return;
-        }
-
-        // Check if there's an active trip
-        if (!HasActiveTrip)
-        {
-            await ShowAlertAsync("No Active Trip",
-                "Please start a trip before logging catches. Go to the Trips tab to start a new trip.");
-            return;
-        }
-
-        await ExecuteSafelyAsync(async () =>
-        {
-            // Get current location
-            var currentLocation = await _locationService.GetCurrentLocationAsync();
-
-            // ✅ IMPORTANT: Save the location to the database FIRST
-            await _databaseService.SaveLocationAsync(currentLocation);
-            Debug.WriteLine($"Location saved: {currentLocation.Latitude}, {currentLocation.Longitude} (ID: {currentLocation.Id})");
-
-            var fishInfo = FishData.GetInfoFromName(SelectedFishOption);
-
-            var newCatch = new CatchDataEntity
+            if (string.IsNullOrWhiteSpace(SelectedFishOption))
             {
-                Id = Guid.NewGuid(),
-                TripId = ActiveTrip.Id,  // ✅ Make sure to set TripId!
-                Timestamp = DateTime.Now,
-                LocationId = currentLocation.Id,  // Now this ID exists in the database
-                FishInfoId = fishInfo.Id,
-                LureId = rod.LureId,
-                DiverDataId = rod.DiverId,
-                LineOut = rod.LineOut,
-                Latitude = currentLocation.Latitude,
-                Longitude = currentLocation.Longitude,
-                FishName = FishData.GetFishNameById(fishInfo.Id)
-            };
-
-            // Save catch
-            await _databaseService.SaveCatchAsync(newCatch);
-            Debug.WriteLine($"Catch saved: {newCatch.FishName} at location {newCatch.LocationId}");
-
-            // Add catch to active trip's collection for UI
-            if (ActiveTrip.Catches == null)
-            {
-                ActiveTrip.Catches = new List<CatchDataEntity>();
-            }
-            ActiveTrip.Catches.Add(newCatch);
-
-            Catches.Insert(0, newCatch);
-            TotalCatches++;
-            if (newCatch.Timestamp.Date == DateTime.Today)
-            {
-                TodaysCatches++;
+                await ShowAlertAsync("No Species Selected", "Please select a fish species before logging a catch.");
+                return;
             }
 
-            Debug.WriteLine($"Added new catch: {SelectedFishOption} at {newCatch.Timestamp}");
+            // Check if there's an active trip
+            if (!HasActiveTrip)
+            {
+                await ShowAlertAsync("No Active Trip",
+                    "Please start a trip before logging catches. Go to the Trips tab to start a new trip.");
+                return;
+            }
 
-            // Clear selection
-            SelectedFishOption = string.Empty;
-        }, "Adding catch...");
+            await ExecuteSafelyAsync(async () =>
+            {
+                // Get current location
+                var currentLocation = await _locationService.GetCurrentLocationAsync();
+
+                // ✅ IMPORTANT: Save the location to the database FIRST
+                await _databaseService.SaveLocationAsync(currentLocation);
+                Debug.WriteLine($"Location saved: {currentLocation.Latitude}, {currentLocation.Longitude} (ID: {currentLocation.Id})");
+
+                var fishInfo = FishData.GetInfoFromName(SelectedFishOption);
+
+                var newCatch = new CatchDataEntity
+                {
+                    Id = Guid.NewGuid(),
+                    TripId = ActiveTrip.Id,  // ✅ Make sure to set TripId!
+                    Timestamp = DateTime.Now,
+                    LocationId = currentLocation.Id,  // Now this ID exists in the database
+                    FishInfoId = fishInfo.Id,
+                    LureId = rod.LureId,
+                    DiverDataId = rod.DiverId,
+                    LineOut = rod.LineOut,
+                    Latitude = currentLocation.Latitude,
+                    Longitude = currentLocation.Longitude,
+                    FishName = FishData.GetFishNameById(fishInfo.Id)
+                };
+
+                // Save catch
+                await _databaseService.SaveCatchAsync(newCatch);
+                Debug.WriteLine($"Catch saved: {newCatch.FishName} at location {newCatch.LocationId}");
+
+                // Add catch to active trip's collection for UI
+                if (ActiveTrip.Catches == null)
+                {
+                    ActiveTrip.Catches = new List<CatchDataEntity>();
+                }
+                ActiveTrip.Catches.Add(newCatch);
+
+                Catches.Insert(0, newCatch);
+                TotalCatches++;
+                if (newCatch.Timestamp.Date == DateTime.Today)
+                {
+                    TodaysCatches++;
+                }
+
+                Debug.WriteLine($"Added new catch: {SelectedFishOption} at {newCatch.Timestamp}");
+
+                // Clear selection
+                SelectedFishOption = string.Empty;
+            }, "Adding catch...");
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"CatchesViewModel AddNewCatchAsync() failed: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
     }
 
     #endregion

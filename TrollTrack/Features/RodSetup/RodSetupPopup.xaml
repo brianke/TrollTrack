@@ -91,7 +91,7 @@
                                FontAttributes="Bold"
                                TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
 
-                        <Picker ItemsSource="{Binding LuresViewModel.Divers}"
+                        <Picker ItemsSource="{Binding LuresVM.Divers}"
                                 SelectedItem="{Binding SelectedDiver, Mode=TwoWay}"
                                 ItemDisplayBinding="{Binding DisplayName}" />
                     </VerticalStackLayout>
@@ -114,7 +114,7 @@
                                       HeightRequest="100"/>
 
                     <!-- Lures Collection View -->
-                    <CollectionView ItemsSource="{Binding LuresViewModel.Lures}"
+                    <CollectionView ItemsSource="{Binding LuresVM.Lures}"
                                    SelectionMode="Single"
                                    SelectedItem="{Binding SelectedLure}"
                                    IsVisible="{Binding IsNotBusy}"

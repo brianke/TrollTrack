@@ -14,10 +14,13 @@ namespace TrollTrack.Features.RodSetup
         #region Observable Properties
 
         [ObservableProperty]
-        private ObservableCollection<LureDataEntity> _lures = new();
+        private LuresViewModel _luresVM;
 
-        [ObservableProperty]
-        private ObservableCollection<DiverDataEntity> _divers = new();
+        //[ObservableProperty]
+        //private ObservableCollection<LureDataEntity> _lures = new();
+
+        //[ObservableProperty]
+        //private ObservableCollection<DiverDataEntity> _divers = new();
 
         [ObservableProperty]
         private LureDataEntity? _selectedLure;
@@ -52,10 +55,12 @@ namespace TrollTrack.Features.RodSetup
 
         #region Constructor
 
-        public RodSetupViewModel(ILocationService locationService, IDatabaseService databaseService)
+        public RodSetupViewModel(ILocationService locationService, IDatabaseService databaseService, LuresViewModel luresViewModel)
             : base(locationService, databaseService)
         {
             Title = "Select Lure";
+            _luresVM = luresViewModel;
+
         }
 
         #endregion
@@ -96,23 +101,21 @@ namespace TrollTrack.Features.RodSetup
 
         public async Task InitializeAsync()
         {
-            await ExecuteSafelyAsync(async () =>
-            {
-                IsInitializing = true;
+            //await ExecuteSafelyAsync(async () =>
+            //{
+            //    IsInitializing = true;
 
                 // Load active trip
-                await LoadLuresAsync();
+                //await LoadLuresAsync();
 
                 // Load active trip
-                await LoadDiversAsync();
+                //await LoadDiversAsync();
 
-                //// Load catches for active trip or all catches
-                //await LoadCatchesAsync();
-
-                IsInitializing = false;
-            }, "Initializing catches...");
+            //    IsInitializing = false;
+            //}, "Initializing catches...");
         }
 
+/*
         /// <summary>
         /// Load available lures from the database
         /// </summary>
@@ -178,6 +181,7 @@ namespace TrollTrack.Features.RodSetup
             IsLoading = false;
             //}, "Loading lures...", showErrorAlert: false);
         }
+*/
 
         /// <summary>
         /// Confirm the rod setup and raise the event
