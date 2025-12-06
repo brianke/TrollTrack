@@ -2,17 +2,18 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:TrollTrack.Features.RodSetup"
+             xmlns:vml="clr-namespace:TrollTrack.Features.Lures"
              xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
              x:Class="TrollTrack.Features.RodSetup.RodSetupPopup"
              x:DataType="vm:RodSetupViewModel"
-             Title="Rod Setup"
+             Title="{Binding Title}"
              BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#1C1C1C}">
 
     <Grid RowDefinitions="Auto,*,Auto,Auto" Padding="20">
 
         <!-- Header -->
         <VerticalStackLayout Grid.Row="0" Spacing="10" Margin="0,10,0,20">
-            <Label Text="Add New Rod"
+            <Label Text="{Binding Title}"
                    FontSize="28"
                    FontAttributes="Bold"
                    HorizontalOptions="Center"
@@ -90,9 +91,9 @@
                                FontAttributes="Bold"
                                TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
 
-                        <Picker ItemsSource="{Binding Divers}"
+                        <Picker ItemsSource="{Binding LuresViewModel.Divers}"
                                 SelectedItem="{Binding SelectedDiver, Mode=TwoWay}"
-                                ItemDisplayBinding="{Binding DisplayName}"/>
+                                ItemDisplayBinding="{Binding DisplayName}" />
                     </VerticalStackLayout>
                 </Border>
                 
@@ -113,7 +114,7 @@
                                       HeightRequest="100"/>
 
                     <!-- Lures Collection View -->
-                    <CollectionView ItemsSource="{Binding Lures}"
+                    <CollectionView ItemsSource="{Binding LuresViewModel.Lures}"
                                    SelectionMode="Single"
                                    SelectedItem="{Binding SelectedLure}"
                                    IsVisible="{Binding IsNotBusy}"

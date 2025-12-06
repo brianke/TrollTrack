@@ -1,5 +1,4 @@
 using SQLiteNetExtensionsAsync.Extensions;
-using System.Collections.Generic;
 using System.Text.Json;
 using TrollTrack.Configuration;
 using TrollTrack.Features.Shared.Models;
@@ -49,6 +48,9 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<CustomClarityEntity>();
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
+
+                await LoadLuresJsonAsync();
+                await LoadDiversJsonAsync();
             }
             catch (Exception ex)
             {
@@ -816,100 +818,102 @@ namespace TrollTrack.Services
             }
         }
 
+/*
         /// <summary>
         /// Get recently used rod setups
         /// </summary>
-        //public async Task<List<RodSetupEntity>> GetRecentlyUsedRodSetupsAsync(int count = 10)
-        //{
-        //    try
-        //    {
-        //        var db = await GetDatabaseAsync();
-        //        var setups = await db.Table<RodSetupEntity>()
-        //            .OrderByDescending(r => r.LastUsed)
-        //            .Take(count)
-        //            .ToListAsync();
+        public async Task<List<RodSetupEntity>> GetRecentlyUsedRodSetupsAsync(int count = 10)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var setups = await db.Table<RodSetupEntity>()
+                    .OrderByDescending(r => r.LastUsed)
+                    .Take(count)
+                    .ToListAsync();
 
-        //        // Load lure information
-        //        foreach (var setup in setups)
-        //        {
-        //            if (setup.LureId.HasValue)
-        //            {
-        //                setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
-        //            }
-        //            if (setup.DiverId.HasValue)
-        //            {
-        //                setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
-        //            }
-        //        }
+                // Load lure information
+                foreach (var setup in setups)
+                {
+                    if (setup.LureId.HasValue)
+                    {
+                        setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+                    }
+                    if (setup.DiverId.HasValue)
+                    {
+                        setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+                    }
+                }
 
-        //        return setups;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"Error getting recently used rod setups: {ex.Message}");
-        //        return new List<RodSetupEntity>();
-        //    }
-        //}
+                return setups;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting recently used rod setups: {ex.Message}");
+                return new List<RodSetupEntity>();
+            }
+        }
 
         /// <summary>
         /// Get most frequently used rod setups
         /// </summary>
-        //public async Task<List<RodSetupEntity>> GetMostUsedRodSetupsAsync(int count = 10)
-        //{
-        //    try
-        //    {
-        //        var db = await GetDatabaseAsync();
-        //        var setups = await db.Table<RodSetupEntity>()
-        //            .OrderByDescending(r => r.TimesUsed)
-        //            .ThenByDescending(r => r.LastUsed)
-        //            .Take(count)
-        //            .ToListAsync();
+        public async Task<List<RodSetupEntity>> GetMostUsedRodSetupsAsync(int count = 10)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var setups = await db.Table<RodSetupEntity>()
+                    .OrderByDescending(r => r.TimesUsed)
+                    .ThenByDescending(r => r.LastUsed)
+                    .Take(count)
+                    .ToListAsync();
 
-        //        // Load lure information
-        //        foreach (var setup in setups)
-        //        {
-        //            if (setup.LureId.HasValue)
-        //            {
-        //                setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
-        //            }
-        //            if (setup.DiverId.HasValue)
-        //            {
-        //                setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
-        //            }
-        //        }
+                // Load lure information
+                foreach (var setup in setups)
+                {
+                    if (setup.LureId.HasValue)
+                    {
+                        setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+                    }
+                    if (setup.DiverId.HasValue)
+                    {
+                        setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+                    }
+                }
 
-        //        return setups;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"Error getting most used rod setups: {ex.Message}");
-        //        return new List<RodSetupEntity>();
-        //    }
-        //}
+                return setups;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting most used rod setups: {ex.Message}");
+                return new List<RodSetupEntity>();
+            }
+        }
 
         /// <summary>
         /// Increment usage counter for a rod setup
         /// </summary>
-        //public async Task<int> IncrementRodSetupUsageAsync(int setupId)
-        //{
-        //    try
-        //    {
-        //        var setup = await GetRodSetupByIdAsync(setupId);
-        //        if (setup != null)
-        //        {
-        //            setup.TimesUsed++;
-        //            setup.LastUsed = DateTime.Now;
-        //            await UpdateRodSetupAsync(setup);
-        //            return 1;
-        //        }
-        //        return 0;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"Error incrementing rod setup usage: {ex.Message}");
-        //        throw;
-        //    }
-        //}
+        public async Task<int> IncrementRodSetupUsageAsync(int setupId)
+        {
+            try
+            {
+                var setup = await GetRodSetupByIdAsync(setupId);
+                if (setup != null)
+                {
+                    setup.TimesUsed++;
+                    setup.LastUsed = DateTime.Now;
+                    await UpdateRodSetupAsync(setup);
+                    return 1;
+                }
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error incrementing rod setup usage: {ex.Message}");
+                throw;
+            }
+        }
+*/
 
         /// <summary>
         /// Save multiple rod setups in a transaction
@@ -1103,6 +1107,23 @@ namespace TrollTrack.Services
                 var db = await GetDatabaseAsync();
                 var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
                 var lures = entities.Select(ConvertFromLureEntity).ToList();
+                
+                System.Diagnostics.Debug.WriteLine($"Loaded {lures.Count} lures");
+                return lures;
+
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting all lures: {ex.Message}");
+                return new List<LureDataEntity>();
+            }
+        }
+
+        public async Task<int> LoadLuresJsonAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
 
                 using var stream = await FileSystem.OpenAppPackageFileAsync("lures.json");
                 using var reader = new StreamReader(stream);
@@ -1113,20 +1134,18 @@ namespace TrollTrack.Services
                 {
                     foreach (var lure in lureList)
                     {
-                        lures.Add(lure);
+                        await SaveLureAsync(lure);
                     }
                 }
-                
-                System.Diagnostics.Debug.WriteLine($"Loaded {lureList.Count} lures");
-                return lureList;
-
+                return 1;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error getting all lures: {ex.Message}");
-                return new List<LureDataEntity>();
+                System.Diagnostics.Debug.WriteLine($"Error saving lure: {ex.Message}");
+                throw;
             }
         }
+
 
         #endregion
 
@@ -1221,6 +1240,33 @@ namespace TrollTrack.Services
             }
         }
 
+        public async Task<int> LoadDiversJsonAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                using var stream = await FileSystem.OpenAppPackageFileAsync("divers.json");
+                using var reader = new StreamReader(stream);
+                var json = await reader.ReadToEndAsync();
+                var diverList = JsonSerializer.Deserialize<List<DiverDataEntity>>(json);
+
+                if (diverList != null)
+                {
+                    foreach (var diver in diverList)
+                    {
+                        await SaveDiverAsync(diver);
+                    }
+                }
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving lure: {ex.Message}");
+                throw;
+            }
+        }
+
         #endregion
 
         #region Helper Methods
@@ -1260,8 +1306,6 @@ namespace TrollTrack.Services
 
             return catchData;
         }
-
-
 
         private LureDataEntity ConvertToLureEntity(LureDataEntity lureData)
         {

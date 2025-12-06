@@ -49,43 +49,55 @@ public partial class DashboardViewModel : BaseViewModel
 
     private async Task LoadDataAsync(bool isRefresh)
     {
-        var statusMessage = isRefresh ? "Refreshing dashboard..." : "Initializing dashboard...";
-        await ExecuteSafelyAsync(async () =>
+        try
         {
-            WeatherSummary = "Fetching location and weather...";
-
-            if (!await GetAndSetLocationAsync(showAlerts: isRefresh))
+            var statusMessage = isRefresh ? "Refreshing dashboard..." : "Initializing dashboard...";
+            await ExecuteSafelyAsync(async () =>
             {
-                if (!isRefresh)
+                WeatherSummary = "Fetching location and weather...";
+
+                if (!await GetAndSetLocationAsync(showAlerts: isRefresh))
                 {
-                    CurrentLatitude = AppConfig.Constants.DefaultLatitude;
-                    CurrentLongitude = AppConfig.Constants.DefaultLongitude;
-                    LocationName = "Default Location (Great Lakes)";
+                    if (!isRefresh)
+                    {
+                        CurrentLatitude = AppConfig.Constants.DefaultLatitude;
+                        CurrentLongitude = AppConfig.Constants.DefaultLongitude;
+                        LocationName = "Default Location (Great Lakes)";
+                    }
+                    else
+                    {
+                        WeatherSummary = "Could not update location.";
+                        return;
+                    }
+                }
+
+                var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
+
+                if (weather != null)
+                {
+                    WeatherEntity = weather[0];
+                    LocationName = weather[0].LocationName ?? "Location Unavailable";
+                    WeatherSummary = $"Weather updated at {DateTime.Now:T}";
+                    if (isRefresh)
+                    {
+                        RefreshStatus = "Dashboard updated";
+                    }
                 }
                 else
                 {
-                    WeatherSummary = "Could not update location.";
-                    return;
+                    WeatherSummary = "Weather data unavailable.";
                 }
-            }
+            }, statusMessage, showErrorAlert: isRefresh);
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"DashboardViewModel Initialization failed: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
 
-            var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
-
-            if (weather != null)
-            {
-                WeatherEntity = weather[0];
-                LocationName = weather[0].LocationName ?? "Location Unavailable";
-                WeatherSummary = $"Weather updated at {DateTime.Now:T}";
-                if (isRefresh)
-                {
-                    RefreshStatus = "Dashboard updated";
-                }
-            }
-            else
-            {
-                WeatherSummary = "Weather data unavailable.";
-            }
-        }, statusMessage, showErrorAlert: isRefresh);
     }
 
     #endregion
