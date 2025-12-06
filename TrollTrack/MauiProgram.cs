@@ -50,7 +50,13 @@ namespace TrollTrack
             builder.Logging.AddDebug();
 #endif
 
-            return builder.Build();
+            var app = builder.Build();
+
+            // Seed data on first run
+            var dbService = app.Services.GetRequiredService<IDatabaseService>();
+            dbService.SeedInitialDataAsync();
+
+            return app;
         }
     }
 }

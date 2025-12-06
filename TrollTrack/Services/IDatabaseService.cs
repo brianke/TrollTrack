@@ -4,6 +4,8 @@ namespace TrollTrack.Services
 {
     public interface IDatabaseService
     {
+        Task SeedInitialDataAsync();
+
         #region Trip methods
 
         Task<int> SaveTripAsync(TripDataEntity trip);
