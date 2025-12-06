@@ -825,101 +825,103 @@ namespace TrollTrack.Services
             }
         }
 
+/*
         /// <summary>
         /// Get recently used rod setups
         /// </summary>
-        //public async Task<List<RodSetupEntity>> GetRecentlyUsedRodSetupsAsync(int count = 10)
-        //{
-        //    try
-        //    {
-        //        var db = await GetDatabaseAsync();
-        //        var setups = await db.Table<RodSetupEntity>()
-        //            .OrderByDescending(r => r.LastUsed)
-        //            .Take(count)
-        //            .ToListAsync();
+        public async Task<List<RodSetupEntity>> GetRecentlyUsedRodSetupsAsync(int count = 10)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var setups = await db.Table<RodSetupEntity>()
+                    .OrderByDescending(r => r.LastUsed)
+                    .Take(count)
+                    .ToListAsync();
 
-        //        // Load lure information
-        //        foreach (var setup in setups)
-        //        {
-        //            if (setup.LureId.HasValue)
-        //            {
-        //                setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
-        //            }
-        //            if (setup.DiverId.HasValue)
-        //            {
-        //                setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
-        //            }
-        //        }
+                // Load lure information
+                foreach (var setup in setups)
+                {
+                    if (setup.LureId.HasValue)
+                    {
+                        setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+                    }
+                    if (setup.DiverId.HasValue)
+                    {
+                        setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+                    }
+                }
 
-        //        return setups;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"Error getting recently used rod setups: {ex.Message}");
-        //        return new List<RodSetupEntity>();
-        //    }
-        //}
+                return setups;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting recently used rod setups: {ex.Message}");
+                return new List<RodSetupEntity>();
+            }
+        }
 
         /// <summary>
         /// Get most frequently used rod setups
         /// </summary>
-        //public async Task<List<RodSetupEntity>> GetMostUsedRodSetupsAsync(int count = 10)
-        //{
-        //    try
-        //    {
-        //        var db = await GetDatabaseAsync();
-        //        var setups = await db.Table<RodSetupEntity>()
-        //            .OrderByDescending(r => r.TimesUsed)
-        //            .ThenByDescending(r => r.LastUsed)
-        //            .Take(count)
-        //            .ToListAsync();
+        public async Task<List<RodSetupEntity>> GetMostUsedRodSetupsAsync(int count = 10)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var setups = await db.Table<RodSetupEntity>()
+                    .OrderByDescending(r => r.TimesUsed)
+                    .ThenByDescending(r => r.LastUsed)
+                    .Take(count)
+                    .ToListAsync();
 
-        //        // Load lure information
-        //        foreach (var setup in setups)
-        //        {
-        //            if (setup.LureId.HasValue)
-        //            {
-        //                setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
-        //            }
-        //            if (setup.DiverId.HasValue)
-        //            {
-        //                setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
-        //            }
-        //        }
+                // Load lure information
+                foreach (var setup in setups)
+                {
+                    if (setup.LureId.HasValue)
+                    {
+                        setup.Lure = await GetLureByIdAsync(setup.LureId.Value);
+                    }
+                    if (setup.DiverId.HasValue)
+                    {
+                        setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+                    }
+                }
 
-        //        return setups;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"Error getting most used rod setups: {ex.Message}");
-        //        return new List<RodSetupEntity>();
-        //    }
-        //}
+                return setups;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting most used rod setups: {ex.Message}");
+                return new List<RodSetupEntity>();
+            }
+        }
 
         /// <summary>
         /// Increment usage counter for a rod setup
         /// </summary>
-        //public async Task<int> IncrementRodSetupUsageAsync(int setupId)
-        //{
-        //    try
-        //    {
-        //        var setup = await GetRodSetupByIdAsync(setupId);
-        //        if (setup != null)
-        //        {
-        //            setup.TimesUsed++;
-        //            setup.LastUsed = DateTime.Now;
-        //            await UpdateRodSetupAsync(setup);
-        //            return 1;
-        //        }
-        //        return 0;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        System.Diagnostics.Debug.WriteLine($"Error incrementing rod setup usage: {ex.Message}");
-        //        throw;
-        //    }
-        //}
+        public async Task<int> IncrementRodSetupUsageAsync(int setupId)
+        {
+            try
+            {
+                var setup = await GetRodSetupByIdAsync(setupId);
+                if (setup != null)
+                {
+                    setup.TimesUsed++;
+                    setup.LastUsed = DateTime.Now;
+                    await UpdateRodSetupAsync(setup);
+                    return 1;
+                }
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error incrementing rod setup usage: {ex.Message}");
+                throw;
+            }
+        }
 
+*/
         /// <summary>
         /// Save multiple rod setups in a transaction
         /// </summary>

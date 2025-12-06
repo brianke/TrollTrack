@@ -1,10 +1,10 @@
 ﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
-    [Table("Weather")]
 
     /// <summary>
     /// Weather data model for fishing conditions
     /// </summary>
+    [Table("Weather")]
     public class WeatherDataEntity
     {
         [PrimaryKey]

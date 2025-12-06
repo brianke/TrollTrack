@@ -8,6 +8,7 @@ namespace TrollTrack.Features.RodSetup;
 public partial class RodSetupPopup : ContentPage
 {
     private readonly RodSetupViewModel _viewModel;
+    private readonly RodSetupEntity _rodToEdit;
     private bool _hasInitialized = false;
 
     public RodSetupPopup(RodSetupViewModel viewModel)
@@ -16,6 +17,7 @@ public partial class RodSetupPopup : ContentPage
 
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        _rodToEdit = _viewModel.RodToEdit;
         BindingContext = viewModel;
     }
 

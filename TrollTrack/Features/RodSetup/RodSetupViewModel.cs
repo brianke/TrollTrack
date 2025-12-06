@@ -29,6 +29,9 @@ namespace TrollTrack.Features.RodSetup
         private DiverDataEntity? _selectedDiver;
 
         [ObservableProperty]
+        private RodSetupEntity? _rodToEdit;
+
+        [ObservableProperty]
         private int _lineOut = 0;
 
         /// <summary>
@@ -230,6 +233,10 @@ namespace TrollTrack.Features.RodSetup
     /// </summary>
     public class RodSetupData
     {
+        public int Id { get; set; }
+        
+        public string RodName { get; set; } = string.Empty;
+
         public LureDataEntity Lure { get; set; } = null!;
 
         public DiverDataEntity Diver { get; set; } = null!;

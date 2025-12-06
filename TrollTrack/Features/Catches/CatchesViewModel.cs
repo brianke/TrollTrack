@@ -549,16 +549,34 @@ public partial class CatchesViewModel : BaseViewModel
             Debug.WriteLine($"Lure: {rodSetupData.Lure.Manufacturer} - {rodSetupData.Lure.Color}");
             Debug.WriteLine($"Line Out: {rodSetupData.LineOut} feet");
 
-            // Create a new rod with the selected lure and line out
-            var newRod = new RodSetupEntity
+            var newRod = new RodSetupEntity();
+
+            if (rodSetupData.Id == 0)
             {
-                Name = $"Rod {Rods.Count + 1}",
-                LureId = rodSetupData.Lure.Id,
-                LineOut = rodSetupData.LineOut,
-                Lure = rodSetupData.Lure,
-                Diver = rodSetupData.Diver,
-                DiverId = rodSetupData.Diver.Id,
-            };
+                // Create a new rod with the selected lure and line out
+                newRod = new RodSetupEntity
+                {
+                    Name = $"Rod {Rods.Count + 1}",
+                    LineOut = rodSetupData.LineOut,
+                    Diver = rodSetupData.Diver,
+                    DiverId = rodSetupData.Diver.Id,
+                    Lure = rodSetupData.Lure,
+                    LureId = rodSetupData.Lure.Id,
+                };
+            }
+            else
+            {
+                newRod = new RodSetupEntity
+                {
+                    Id = rodSetupData.Id,
+                    Name = rodSetupData.RodName,
+                    LineOut = rodSetupData.LineOut,
+                    Diver = rodSetupData.Diver,
+                    DiverId = rodSetupData.Diver.Id,
+                    Lure = rodSetupData.Lure,
+                    LureId = rodSetupData.Lure.Id,
+                };
+            }
 
             Debug.WriteLine($"Creating rod with Name: {newRod.Name}, LureId: {newRod.LureId}, LineOut: {newRod.LineOut}");
 
@@ -585,136 +603,140 @@ public partial class CatchesViewModel : BaseViewModel
         }
     }
 
-    /// <summary>
-    /// Command to remove a rod
-    /// </summary>
-    [RelayCommand]
-    private async Task RemoveRodAsync(RodSetupEntity rod)
-    {
-        var mainPage = Application.Current?.MainPage;
-        if (mainPage == null) return;
-
-        bool confirm = await mainPage.DisplayAlert(
-            "Remove Rod",
-            $"Remove {rod.Name}?",
-            "Yes",
-            "No");
-
-        if (confirm)
-        {
-            try
-            {
-                await ExecuteSafelyAsync(async () =>
-                {
-                    await _databaseService.DeleteRodSetupAsync(rod.Id);
-                    await LoadRodsAsync();
-                    Debug.WriteLine($"Rod removed: {rod.Name}");
-                }, "Removing rod...");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"CatchesViewModel RemoveRodAsync() failed: {ex.Message}");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
-    }
-
     [RelayCommand]
     private async Task EditRod(RodSetupEntity rod)
     {
-        if (rod == null) return;
-
-        // Show action sheet with options
-        string action = await Shell.Current.DisplayActionSheet(
-            $"Rod: {rod.Name}",
-            "Cancel",
-            "Delete",
-            "Edit Details",
-            "Change Lure",
-            "Update Line Out");
-
-        switch (action)
+        try
         {
-            case "Edit Details":
-                await EditRodDetails(rod);
-                break;
-            case "Change Lure":
-                await ChangeLure(rod);
-                break;
-            case "Update Line Out":
-                await UpdateLineOut(rod);
-                break;
-            case "Delete":
-                await DeleteRod(rod);
-                break;
+            Debug.WriteLine("=== EditRod Command Started ===");
+
+            // Create the rod setup view model
+            _rodSetupVM = new RodSetupViewModel(_locationService, _databaseService, _luresVM)
+            {
+                RodToEdit = await _databaseService.GetRodSetupByIdAsync(rod.Id)
+            };
+
+            if (rod != null)
+            {
+                // Subscribe to the rod setup confirmed event (not just lure selected)
+                _rodSetupVM.RodSetupConfirmed += OnRodSetupConfirmed;
+                Debug.WriteLine("Subscribed to RodSetupConfirmed event");
+
+                // Create and show the popup
+                var popup = new RodSetupPopup(_rodSetupVM);
+                Debug.WriteLine("Pushing modal popup");
+
+                await Application.Current?.MainPage?.Navigation.PushModalAsync(popup)!;
+                Debug.WriteLine("Modal popup displayed");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"!!! ERROR in AddRod: {ex.Message}");
+            await ShowAlertAsync("Error", "Failed to open rod setup. Please try again.");
         }
     }
 
-    private async Task EditRodDetails(RodSetupEntity rod)
-    {
-        // Navigate to Edit Rod page
-        var parameters = new Dictionary<string, object>
-            {
-                { "RodId", rod.Id },
-                { "TripId", ActiveTrip?.Id ?? new Guid() }
-            };
-
-        await Shell.Current.GoToAsync("EditRodPage", parameters);
-    }
-
-    private async Task ChangeLure(RodSetupEntity rod)
-    {
-        // Navigate to lure selection page
-        var parameters = new Dictionary<string, object>
-            {
-                { "RodId", rod.Id },
-                { "Mode", "SelectLure" }
-            };
-
-        await Shell.Current.GoToAsync("SelectLurePage", parameters);
-    }
-
-    private async Task UpdateLineOut(RodSetupEntity rod)
-    {
-        // Show prompt to update line out
-        string result = await Shell.Current.DisplayPromptAsync(
-            "Update Line Out",
-            $"Current: {rod.LineOut} feet\nEnter new line out distance:",
-            "Update",
-            "Cancel",
-            "Enter feet",
-            keyboard: Keyboard.Numeric,
-            initialValue: rod.LineOut.ToString());
-
-        if (!string.IsNullOrEmpty(result) && int.TryParse(result, out int newLineOut))
+    /*
+        /// <summary>
+        /// Command to remove a rod
+        /// </summary>
+        [RelayCommand]
+        private async Task RemoveRodAsync(RodSetupEntity rod)
         {
-            try
-            {
-                rod.LineOut = newLineOut;
-                await _rodSetupService.UpdateSetupAsync(rod);
+            var mainPage = Application.Current?.MainPage;
+            if (mainPage == null) return;
 
-                // Refresh the rod in the collection
-                var index = Rods.IndexOf(rod);
-                if (index >= 0)
+            bool confirm = await mainPage.DisplayAlert(
+                "Remove Rod",
+                $"Remove {rod.Name}?",
+                "Yes",
+                "No");
+
+            if (confirm)
+            {
+                try
                 {
-                    Rods[index] = rod;
+                    await ExecuteSafelyAsync(async () =>
+                    {
+                        await _databaseService.DeleteRodSetupAsync(rod.Id);
+                        await LoadRodsAsync();
+                        Debug.WriteLine($"Rod removed: {rod.Name}");
+                    }, "Removing rod...");
                 }
-
-                await Shell.Current.DisplayAlert("Success",
-                    "Line out updated successfully", "OK");
-            }
-            catch (Exception ex)
-            {
-                await Shell.Current.DisplayAlert("Error",
-                    $"Failed to update line out: {ex.Message}", "OK");
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"CatchesViewModel RemoveRodAsync() failed: {ex.Message}");
+                }
+                finally
+                {
+                    IsBusy = false;
+                }
             }
         }
-    }
 
 
+        private async Task EditRodDetails(RodSetupEntity rod)
+        {
+            // Navigate to Edit Rod page
+            var parameters = new Dictionary<string, object>
+                {
+                    { "RodId", rod.Id },
+                    { "TripId", ActiveTrip?.Id ?? new Guid() }
+                };
+
+            await Shell.Current.GoToAsync("EditRodPage", parameters);
+        }
+
+        private async Task ChangeLure(RodSetupEntity rod)
+        {
+            // Navigate to lure selection page
+            var parameters = new Dictionary<string, object>
+                {
+                    { "RodId", rod.Id },
+                    { "Mode", "SelectLure" }
+                };
+
+            await Shell.Current.GoToAsync("SelectLurePage", parameters);
+        }
+
+        private async Task UpdateLineOut(RodSetupEntity rod)
+        {
+            // Show prompt to update line out
+            string result = await Shell.Current.DisplayPromptAsync(
+                "Update Line Out",
+                $"Current: {rod.LineOut} feet\nEnter new line out distance:",
+                "Update",
+                "Cancel",
+                "Enter feet",
+                keyboard: Keyboard.Numeric,
+                initialValue: rod.LineOut.ToString());
+
+            if (!string.IsNullOrEmpty(result) && int.TryParse(result, out int newLineOut))
+            {
+                try
+                {
+                    rod.LineOut = newLineOut;
+                    await _rodSetupService.UpdateSetupAsync(rod);
+
+                    // Refresh the rod in the collection
+                    var index = Rods.IndexOf(rod);
+                    if (index >= 0)
+                    {
+                        Rods[index] = rod;
+                    }
+
+                    await Shell.Current.DisplayAlert("Success",
+                        "Line out updated successfully", "OK");
+                }
+                catch (Exception ex)
+                {
+                    await Shell.Current.DisplayAlert("Error",
+                        $"Failed to update line out: {ex.Message}", "OK");
+                }
+            }
+        }
+    */
 
     private async Task DeleteRod(RodSetupEntity rod)
     {
