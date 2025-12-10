@@ -41,7 +41,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
         [Required]
         public string Name { get; set; } = string.Empty;
 
-        public string Setting { get; set; }
+        public string Setting { get; set; } = string.Empty;
 
         // Display name for picker
         [Ignore]

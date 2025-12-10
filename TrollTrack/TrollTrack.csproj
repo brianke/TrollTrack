@@ -97,6 +97,7 @@
 	<ItemGroup>
 	  <Compile Remove="Features\Lures\LureData.cs" />
 	  <Compile Remove="Features\Shared\Models\Entities\ProgramDataEntity.cs" />
+	  <Compile Remove="Features\Shared\Models\RodConfiguration.cs" />
 	</ItemGroup>
 	
 	<ItemGroup>

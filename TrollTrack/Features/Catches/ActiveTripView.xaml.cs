@@ -6,9 +6,12 @@ namespace TrollTrack.Features.Catches;
 public partial class ActiveTripView : ContentView
 {
     private System.Timers.Timer _longPressTimer;
-    private object _currentRod;
+    private object? _currentRod;
     private bool _isLongPress = false;
 
+    /// <summary>
+    /// ActiveTripView ctor
+    /// </summary>
     public ActiveTripView()
     {
         InitializeComponent();
@@ -53,7 +56,7 @@ public partial class ActiveTripView : ContentView
     /// <summary>
     /// Timer elapsed - long press detected!
     /// </summary>
-    private async void OnLongPressTimerElapsed(object sender, ElapsedEventArgs e)
+    private async void OnLongPressTimerElapsed(object? sender, ElapsedEventArgs e)
     {
         _isLongPress = true;
         Debug.WriteLine("??? LONG PRESS DETECTED! ???");

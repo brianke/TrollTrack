@@ -86,7 +86,7 @@ namespace TrollTrack.Features.Lures
 
         public async Task LoadLuresAsync()
         {
-            var lureList = await _databaseService.GetAllLureDataAsync();
+            var lureList = await BaseDatabaseService.GetAllLureDataAsync();
 
             if (lureList == null || !lureList.Any())
             {
@@ -112,7 +112,7 @@ namespace TrollTrack.Features.Lures
 
         public async Task LoadDiversAsync()
         {
-            var diverList = await _databaseService.GetAllDiversAsync();
+            var diverList = await BaseDatabaseService.GetAllDiversAsync();
 
             if (diverList == null || !diverList.Any())
             {

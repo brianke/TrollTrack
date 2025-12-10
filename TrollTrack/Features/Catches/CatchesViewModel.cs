@@ -1,4 +1,5 @@
-﻿using TrollTrack.Features.RodSetup;
+﻿using CommunityToolkit.Maui.Views;
+using TrollTrack.Features.RodSetup;
 using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models;
 using TrollTrack.Features.Shared.Models.Entities;
@@ -180,7 +181,7 @@ public partial class CatchesViewModel : BaseViewModel
             await ExecuteSafelyAsync(async () =>
             {
                 // Get current location and weather
-                var location = await _locationService.GetCurrentLocationAsync();
+                var location = await BaseLocationService.GetCurrentLocationAsync();
                 var weather = await _weatherService.GetCurrentWeatherAsync(
                     location.Latitude,
                     location.Longitude);
@@ -203,7 +204,7 @@ public partial class CatchesViewModel : BaseViewModel
                 };
 
                 // Save to database
-                await _databaseService.SaveTripAsync(trip);
+                await BaseDatabaseService.SaveTripAsync(trip);
 
                 // Set as active trip
                 ActiveTrip = trip;
@@ -249,7 +250,7 @@ public partial class CatchesViewModel : BaseViewModel
     {
         try
         {
-            var customs = await _databaseService.GetCustomClaritiesAsync();
+            var customs = await BaseDatabaseService.GetCustomClaritiesAsync();
 
             foreach (var custom in customs)
             {
@@ -269,7 +270,10 @@ public partial class CatchesViewModel : BaseViewModel
 
     private async Task PromptForCustomClarityAsync()
     {
-        var result = await Application.Current.MainPage.DisplayPromptAsync(
+        var page = Application.Current?.Windows[0]?.Page;
+        if (page == null) return;
+
+        var result = await page.DisplayPromptAsync(
             "Custom Water Clarity",
             "Describe the water clarity:",
             accept: "Save",
@@ -290,7 +294,7 @@ public partial class CatchesViewModel : BaseViewModel
                 ClarityOptions.Insert(insertIndex, result);
 
                 // Save to database
-                await _databaseService.SaveCustomClarityAsync(result);
+                await BaseDatabaseService.SaveCustomClarityAsync(result);
             }
 
             // Set the selected value
@@ -324,7 +328,7 @@ public partial class CatchesViewModel : BaseViewModel
                 ActiveTrip.EndTime = DateTime.Now;
                 ActiveTrip.IsActive = false;
 
-                await _databaseService.UpdateTripAsync(ActiveTrip);
+                await BaseDatabaseService.UpdateTripAsync(ActiveTrip);
 
                 // Clear active trip
                 ActiveTrip = null;
@@ -348,7 +352,7 @@ public partial class CatchesViewModel : BaseViewModel
 
     private async Task LoadActiveTripAsync()
     {
-        var trip = await _databaseService.GetActiveTripAsync();
+        var trip = await BaseDatabaseService.GetActiveTripAsync();
         ActiveTrip = trip;
         HasActiveTrip = trip != null;
 
@@ -377,7 +381,7 @@ public partial class CatchesViewModel : BaseViewModel
 
     private async Task LoadRecentTripsAsync()
     {
-        var trips = await _databaseService.GetRecentTripsAsync(10);
+        var trips = await BaseDatabaseService.GetRecentTripsAsync(10);
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
@@ -450,7 +454,7 @@ public partial class CatchesViewModel : BaseViewModel
             Debug.WriteLine($"Loading catches for trip: {ActiveTrip.TripName}");
 
             // Get catches for this trip from the database
-            var catches = await _databaseService.GetCatchesForTripAsync(ActiveTrip.Id);
+            var catches = await BaseDatabaseService.GetCatchesForTripAsync(ActiveTrip.Id);
 
             Debug.WriteLine($"Loaded {catches.Count} catches from database");
 
@@ -486,7 +490,7 @@ public partial class CatchesViewModel : BaseViewModel
     {
         //await ExecuteSafelyAsync(async () =>
         //{
-            var rodList = await _databaseService.GetAllRodSetupsAsync();
+            var rodList = await BaseDatabaseService.GetAllRodSetupsAsync();
 
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
@@ -511,8 +515,10 @@ public partial class CatchesViewModel : BaseViewModel
         {
             Debug.WriteLine("=== AddRod Command Started ===");
 
+            if (_luresVM == null) return;
+
             // Create the rod setup view model
-            _rodSetupVM = new RodSetupViewModel(_locationService, _databaseService, _luresVM);
+            _rodSetupVM = new RodSetupViewModel(BaseLocationService, BaseDatabaseService, _luresVM);
 
             // Subscribe to the rod setup confirmed event (not just lure selected)
             _rodSetupVM.RodSetupConfirmed += OnRodSetupConfirmed;
@@ -522,7 +528,10 @@ public partial class CatchesViewModel : BaseViewModel
             var popup = new RodSetupPopup(_rodSetupVM);
             Debug.WriteLine("Pushing modal popup");
 
-            await Application.Current?.MainPage?.Navigation.PushModalAsync(popup)!;
+            var page = Application.Current?.Windows[0]?.Page;
+            if (page?.Navigation == null) return;
+
+            await page?.Navigation.PushModalAsync(popup)!;
             Debug.WriteLine("Modal popup displayed");
         }
         catch (Exception ex)
@@ -535,7 +544,7 @@ public partial class CatchesViewModel : BaseViewModel
     /// <summary>
     /// Handle rod setup confirmation from the popup (includes lure and line out)
     /// </summary>
-    private async void OnRodSetupConfirmed(object? sender, RodSetupData rodSetupData)
+    private async void OnRodSetupConfirmed(object? sender, RodSetupEntity rodSetupEntity)
     {
         try
         {
@@ -546,42 +555,42 @@ public partial class CatchesViewModel : BaseViewModel
             }
 
             Debug.WriteLine($"=== Rod Setup Confirmed ===");
-            Debug.WriteLine($"Lure: {rodSetupData.Lure.Manufacturer} - {rodSetupData.Lure.Color}");
-            Debug.WriteLine($"Line Out: {rodSetupData.LineOut} feet");
+            Debug.WriteLine($"Lure: {rodSetupEntity.Lure!.Manufacturer} - {rodSetupEntity.Lure.Color}");   // Lure cannot be null here so added (!) ignore
+            Debug.WriteLine($"Line Out: {rodSetupEntity.LineOut} feet");
 
-            var newRod = new RodSetupEntity();
+            RodSetupEntity newRod;
 
-            if (rodSetupData.Id == 0)
+            if (rodSetupEntity.Id == 0)
             {
                 // Create a new rod with the selected lure and line out
                 newRod = new RodSetupEntity
                 {
                     Name = $"Rod {Rods.Count + 1}",
-                    LineOut = rodSetupData.LineOut,
-                    Diver = rodSetupData.Diver,
-                    DiverId = rodSetupData.Diver.Id,
-                    Lure = rodSetupData.Lure,
-                    LureId = rodSetupData.Lure.Id,
+                    LineOut = rodSetupEntity.LineOut,
+                    Diver = rodSetupEntity.Diver,
+                    DiverId = rodSetupEntity.Diver?.Id,
+                    Lure = rodSetupEntity.Lure,
+                    LureId = rodSetupEntity.Lure.Id,
                 };
             }
             else
             {
                 newRod = new RodSetupEntity
                 {
-                    Id = rodSetupData.Id,
-                    Name = rodSetupData.RodName,
-                    LineOut = rodSetupData.LineOut,
-                    Diver = rodSetupData.Diver,
-                    DiverId = rodSetupData.Diver.Id,
-                    Lure = rodSetupData.Lure,
-                    LureId = rodSetupData.Lure.Id,
+                    Id = rodSetupEntity.Id,
+                    Name = rodSetupEntity.Name,
+                    LineOut = rodSetupEntity.LineOut,
+                    Diver = rodSetupEntity.Diver,
+                    DiverId = rodSetupEntity.Diver?.Id,
+                    Lure = rodSetupEntity.Lure,
+                    LureId = rodSetupEntity.Lure.Id,
                 };
             }
 
             Debug.WriteLine($"Creating rod with Name: {newRod.Name}, LureId: {newRod.LureId}, LineOut: {newRod.LineOut}");
 
             // Save the rod to the database
-            var result = await _databaseService.SaveRodSetupAsync(newRod);
+            var result = await BaseDatabaseService.SaveRodSetupAsync(newRod);
             Debug.WriteLine($"Database save returned: {result}");
 
             // Reload rods to show the new one
@@ -592,8 +601,8 @@ public partial class CatchesViewModel : BaseViewModel
 
             await ShowAlertAsync("Success",
                 $"Rod added:\n" +
-                $"{rodSetupData.Lure.Manufacturer} - {rodSetupData.Lure.Color}\n" +
-                $"Line Out: {rodSetupData.LineOut} feet");
+                $"{rodSetupEntity.Lure.Manufacturer} - {rodSetupEntity.Lure.Color}\n" +
+                $"Line Out: {rodSetupEntity.LineOut} feet");
         }
         catch (Exception ex)
         {
@@ -610,10 +619,12 @@ public partial class CatchesViewModel : BaseViewModel
         {
             Debug.WriteLine("=== EditRod Command Started ===");
 
+            if (_luresVM == null) return;
+
             // Create the rod setup view model
-            _rodSetupVM = new RodSetupViewModel(_locationService, _databaseService, _luresVM)
+            _rodSetupVM = new RodSetupViewModel(BaseLocationService, BaseDatabaseService, _luresVM)
             {
-                RodToEdit = await _databaseService.GetRodSetupByIdAsync(rod.Id)
+                RodToEdit = await BaseDatabaseService.GetRodSetupByIdAsync(rod.Id)
             };
 
             if (rod != null)
@@ -626,7 +637,10 @@ public partial class CatchesViewModel : BaseViewModel
                 var popup = new RodSetupPopup(_rodSetupVM);
                 Debug.WriteLine("Pushing modal popup");
 
-                await Application.Current?.MainPage?.Navigation.PushModalAsync(popup)!;
+                var page = Application.Current?.Windows[0]?.Page;
+                if (page?.Navigation == null) return;
+
+                await page?.Navigation.PushModalAsync(popup)!;
                 Debug.WriteLine("Modal popup displayed");
             }
         }
@@ -659,7 +673,7 @@ public partial class CatchesViewModel : BaseViewModel
                 {
                     await ExecuteSafelyAsync(async () =>
                     {
-                        await _databaseService.DeleteRodSetupAsync(rod.Id);
+                        await BaseDatabaseService.DeleteRodSetupAsync(rod.Id);
                         await LoadRodsAsync();
                         Debug.WriteLine($"Rod removed: {rod.Name}");
                     }, "Removing rod...");
@@ -781,10 +795,10 @@ public partial class CatchesViewModel : BaseViewModel
             await ExecuteSafelyAsync(async () =>
             {
                 // Get current location
-                var currentLocation = await _locationService.GetCurrentLocationAsync();
+                var currentLocation = await BaseLocationService.GetCurrentLocationAsync();
 
                 // ✅ IMPORTANT: Save the location to the database FIRST
-                await _databaseService.SaveLocationAsync(currentLocation);
+                await BaseDatabaseService.SaveLocationAsync(currentLocation);
                 Debug.WriteLine($"Location saved: {currentLocation.Latitude}, {currentLocation.Longitude} (ID: {currentLocation.Id})");
 
                 var fishInfo = FishData.GetInfoFromName(SelectedFishOption);
@@ -792,7 +806,7 @@ public partial class CatchesViewModel : BaseViewModel
                 var newCatch = new CatchDataEntity
                 {
                     Id = Guid.NewGuid(),
-                    TripId = ActiveTrip.Id,  // ✅ Make sure to set TripId!
+                    TripId = ActiveTrip!.Id,  // ✅ Make sure to set TripId!
                     Timestamp = DateTime.Now,
                     LocationId = currentLocation.Id,  // Now this ID exists in the database
                     FishInfoId = fishInfo.Id,
@@ -805,24 +819,27 @@ public partial class CatchesViewModel : BaseViewModel
                 };
 
                 // Save catch
-                await _databaseService.SaveCatchAsync(newCatch);
+                await BaseDatabaseService.SaveCatchAsync(newCatch);
                 Debug.WriteLine($"Catch saved: {newCatch.FishName} at location {newCatch.LocationId}");
 
                 // Add catch to active trip's collection for UI
-                if (ActiveTrip.Catches == null)
+                if (ActiveTrip != null)
                 {
-                    ActiveTrip.Catches = new List<CatchDataEntity>();
-                }
-                ActiveTrip.Catches.Add(newCatch);
+                    if (ActiveTrip.Catches == null)
+                    {
+                        ActiveTrip.Catches = new List<CatchDataEntity>();
+                    }
+                    ActiveTrip.Catches.Add(newCatch);
 
-                Catches.Insert(0, newCatch);
-                TotalCatches++;
-                if (newCatch.Timestamp.Date == DateTime.Today)
-                {
-                    TodaysCatches++;
-                }
+                    Catches.Insert(0, newCatch);
+                    TotalCatches++;
+                    if (newCatch.Timestamp.Date == DateTime.Today)
+                    {
+                        TodaysCatches++;
+                    }
 
-                Debug.WriteLine($"Added new catch: {SelectedFishOption} at {newCatch.Timestamp}");
+                    Debug.WriteLine($"Added new catch: {SelectedFishOption} at {newCatch.Timestamp}");
+                }
 
                 // Clear selection
                 SelectedFishOption = string.Empty;

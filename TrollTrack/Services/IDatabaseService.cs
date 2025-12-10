@@ -63,8 +63,6 @@ namespace TrollTrack.Services
 
         #endregion
 
-
-
         #region Diver methods
 
         Task<int> SaveDiverAsync(DiverDataEntity diver);
@@ -84,7 +82,7 @@ namespace TrollTrack.Services
         #region Database maintenance
 
         Task<long> GetDatabaseSizeAsync();
-        Task<string?> BackupDatabaseAsync();
+        string? BackupDatabaseAsync();
         Task ClearAllTablesAsync();
 
         #endregion

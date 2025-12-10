@@ -56,7 +56,7 @@ public partial class SettingsViewModel : BaseViewModel
             {
                 await ExecuteSafelyAsync(async () =>
                 {
-                    await _databaseService.ClearAllTablesAsync();
+                    await BaseDatabaseService.ClearAllTablesAsync();
                     await LoadDatabaseInfoAsync();
                     await ShowAlertAsync("Success", "All data has been cleared.");
                 }, "Clearing data...");
@@ -117,9 +117,9 @@ public partial class SettingsViewModel : BaseViewModel
 
     private async Task LoadDatabaseInfoAsync()
     {
-        var size = await _databaseService.GetDatabaseSizeAsync();
+        var size = await BaseDatabaseService.GetDatabaseSizeAsync();
         var sizeKB = size / 1024.0;
-        var stats = await _databaseService.GetCatchStatisticsAsync();
+        var stats = await BaseDatabaseService.GetCatchStatisticsAsync();
 
         DatabaseInfo = $"Database Size: {sizeKB:F2} KB\n" +
                       $"Total Catches: {stats.TotalCatches}\n" +

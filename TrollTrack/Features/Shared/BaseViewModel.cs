@@ -14,8 +14,8 @@ namespace TrollTrack.Features.Shared
         #endregion
 
         #region Protected Properties - Access services through these**
-        protected ILocationService LocationService => _locationService;
-        protected IDatabaseService DatabaseService => _databaseService;
+        protected ILocationService BaseLocationService => _locationService;
+        protected IDatabaseService BaseDatabaseService => _databaseService;
         #endregion
 
         #region Properties
@@ -61,7 +61,7 @@ namespace TrollTrack.Features.Shared
         #region Location Properties
 
         [ObservableProperty]
-        private LocationDataEntity currentLocation;
+        private LocationDataEntity? currentLocation;
 
         [ObservableProperty]
         private double currentLatitude;
@@ -96,12 +96,12 @@ namespace TrollTrack.Features.Shared
         /// <summary>
         /// Event raised when an error occurs in the ViewModel
         /// </summary>
-        public event EventHandler<string> ErrorOccurred;
+        public event EventHandler<string>? ErrorOccurred;
 
         /// <summary>
         /// Event raised when the ViewModel starts or stops being busy
         /// </summary>
-        public event EventHandler<bool> BusyStateChanged;
+        public event EventHandler<bool>? BusyStateChanged;
 
         #endregion
 
@@ -367,7 +367,7 @@ namespace TrollTrack.Features.Shared
 
         #endregion
 
-        private async void OnLocationServiceUpdated(object sender, LocationDataEntity location)
+        private async void OnLocationServiceUpdated(object? sender, LocationDataEntity location)
         {
             if (_disposed)
                 return;
@@ -499,8 +499,10 @@ namespace TrollTrack.Features.Shared
         /// <param name="busyMessage">Message to show while busy</param>
         /// <param name="showErrorAlert">Whether to show error alerts to user</param>
         /// <returns>Operation result or default value</returns>
-        protected async Task<T> ExecuteSafelyAsync<T>(Func<Task<T>> operation, T defaultValue = default, string busyMessage = "", bool showErrorAlert = true)
+        protected async Task<T?> ExecuteSafelyAsync<T>(Func<Task<T>> operation, T defaultValue = default, string busyMessage = "", bool showErrorAlert = true)
         {
+            ArgumentNullException.ThrowIfNull(operation);
+            ArgumentException.ThrowIfNullOrEmpty(busyMessage);
             ThrowIfDisposed();
 
             if (IsBusy)
@@ -594,7 +596,7 @@ namespace TrollTrack.Features.Shared
         /// Gets the current page using the modern .NET MAUI approach
         /// </summary>
         /// <returns>Current page or null if not available</returns>
-        private static Page GetCurrentPage()
+        private static Page? GetCurrentPage()
         {
             try
             {
@@ -604,16 +606,9 @@ namespace TrollTrack.Features.Shared
                     return Shell.Current.CurrentPage;
                 }
 
-                // Fall back to the main window's page
-                var mainWindow = Application.Current?.Windows?.FirstOrDefault();
-                if (mainWindow?.Page != null)
-                {
-                    return mainWindow.Page;
-                }
-
-                // Last resort: try to find any available window with a page
-                var windowWithPage = Application.Current?.Windows?.FirstOrDefault(w => w.Page != null);
-                return windowWithPage?.Page;
+                // Fall back to checking if Shell.Current is itself a page
+                var shellAsPage = Shell.Current as Page;
+                return shellAsPage;
             }
             catch (Exception ex)
             {

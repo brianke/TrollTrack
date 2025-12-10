@@ -34,7 +34,7 @@
         public double? Longitude { get; set; }
 
         [Ignore]
-        public string FishName { get; set; }
+        public string FishName { get; set; } = string.Empty;
 
         public CatchDataEntity()
         {

@@ -17,7 +17,7 @@ public partial class RodSetupPopup : ContentPage
 
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _rodToEdit = _viewModel.RodToEdit;
+        _rodToEdit = _viewModel.RodToEdit ?? new RodSetupEntity();
         BindingContext = viewModel;
     }
 

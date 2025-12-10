@@ -14,21 +14,9 @@ public partial class SettingsView : ContentPage
     }
 
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
-
-        // Initialize the ViewModel when the page appears
-        //try
-        //{
-        //    await _viewModel.InitializeAsync();
-        //}
-        //catch (Exception ex)
-        //{
-        //    System.Diagnostics.Debug.WriteLine($"Error initializing Settings ViewModel: {ex.Message}");
-        //    // Optionally show error message to user
-        //    await DisplayAlert("Error", "Failed to load settings data. Please try again.", "OK");
-        //}
     }
 
 

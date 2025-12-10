@@ -28,13 +28,15 @@ namespace TrollTrack.Features.Analytics
         /// Initialize the data needed for the catches 
         /// </summary>
         /// <returns></returns>
-        public async Task InitializeAsync()
+        public Task InitializeAsync()
         {
             Debug.WriteLine("Starting analytics initialization...");
             IsInitializing = true;
 
             // Update Title
             Title = "Anlytics";
+
+            return Task.CompletedTask;
         }
 
         #endregion

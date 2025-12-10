@@ -35,8 +35,8 @@
         /// </summary>
         public bool IsActive { get; set; } = true;
 
-        [Ignore, Required]
-        public LureDataEntity Lure { get; set; }
+        [Ignore]
+        public LureDataEntity? Lure { get; set; }
 
         /// <summary>
         /// The diver details (populated by relationships, not stored directly)

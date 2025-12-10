@@ -52,7 +52,7 @@ namespace TrollTrack.Features.RodSetup
         /// <summary>
         /// Event raised when a rod setup is confirmed with lure and line out
         /// </summary>
-        public event EventHandler<RodSetupData>? RodSetupConfirmed;
+        public event EventHandler<RodSetupEntity>? RodSetupConfirmed;
 
         #endregion
 
@@ -102,89 +102,78 @@ namespace TrollTrack.Features.RodSetup
 
         #region Methods
 
-        public async Task InitializeAsync()
+        public Task InitializeAsync()
         {
-            //await ExecuteSafelyAsync(async () =>
-            //{
-            //    IsInitializing = true;
-
-                // Load active trip
-                //await LoadLuresAsync();
-
-                // Load active trip
-                //await LoadDiversAsync();
-
-            //    IsInitializing = false;
-            //}, "Initializing catches...");
+            return Task.CompletedTask;
         }
 
-/*
-        /// <summary>
-        /// Load available lures from the database
-        /// </summary>
-        public async Task LoadLuresAsync()
-        {
-            //await ExecuteSafelyAsync(async () =>
-            //{
-            IsLoading = true;
-
-            var lureList = await _databaseService.GetAllLureDataAsync();
-
-            if (lureList == null || !lureList.Any())
-            {
-                Debug.WriteLine("No lures found in database");
-                await ShowAlertAsync("No Lures", "No lures found. Please add lures first from the Lures tab.");
-                IsLoading = false;
-                return;
-            }
-
-            await MainThread.InvokeOnMainThreadAsync(() =>
-            {
-                Lures.Clear();
-                foreach (var lure in lureList)
+        /*
+                /// <summary>
+                /// Load available lures from the database
+                /// </summary>
+                public async Task LoadLuresAsync()
                 {
-                    Lures.Add(lure);
+                    //await ExecuteSafelyAsync(async () =>
+                    //{
+                    IsLoading = true;
+
+                    var lureList = await BaseDatabaseService.GetAllLureDataAsync();
+
+                    if (lureList == null || !lureList.Any())
+                    {
+                        Debug.WriteLine("No lures found in database");
+                        await ShowAlertAsync("No Lures", "No lures found. Please add lures first from the Lures tab.");
+                        IsLoading = false;
+                        return;
+                    }
+
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        Lures.Clear();
+                        foreach (var lure in lureList)
+                        {
+                            Lures.Add(lure);
+                        }
+                    });
+
+                    Debug.WriteLine($"Loaded {lureList.Count} lures for selection");
+                    IsLoading = false;
+                    //}, "Loading lures...", showErrorAlert: false);
                 }
-            });
 
-            Debug.WriteLine($"Loaded {lureList.Count} lures for selection");
-            IsLoading = false;
-            //}, "Loading lures...", showErrorAlert: false);
-        }
-
-        /// <summary>
-        /// Load available divers from the database
-        /// </summary>
-        public async Task LoadDiversAsync()
-        {
-            //await ExecuteSafelyAsync(async () =>
-            //{
-            IsLoading = true;
-
-            var diverList = await _databaseService.GetAllDiversAsync();
-
-            if (diverList == null || !diverList.Any())
-            {
-                Debug.WriteLine("No divers found in database");
-                await ShowAlertAsync("No Divers", "No divers found. Please add divers first from the Lures tab.");
-                IsLoading = false;
-                return;
-            }
-
-            await MainThread.InvokeOnMainThreadAsync(() =>
-            {
-                Divers.Clear();
-                foreach (var diver in diverList)
+                /// <summary>
+                /// Load available divers from the database
+                /// </summary>
+                public async Task LoadDiversAsync()
                 {
-                    Divers.Add(diver);
-                }
-            });
+                    //await ExecuteSafelyAsync(async () =>
+                    //{
+                    IsLoading = true;
 
-            Debug.WriteLine($"Loaded {diverList.Count} divers for selection");
-            IsLoading = false;
-            //}, "Loading lures...", showErrorAlert: false);
-        }
-*/
+                    var diverList = await BaseDatabaseService.GetAllDiversAsync();
+
+                    if (diverList == null || !diverList.Any())
+                    {
+                        Debug.WriteLine("No divers found in database");
+                        await ShowAlertAsync("No Divers", "No divers found. Please add divers first from the Lures tab.");
+                        IsLoading = false;
+                        return;
+                    }
+
+                    await MainThread.InvokeOnMainThreadAsync(() =>
+                    {
+                        Divers.Clear();
+                        foreach (var diver in diverList)
+                        {
+                            Divers.Add(diver);
+                        }
+                    });
+
+                    Debug.WriteLine($"Loaded {diverList.Count} divers for selection");
+                    IsLoading = false;
+                    //}, "Loading lures...", showErrorAlert: false);
+                }
+        */
 
         /// <summary>
         /// Confirm the rod setup and raise the event
@@ -203,7 +192,7 @@ namespace TrollTrack.Features.RodSetup
                 return;
             }
 
-            var rodSetupData = new RodSetupData
+            var rodSetupData = new RodSetupEntity
             {
                 Lure = SelectedLure,
                 Diver = SelectedDiver,
@@ -228,6 +217,7 @@ namespace TrollTrack.Features.RodSetup
         #endregion
     }
 
+/*
     /// <summary>
     /// Data class to pass rod setup information
     /// </summary>
@@ -243,4 +233,5 @@ namespace TrollTrack.Features.RodSetup
 
         public int LineOut { get; set; }
     }
+*/
 }

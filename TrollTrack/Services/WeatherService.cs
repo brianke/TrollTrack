@@ -28,7 +28,7 @@ public class WeatherService : IWeatherService
         _httpClient.Timeout = TimeSpan.FromSeconds(AppConfig.Constants.WeatherApiTimeoutSeconds);
     }
 
-    private async Task<T> FetchAndDeserializeAsync<T>(string url)
+    private async Task<T?> FetchAndDeserializeAsync<T>(string url)
     {
         try
         {
@@ -59,6 +59,7 @@ public class WeatherService : IWeatherService
     {
         var url = $"{AppConfig.Constants.WeatherApiBaseUrl}/current.json?key={_apiKey}&q={latitude},{longitude}&aqi=yes";
         var apiResponse = await FetchAndDeserializeAsync<WeatherApiResponse>(url);
+        if (apiResponse == null) return null;
 
         return MapToWeatherDataEntity(apiResponse.Current, apiResponse.Location);
     }
@@ -92,6 +93,8 @@ public class WeatherService : IWeatherService
         try
         {
             var apiResponse = await FetchAndDeserializeAsync<WeatherApiResponse>(url);
+            if (apiResponse == null) return null;
+
             return MapToWeatherDataEntity(apiResponse.Current, apiResponse.Location);
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("400"))
@@ -154,7 +157,7 @@ public class WeatherService : IWeatherService
             Sunset = ParseTimeString(forecastDay.Astro?.Sunset),
             Moonrise = ParseTimeString(forecastDay.Astro?.Moonrise),
             Moonset = ParseTimeString(forecastDay.Astro?.Moonset),
-            MoonPhase = forecastDay.Astro?.MoonPhase,
+            MoonPhase = forecastDay.Astro?.MoonPhase ?? string.Empty,
             MoonIllumination = double.TryParse(forecastDay.Astro?.MoonIllumination?.Replace("%", ""), out var illumination) ? illumination : 0
         };
     }

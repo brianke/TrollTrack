@@ -400,7 +400,8 @@ namespace TrollTrack.Services
         {
             try
             {
-                var entities = await _database.Table<CatchDataEntity>()
+                var db = await GetDatabaseAsync();
+                var entities = await db.Table<CatchDataEntity>()
                     .Where(c => c.TripId == tripId)
                     .ToListAsync();
 
@@ -1198,10 +1199,12 @@ namespace TrollTrack.Services
                     {
                         divers.Add(lure);
                     }
+
+                    System.Diagnostics.Debug.WriteLine($"Loaded {diverList.Count} divers");
+                    return diverList.OrderBy(d => d.Name).ToList();
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Loaded {diverList.Count} divers");
-                return diverList.OrderBy(d => d.Name).ToList(); ;
+                return new List<DiverDataEntity>();
 
             }
             catch (Exception ex)
@@ -1381,7 +1384,7 @@ namespace TrollTrack.Services
         /// <summary>
         /// Export database to backup location
         /// </summary>
-        public async Task<string?> BackupDatabaseAsync()
+        public string? BackupDatabaseAsync()
         {
             try
             {
