@@ -85,7 +85,7 @@ namespace TrollTrack.Services
         public async Task SeedInitialDataAsync()
         {
             await LoadLuresJsonAsync();
-            // Add other seeding methods here as needed
+            await LoadDiversJsonAsync();
         }
 
         #region Trip Data Operations
@@ -1181,30 +1181,11 @@ namespace TrollTrack.Services
             try
             {
                 var db = await GetDatabaseAsync();
-                var entities = await db.Table<DiverDataEntity>().ToListAsync();
-                var divers = entities.OrderBy(d => d.Name).ToList();
+                var entities = await db.GetAllWithChildrenAsync<DiverDataEntity>(recursive: true);
+                var divers = entities.Select(ConvertFromDiverEntity).ToList();
 
-                //var db = await GetDatabaseAsync();
-                //var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
-                //var lures = entities.Select(ConvertFromLureEntity).ToList();
-
-                using var stream = await FileSystem.OpenAppPackageFileAsync("divers.json");
-                using var reader = new StreamReader(stream);
-                var json = await reader.ReadToEndAsync();
-                var diverList = JsonSerializer.Deserialize<List<DiverDataEntity>>(json);
-
-                if (diverList != null)
-                {
-                    foreach (var lure in diverList)
-                    {
-                        divers.Add(lure);
-                    }
-
-                    System.Diagnostics.Debug.WriteLine($"Loaded {diverList.Count} divers");
-                    return diverList.OrderBy(d => d.Name).ToList();
-                }
-
-                return new List<DiverDataEntity>();
+                System.Diagnostics.Debug.WriteLine($"Loaded {divers.Count} lures");
+                return divers;
 
             }
             catch (Exception ex)
@@ -1248,6 +1229,33 @@ namespace TrollTrack.Services
             }
         }
 
+        public async Task<int> LoadDiversJsonAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+
+                using var stream = await FileSystem.OpenAppPackageFileAsync("divers.json");
+                using var reader = new StreamReader(stream);
+                var json = await reader.ReadToEndAsync();
+                var diverList = JsonSerializer.Deserialize<List<DiverDataEntity>>(json);
+
+                if (diverList != null)
+                {
+                    foreach (var diver in diverList)
+                    {
+                        await SaveDiverAsync(diver);
+                    }
+                }
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving diver: {ex.Message}");
+                throw;
+            }
+        }
+
         #endregion
 
         #region Helper Methods
@@ -1287,8 +1295,6 @@ namespace TrollTrack.Services
 
             return catchData;
         }
-
-
 
         private LureDataEntity ConvertToLureEntity(LureDataEntity lureData)
         {
@@ -1336,6 +1342,19 @@ namespace TrollTrack.Services
             }
 
             return lureData;
+        }
+
+        private DiverDataEntity ConvertFromDiverEntity(DiverDataEntity entity)
+        {
+            var diverData = new DiverDataEntity
+            {
+                Id = entity.Id,
+                Manufacturer = entity.Manufacturer,
+                Name = entity.Name,
+                Setting = entity.Setting,
+            };
+
+            return diverData;
         }
 
         #endregion

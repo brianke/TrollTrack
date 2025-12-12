@@ -16,12 +16,6 @@ namespace TrollTrack.Features.RodSetup
         [ObservableProperty]
         private LuresViewModel _luresVM;
 
-        //[ObservableProperty]
-        //private ObservableCollection<LureDataEntity> _lures = new();
-
-        //[ObservableProperty]
-        //private ObservableCollection<DiverDataEntity> _divers = new();
-
         [ObservableProperty]
         private LureDataEntity? _selectedLure;
 
@@ -29,10 +23,19 @@ namespace TrollTrack.Features.RodSetup
         private DiverDataEntity? _selectedDiver;
 
         [ObservableProperty]
-        private RodSetupEntity? _rodToEdit;
+        private int _id = 0;
+
+        [ObservableProperty]
+        private string _name = string.Empty;
 
         [ObservableProperty]
         private int _lineOut = 0;
+
+        [ObservableProperty]
+        private string _addButtonText = "Add Rod";
+
+        [ObservableProperty]
+        private string _currentSetup = string.Empty;
 
         /// <summary>
         /// Computed property to check if a lure has been selected
@@ -43,7 +46,6 @@ namespace TrollTrack.Features.RodSetup
         /// Computed property to check if rod can be added (lure selected and valid line out)
         /// </summary>
         public bool CanAddRod => SelectedLure != null && LineOut > 0;
-
 
         #endregion
 
@@ -61,8 +63,9 @@ namespace TrollTrack.Features.RodSetup
         public RodSetupViewModel(ILocationService locationService, IDatabaseService databaseService, LuresViewModel luresViewModel)
             : base(locationService, databaseService)
         {
-            Title = "Select Lure";
+            Title = "Add New Rod";
             _luresVM = luresViewModel;
+            _ = InitializeAsync();
 
         }
 
@@ -94,7 +97,6 @@ namespace TrollTrack.Features.RodSetup
         /// </summary>
         partial void OnSelectedDiverChanged(DiverDataEntity? value)
         {
-            //OnPropertyChanged(nameof(CanAddRod));
             Debug.WriteLine($"Diver changed: {value}");
         }
 
@@ -102,9 +104,13 @@ namespace TrollTrack.Features.RodSetup
 
         #region Methods
 
-        public Task InitializeAsync()
+        public async Task InitializeAsync()
         {
-            return Task.CompletedTask;
+            // set SelectedDiver to "Not Used" here since it is not required for a RodSetup
+            // Don't need to set SelectedLure as it is required for a RodSetup and will be there when new RodSetup is created
+            SelectedDiver = await _databaseService.GetDiverByIdAsync(new Guid("68E2F4AD-23EB-4A4C-932E-7886362532E6"));
+
+            //return Task.CompletedTask;
         }
 
         /*
@@ -178,7 +184,7 @@ namespace TrollTrack.Features.RodSetup
         /// <summary>
         /// Confirm the rod setup and raise the event
         /// </summary>
-        public void ConfirmRodSetup()
+        public void ConfirmRodSetup(int id = 0)
         {
             if (SelectedLure == null)
             {
@@ -194,6 +200,8 @@ namespace TrollTrack.Features.RodSetup
 
             var rodSetupData = new RodSetupEntity
             {
+                Id = id,
+                Name = Name,
                 Lure = SelectedLure,
                 Diver = SelectedDiver,
                 LineOut = LineOut
@@ -210,28 +218,11 @@ namespace TrollTrack.Features.RodSetup
         public void CancelRodSetup()
         {
             Debug.WriteLine("Rod setup cancelled");
-            SelectedLure = null;
             LineOut = 0;
+            SelectedDiver = null;
+            SelectedLure = null;
         }
 
         #endregion
     }
-
-/*
-    /// <summary>
-    /// Data class to pass rod setup information
-    /// </summary>
-    public class RodSetupData
-    {
-        public int Id { get; set; }
-        
-        public string RodName { get; set; } = string.Empty;
-
-        public LureDataEntity Lure { get; set; } = null!;
-
-        public DiverDataEntity Diver { get; set; } = null!;
-
-        public int LineOut { get; set; }
-    }
-*/
 }

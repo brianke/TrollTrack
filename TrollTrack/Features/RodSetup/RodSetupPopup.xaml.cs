@@ -8,7 +8,7 @@ namespace TrollTrack.Features.RodSetup;
 public partial class RodSetupPopup : ContentPage
 {
     private readonly RodSetupViewModel _viewModel;
-    private readonly RodSetupEntity _rodToEdit;
+    //private readonly RodSetupEntity _rodToEdit;
     private bool _hasInitialized = false;
 
     public RodSetupPopup(RodSetupViewModel viewModel)
@@ -17,7 +17,7 @@ public partial class RodSetupPopup : ContentPage
 
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _rodToEdit = _viewModel.RodToEdit ?? new RodSetupEntity();
+        //_rodToEdit = _viewModel.RodToEdit ?? new RodSetupEntity();
         BindingContext = viewModel;
     }
 
@@ -83,7 +83,7 @@ public partial class RodSetupPopup : ContentPage
         }
 
         // Create the rod configuration with both lure and line out
-        _viewModel.ConfirmRodSetup();
+        _viewModel.ConfirmRodSetup(_viewModel.Id);
         await Navigation.PopModalAsync();
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using Microsoft.Extensions.Logging;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -134,4 +135,44 @@ namespace TrollTrack.Converters
             writer.WriteNumberValue(value);
         }
     }
+
+
+    /// <summary>
+    /// Converts a string comparison to a boolean value
+    /// </summary>
+    public class StringComparisonToBooleanConverter: IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            // if either value is null then return the false value
+            if (value == null || parameter == null) return false;
+
+            return ((String)value).Equals((String)parameter, StringComparison.CurrentCulture) ? true : false;
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Converts a string comparison to a visibility value
+    /// </summary>
+    public class StringComparisonToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            // if either value is null then return the false value
+            if (value == null || parameter == null) return Visibility.Hidden;
+
+            return ((String)value).Equals((String)parameter, StringComparison.CurrentCulture) ? Visibility.Hidden : Visibility.Visible;
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 }

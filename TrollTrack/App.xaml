@@ -16,6 +16,9 @@
             <converters:AutoRefreshColorConverter x:Key="AutoRefreshColorConverter" />
             <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <converters:EnumToStringConverter x:Key="EnumToStringConverter" />
+            <converters:StringToDoubleConverter x:Key="StringToDoubleConverter" />
+            <converters:StringComparisonToBooleanConverter x:Key="StringComparisonToBooleanConverter" />
+            <converters:StringComparisonToVisibilityConverter x:Key="StringComparisonToVisibilityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

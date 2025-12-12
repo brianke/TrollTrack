@@ -32,6 +32,40 @@ namespace TrollTrack.Features.Shared.Models.Entities
     [Table("Divers")]
     public class DiverDataEntity
     {
+        /// <summary>
+        /// Override the default GetHashCode() so SelectedItem can find the matching item
+        /// </summary>
+        /// <returns>hashcode of <see cref="DiverDataEntity"/></returns>
+        public override int GetHashCode()
+        {
+            return HelperClass.CalculateHashCode(this,
+                    () => this.Id,
+                    () => this.Manufacturer,
+                    () => this.Name,
+                    () => this.Setting); 
+        }
+
+        /// <summary>
+        /// Override Equals method
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public override bool Equals(System.Object obj)
+        {
+            var item = obj as DiverDataEntity;
+
+            if (item == null)
+            {
+                return false;
+            }
+
+            // ?? String.Empty will return empty string if TimeFileStructureId is null (avoids a object is null error)
+            return (this.Id).Equals(item.Id)
+                    && this.Manufacturer.Equals(item.Manufacturer)
+                    && this.Name.Equals(item.Name)
+                    && this.Setting.Equals(item.Setting);
+        }
+
         [PrimaryKey]
         public Guid Id { get; set; } = new Guid();
 

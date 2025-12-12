@@ -601,8 +601,9 @@ public partial class CatchesViewModel : BaseViewModel
 
             await ShowAlertAsync("Success",
                 $"Rod added:\n" +
-                $"{rodSetupEntity.Lure.Manufacturer} - {rodSetupEntity.Lure.Color}\n" +
-                $"Line Out: {rodSetupEntity.LineOut} feet");
+                $"Line Out: {rodSetupEntity.LineOut} feet" + 
+                $"\n{rodSetupEntity.Lure.DisplayName}" +
+                $"\n{rodSetupEntity.Diver.DisplayName}");
         }
         catch (Exception ex)
         {
@@ -624,8 +625,18 @@ public partial class CatchesViewModel : BaseViewModel
             // Create the rod setup view model
             _rodSetupVM = new RodSetupViewModel(BaseLocationService, BaseDatabaseService, _luresVM)
             {
-                RodToEdit = await BaseDatabaseService.GetRodSetupByIdAsync(rod.Id)
-            };
+                Title = "Update Rod Setup",
+                Id = rod.Id,
+                Name = rod.Name,
+                LineOut = rod.LineOut,
+                SelectedDiver = rod.Diver,
+                SelectedLure = rod.Lure,
+                AddButtonText = "Update",
+                CurrentSetup = $"Line Out: {rod.LineOut} feet" +
+                                    $"\n{(rod.Lure == null ? string.Empty : rod.Lure.DisplayName)}" +
+                                    $"\n{(rod.Diver == null ? string.Empty : rod.Diver.DisplayName)}"
+
+        };
 
             if (rod != null)
             {
