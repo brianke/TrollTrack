@@ -54,7 +54,9 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\trolltrack_icon.svg" Color="#2E8BC0" />
+		<MauiIcon Include="Resources\AppIcon\trolltrack_app_icon.png">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</MauiIcon>
 
 		<!-- Styles -->
 		<MauiXaml Update="Resources\Styles\*.xaml">
