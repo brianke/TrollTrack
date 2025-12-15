@@ -54,10 +54,7 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\trolltrack_app_icon.png">
-		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</MauiIcon>
-
+		<MauiIcon Include="Resources\AppIcon\trolltrack_app_icon.png" ForegroundFile="Resources\AppIcon\trolltrack_app_icon.png" Color="#00000000" />
 		<!-- Styles -->
 		<MauiXaml Update="Resources\Styles\*.xaml">
 			<SubType>Designer</SubType>
@@ -75,42 +72,15 @@
 
 		<!-- Raw Assets -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
-		<AndroidResource Remove="Features\CatchesOld\**" />
-		<AndroidResource Remove="Features\Programs\**" />
-		<AndroidResource Remove="Features\Trips\**" />
-		<Compile Remove="Features\CatchesOld\**" />
-		<Compile Remove="Features\Programs\**" />
-		<Compile Remove="Features\Trips\**" />
-		<EmbeddedResource Remove="Features\CatchesOld\**" />
-		<EmbeddedResource Remove="Features\Programs\**" />
-		<EmbeddedResource Remove="Features\Trips\**" />
-		<MauiCss Remove="Features\CatchesOld\**" />
-		<MauiCss Remove="Features\Programs\**" />
-		<MauiCss Remove="Features\Trips\**" />
-		<MauiXaml Remove="Features\CatchesOld\**" />
-		<MauiXaml Remove="Features\Programs\**" />
-		<MauiXaml Remove="Features\Trips\**" />
-		<None Remove="Features\CatchesOld\**" />
-		<None Remove="Features\Programs\**" />
-		<None Remove="Features\Trips\**" />
+		<None Remove="Resources\Images\Lures\Bandit_BlueShiner.png" />
+		<None Remove="Resources\Images\Lures\Bandit_ChromeBlackBack.png" />
+		<None Remove="Resources\Images\Lures\Bandit_ChromeBlueBack.png" />
+		<None Remove="Resources\Images\Lures\Bandit_CoconutCandy.png" />
+		<None Remove="Resources\Images\Lures\Bandit_HumbleBee.png" />
+		<None Remove="Resources\Images\Lures\Bandit_PurpleMist.png" />
 		<EmbeddedResource Include="Configuration\appsettings.json" />
 	</ItemGroup>
-		
-	<ItemGroup>
-	  <Compile Remove="Features\Lures\LureData.cs" />
-	  <Compile Remove="Features\Shared\Models\Entities\ProgramDataEntity.cs" />
-	  <Compile Remove="Features\Shared\Models\RodConfiguration.cs" />
-	</ItemGroup>
-	
-	<ItemGroup>
-	  <None Remove="Resources\Images\Lures\bandit_blueshiner.png" />
-	  <None Remove="Resources\Images\Lures\bandit_chromeblackback.png" />
-	  <None Remove="Resources\Images\Lures\bandit_chromeblueback.png" />
-	  <None Remove="Resources\Images\Lures\bandit_coconutcandy.png" />
-	  <None Remove="Resources\Images\Lures\bandit_humblebee.png" />
-	  <None Remove="Resources\Images\Lures\bandit_purplemist.png" />
-	</ItemGroup>
-	
+
 	<ItemGroup>
 	  <MauiImage Include="Resources\Images\Lures\bandit_blueshiner.png" />
 	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblackback.png" />
