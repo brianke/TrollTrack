@@ -1,23 +1,21 @@
 using TrollTrack.Features.Shared.Models.Entities;
 
-namespace TrollTrack.Features.RodSetup;
+namespace TrollTrack.Features.Lures;
 
 /// <summary>
 /// Popup for selecting a lure and entering line out when adding a rod
 /// </summary>
-public partial class RodSetupPopup : ContentPage
+public partial class AddLurePopup : ContentPage
 {
-    private readonly RodSetupViewModel _viewModel;
-    //private readonly RodSetupEntity _rodToEdit;
+    private readonly AddLureViewModel _viewModel;
     private bool _hasInitialized = false;
 
-    public RodSetupPopup(RodSetupViewModel viewModel)
+    public AddLurePopup(AddLureViewModel viewModel)
     {
         InitializeComponent();
 
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        //_rodToEdit = _viewModel.RodToEdit ?? new RodSetupEntity();
         BindingContext = viewModel;
     }
 
@@ -28,7 +26,7 @@ public partial class RodSetupPopup : ContentPage
         // Guard against multiple initializations
         if (_hasInitialized)
         {
-            System.Diagnostics.Debug.WriteLine("RodSetupPopup: Already initialized, skipping...");
+            System.Diagnostics.Debug.WriteLine("AddLurePopup: Already initialized, skipping...");
             return;
         }
 
@@ -37,13 +35,13 @@ public partial class RodSetupPopup : ContentPage
         // Initialize the ViewModel when the page appears
         try
         {
-            System.Diagnostics.Debug.WriteLine("RodSetupPopup: Starting initialization");
+            System.Diagnostics.Debug.WriteLine("AddLurePopup: Starting initialization");
             await _viewModel.InitializeAsync();
-            System.Diagnostics.Debug.WriteLine("RodSetupPopup: Initialization complete");
+            System.Diagnostics.Debug.WriteLine("AddLurePopup: Initialization complete");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error initializing RodSetup ViewModel: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error initializing AddLurePopup ViewModel: {ex.Message}");
             System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
 
             // Show error message to user
@@ -62,6 +60,6 @@ public partial class RodSetupPopup : ContentPage
         // This allows the popup to reinitialize if shown again
         _hasInitialized = false;
 
-        System.Diagnostics.Debug.WriteLine("RodSetupPopup: OnDisappearing - reset initialization flag");
+        System.Diagnostics.Debug.WriteLine("AddLurePopup: OnDisappearing - reset initialization flag");
     }
 }

@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TrollTrack.Features.Shared;
 
 namespace TrollTrack.Converters
 {
@@ -97,6 +98,28 @@ namespace TrollTrack.Converters
                 }
             }
             return null;
+        }
+    }
+
+    /// <summary>
+    /// Converts an Enum value to use the [Description] property for display
+    /// </summary>
+
+    public class EnumToDisplayStringConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is Enum enumValue)
+            {
+                return enumValue.ToDisplayString();
+            }
+            return value?.ToString() ?? string.Empty;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            // Not needed for display binding
+            throw new NotImplementedException();
         }
     }
 

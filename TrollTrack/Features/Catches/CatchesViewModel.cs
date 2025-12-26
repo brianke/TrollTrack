@@ -9,7 +9,7 @@ namespace TrollTrack.Features.Catches;
 public partial class CatchesViewModel : BaseViewModel
 {
     private readonly IWeatherService _weatherService;
-    private readonly IRodSetupService _rodSetupService;
+    //private readonly IRodSetupService _rodSetupService;
     private RodSetupViewModel? _rodSetupVM;
     private LuresViewModel? _luresVM;
 
@@ -90,11 +90,11 @@ public partial class CatchesViewModel : BaseViewModel
 
     #region Constructor
 
-    public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService, ITripService tripService, IWeatherService weatherService, IRodSetupService rodSetupService, LuresViewModel? luresViewModel)
+    public CatchesViewModel(ILocationService locationService, IDatabaseService databaseService, ITripService tripService, IWeatherService weatherService, LuresViewModel? luresViewModel)
         : base(locationService, databaseService)
     {
         _weatherService = weatherService;
-        _rodSetupService = rodSetupService;
+        //_rodSetupService = rodSetupService;
         _luresVM = luresViewModel;
 
         Title = "Trips";
@@ -555,7 +555,7 @@ public partial class CatchesViewModel : BaseViewModel
             }
 
             Debug.WriteLine($"=== Rod Setup Confirmed ===");
-            Debug.WriteLine($"Lure: {rodSetupEntity.Lure!.Manufacturer} - {rodSetupEntity.Lure.Color}");   // Lure cannot be null here so added (!) ignore
+            Debug.WriteLine($"Lure: {rodSetupEntity.Lure!.DisplayName}");   // Lure cannot be null here so added (!) ignore
             Debug.WriteLine($"Line Out: {rodSetupEntity.LineOut} feet");
 
             RodSetupEntity newRod;
@@ -603,7 +603,7 @@ public partial class CatchesViewModel : BaseViewModel
                 $"Rod added:\n" +
                 $"Line Out: {rodSetupEntity.LineOut} feet" + 
                 $"\n{rodSetupEntity.Lure.DisplayName}" +
-                $"\n{rodSetupEntity.Diver.DisplayName}");
+                $"\n{((rodSetupEntity.Diver == null) ? String.Empty : rodSetupEntity.Diver.DisplayName)}");
         }
         catch (Exception ex)
         {
@@ -626,17 +626,16 @@ public partial class CatchesViewModel : BaseViewModel
             _rodSetupVM = new RodSetupViewModel(BaseLocationService, BaseDatabaseService, _luresVM)
             {
                 Title = "Update Rod Setup",
+                AddButtonText = "Update",
                 Id = rod.Id,
                 Name = rod.Name,
-                LineOut = rod.LineOut,
+                LineOutText = rod.LineOut.ToString(),
                 SelectedDiver = rod.Diver,
                 SelectedLure = rod.Lure,
-                AddButtonText = "Update",
                 CurrentSetup = $"Line Out: {rod.LineOut} feet" +
                                     $"\n{(rod.Lure == null ? string.Empty : rod.Lure.DisplayName)}" +
                                     $"\n{(rod.Diver == null ? string.Empty : rod.Diver.DisplayName)}"
-
-        };
+            };
 
             if (rod != null)
             {

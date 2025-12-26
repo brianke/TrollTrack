@@ -34,4 +34,14 @@ namespace TrollTrack.Features.Shared
         }
 
     }
+
+    public static class EnumExtensions
+    {
+        public static string ToDisplayString(this Enum value)
+        {
+            var fi = value.GetType().GetField(value.ToString());
+            var attr = (DescriptionAttribute?)Attribute.GetCustomAttribute(fi!, typeof(DescriptionAttribute));
+            return attr?.Description ?? value.ToString();
+        }
+    }
 }

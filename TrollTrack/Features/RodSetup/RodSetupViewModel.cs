@@ -17,6 +17,8 @@ namespace TrollTrack.Features.RodSetup
         private LuresViewModel _luresVM;
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AddRodCommand))]
+        [NotifyPropertyChangedFor(nameof(HasSelectedLure))]
         private LureDataEntity? _selectedLure;
 
         [ObservableProperty]
@@ -29,7 +31,10 @@ namespace TrollTrack.Features.RodSetup
         private string _name = string.Empty;
 
         [ObservableProperty]
-        private int _lineOut = 0;
+        [NotifyCanExecuteChangedFor(nameof(AddRodCommand))]
+        private string _lineOutText = string.Empty;
+
+        private static int ParseLineOut(string? text) => int.TryParse(text, out var v) ? v : 0;
 
         [ObservableProperty]
         private string _addButtonText = "Add Rod";
@@ -41,11 +46,6 @@ namespace TrollTrack.Features.RodSetup
         /// Computed property to check if a lure has been selected
         /// </summary>
         public bool HasSelectedLure => SelectedLure != null;
-
-        /// <summary>
-        /// Computed property to check if rod can be added (lure selected and valid line out)
-        /// </summary>
-        public bool CanAddRod => SelectedLure != null && LineOut > 0;
 
         #endregion
 
@@ -65,52 +65,35 @@ namespace TrollTrack.Features.RodSetup
         {
             Title = "Add New Rod";
             _luresVM = luresViewModel;
-            _ = InitializeAsync();
+            //_ = InitializeAsync();
 
         }
 
         #endregion
 
-        #region Property Change Handlers
-
-        /// <summary>
-        /// Handle when selected lure changes
-        /// </summary>
-        partial void OnSelectedLureChanged(LureDataEntity? value)
-        {
-            OnPropertyChanged(nameof(HasSelectedLure));
-            OnPropertyChanged(nameof(CanAddRod));
-            Debug.WriteLine($"Selected lure changed: {value?.Manufacturer} - {value?.Color}");
-        }
-
-        /// <summary>
-        /// Handle when line out changes
-        /// </summary>
-        partial void OnLineOutChanged(int value)
-        {
-            OnPropertyChanged(nameof(CanAddRod));
-            Debug.WriteLine($"Line out changed: {value} feet");
-        }
-
-        /// <summary>
-        /// Handle when diver changes
-        /// </summary>
-        partial void OnSelectedDiverChanged(DiverDataEntity? value)
-        {
-            Debug.WriteLine($"Diver changed: {value}");
-        }
-
-        #endregion
 
         #region Methods
 
-        public async Task InitializeAsync()
+        /// <summary>
+        /// Method to check if rod can be added (lure selected and valid line out)
+        /// This is used by the RelayCommand's CanExecute
+        /// NOTE: This MUST be a method, not a property, for [RelayCommand(CanExecute = ...)] to work
+        /// </summary>
+        private bool CanAddRod()
+        {
+            var lineOut = ParseLineOut(LineOutText);
+            return SelectedLure != null && lineOut > 0;
+        }
+
+        public Task InitializeAsync()
         {
             // set SelectedDiver to "Not Used" here since it is not required for a RodSetup
             // Don't need to set SelectedLure as it is required for a RodSetup and will be there when new RodSetup is created
-            SelectedDiver = await _databaseService.GetDiverByIdAsync(new Guid("68E2F4AD-23EB-4A4C-932E-7886362532E6"));
+            //if (SelectedDiver != null) return;
 
-            //return Task.CompletedTask;
+            //SelectedDiver = await _databaseService.GetDiverByIdAsync(new Guid("68E2F4AD-23EB-4A4C-932E-7886362532E6"));
+
+            return Task.CompletedTask;
         }
 
         /*
@@ -184,7 +167,8 @@ namespace TrollTrack.Features.RodSetup
         /// <summary>
         /// Confirm the rod setup and raise the event
         /// </summary>
-        public void ConfirmRodSetup(int id = 0)
+        [RelayCommand(CanExecute = nameof(CanAddRod))]
+        public async Task AddRodAsync()
         {
             if (SelectedLure == null)
             {
@@ -192,7 +176,7 @@ namespace TrollTrack.Features.RodSetup
                 return;
             }
 
-            if (LineOut <= 0)
+            if (ParseLineOut(LineOutText) <= 0)
             {
                 Debug.WriteLine("ERROR: ConfirmRodSetup called with invalid line out");
                 return;
@@ -200,27 +184,36 @@ namespace TrollTrack.Features.RodSetup
 
             var rodSetupData = new RodSetupEntity
             {
-                Id = id,
+                Id = Id,
                 Name = Name,
                 Lure = SelectedLure,
                 Diver = SelectedDiver,
-                LineOut = LineOut
+                LineOut = ParseLineOut(LineOutText)
             };
 
-            Debug.WriteLine($"Rod setup confirmed: {SelectedLure.Manufacturer} - {SelectedLure.Color}, Line Out: {LineOut} feet");
+            Debug.WriteLine($"Rod setup confirmed: {SelectedLure.Manufacturer} - {SelectedLure.Description}, Line Out: {ParseLineOut(LineOutText)} feet");
 
             RodSetupConfirmed?.Invoke(this, rodSetupData);
+
+            // Close the popup
+            await Shell.Current.Navigation.PopModalAsync();
+
         }
 
         /// <summary>
         /// Cancel the rod setup
         /// </summary>
-        public void CancelRodSetup()
+        [RelayCommand]
+        public async Task CancelRodAsync()
         {
             Debug.WriteLine("Rod setup cancelled");
-            LineOut = 0;
+            LineOutText = String.Empty;
             SelectedDiver = null;
             SelectedLure = null;
+
+            // Close the popup
+            await Shell.Current.Navigation.PopModalAsync();
+
         }
 
         #endregion

@@ -49,6 +49,8 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<RodSetupEntity>();
                 await _database.CreateTableAsync<WeatherDataEntity>();
                 await _database.CreateTableAsync<CustomClarityEntity>();
+                await _database.CreateTableAsync<LureTopColorEntity>();
+                await _database.CreateTableAsync<LureBottomColorEntity>();
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }
@@ -1302,7 +1304,8 @@ namespace TrollTrack.Services
             {
                 Id = lureData.Id == Guid.Empty ? Guid.NewGuid() : lureData.Id,
                 Manufacturer = lureData.Manufacturer,
-                Color = lureData.Color,
+                LureType = lureData.LureType,
+                Description = lureData.Description,
                 Buoyancy = lureData.Buoyancy,
                 Weight = lureData.Weight,
                 Length = lureData.Length,
@@ -1326,7 +1329,8 @@ namespace TrollTrack.Services
             {
                 Id = entity.Id,
                 Manufacturer = entity.Manufacturer,
-                Color = entity.Color,
+                LureType = entity.LureType,
+                Description = entity.Description,
                 Buoyancy = entity.Buoyancy,
                 Weight = entity.Weight,
                 Length = entity.Length,
@@ -1350,6 +1354,7 @@ namespace TrollTrack.Services
             {
                 Id = entity.Id,
                 Manufacturer = entity.Manufacturer,
+                DiverType = entity.DiverType,
                 Name = entity.Name,
                 Setting = entity.Setting,
             };
@@ -1424,16 +1429,19 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
 
-                await db.DeleteAllAsync<CatchDataEntity>();
-                await db.DeleteAllAsync<CustomClarityEntity>();
-                await db.DeleteAllAsync<LocationDataEntity>();
-                await db.DeleteAllAsync<FishInfoEntity>();
-                await db.DeleteAllAsync<DiverDataEntity>();
-                await db.DeleteAllAsync<LureDataEntity>();
-                await db.DeleteAllAsync<LureImageEntity>();
-                await db.DeleteAllAsync<TripDataEntity>();
-                await db.DeleteAllAsync<RodSetupEntity>();
-                await db.DeleteAllAsync<WeatherDataEntity>();
+                await db.DropTableAsync<CatchDataEntity>();
+                await db.DropTableAsync<CustomClarityEntity>();
+                await db.DropTableAsync<LocationDataEntity>();
+                await db.DropTableAsync<FishInfoEntity>();
+                await db.DropTableAsync<DiverDataEntity>();
+                await db.DropTableAsync<LureDataEntity>();
+                await db.DropTableAsync<LureImageEntity>();
+                await db.DropTableAsync<TripDataEntity>();
+                await db.DropTableAsync<RodSetupEntity>();
+                await db.DropTableAsync<WeatherDataEntity>();
+                await db.DropTableAsync<LureTopColorEntity>();
+                await db.DropTableAsync<LureBottomColorEntity>();
+
 
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
 
