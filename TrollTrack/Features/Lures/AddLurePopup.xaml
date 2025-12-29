@@ -201,8 +201,7 @@
                                             <Border.IsVisible>
                                                 <MultiBinding Converter="{StaticResource GuidEqualsMultiConverter}">
                                                     <Binding Path="Id" />
-                                                    <Binding Source="{RelativeSource AncestorType={x:Type ContentPage}}"
-                                                             Path="BindingContext.PrimaryImageId" />
+                                                    <Binding Source="{StaticResource VmProxy}" Path="Data.PrimaryImageId" />
                                                 </MultiBinding>
                                             </Border.IsVisible>-->
 
@@ -216,8 +215,7 @@
                                             <Label.IsVisible>
                                                 <MultiBinding Converter="{StaticResource GuidEqualsMultiConverter}">
                                                     <Binding Path="Id" />
-                                                    <Binding Source="{RelativeSource AncestorType={x:Type ContentPage}}"
-                                                             Path="BindingContext.PrimaryImageId" />
+                                                    <Binding Source="{StaticResource VmProxy}" Path="Data.PrimaryImageId" />
                                                 </MultiBinding>
                                             </Label.IsVisible>
                                         </Label>

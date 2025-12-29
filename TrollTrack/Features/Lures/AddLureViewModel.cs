@@ -150,8 +150,12 @@ public partial class AddLureViewModel : BaseViewModel
     {
         if (image == null) return;
 
+        var imageToRemove = LureImages.FirstOrDefault(i => i.Id == image.Id);
+        if (imageToRemove is null)
+            return;
+
         var wasPrimary = (image.Id == PrimaryImageId);
-        LureImages.Remove(image);
+        LureImages.Remove(imageToRemove);
 
         if (wasPrimary)
             PrimaryImageId = LureImages.FirstOrDefault()?.Id ?? Guid.Empty;
