@@ -198,4 +198,90 @@ namespace TrollTrack.Converters
         }
     }
 
+    public class GuidEqualsMultiConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Must have exactly 2 values: itemGuid, primaryGuid
+            if (values == null || values.Length < 2)
+                return false;
+
+            if (!TryGetGuid(values[0], out var itemGuid))
+                return false;
+
+            if (!TryGetGuid(values[1], out var primaryGuid))
+                return false;
+
+            // Optional: treat empty as "no primary"
+            if (itemGuid == Guid.Empty || primaryGuid == Guid.Empty)
+                return false;
+
+            return itemGuid == primaryGuid;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+            => throw new NotSupportedException();
+
+        private static bool TryGetGuid(object? input, out Guid guid)
+        {
+            guid = Guid.Empty;
+
+            if (input is null)
+                return false;
+
+            if (input is Guid g)
+            {
+                guid = g;
+                return true;
+            }
+
+            if (input is string s && Guid.TryParse(s, out var parsed))
+            {
+                guid = parsed;
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+
+    public class LureImageSourceConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is not string path || string.IsNullOrWhiteSpace(path))
+                return null;
+
+            // Handle res:foo.png
+            if (path.StartsWith("res:", StringComparison.OrdinalIgnoreCase))
+                return ImageSource.FromFile(path.Substring(4));
+
+            // Handle file:/some/path or file:relative/path
+            if (path.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+                path = path.Substring(5);
+
+            // If relative, assume it lives under AppDataDirectory
+            if (!Path.IsPathRooted(path))
+                path = Path.Combine(FileSystem.AppDataDirectory, path);
+
+            return ImageSource.FromFile(path);
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => throw new NotSupportedException();
+    }
+
+
+    public class BindingProxy : BindableObject
+    {
+        public static readonly BindableProperty DataProperty =
+            BindableProperty.Create(nameof(Data), typeof(object), typeof(BindingProxy), default(object));
+
+        public object? Data
+        {
+            get => GetValue(DataProperty);
+            set => SetValue(DataProperty, value);
+        }
+    }
 }

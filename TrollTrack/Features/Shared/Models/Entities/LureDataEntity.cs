@@ -117,15 +117,19 @@ namespace TrollTrack.Features.Shared.Models.Entities
         [OneToMany(CascadeOperations = CascadeOperation.All)]
         public List<LureImageEntity>? Images { get; set; }
 
+        public Guid PrimaryImageId { get; set; } = Guid.Empty;
+
         public LureImageEntity? PrimaryImage
         {
             get
             {
-                if (Images != null && Images.Count > 0)
-                {
-                    return Images[0];
-                }
-                return null;
+                if (Images == null || Images.Count == 0)
+                    return null;
+
+                if (PrimaryImageId != Guid.Empty)
+                    return Images.FirstOrDefault(i => i.Id == PrimaryImageId) ?? Images[0];
+
+                return Images[0];
             }
         }
 

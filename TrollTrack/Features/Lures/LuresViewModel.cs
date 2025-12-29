@@ -177,7 +177,7 @@ namespace TrollTrack.Features.Lures
             {
                 Debug.WriteLine("=== AddLure Command Started ===");
 
-                //if (_luresVM == null) return;
+                _addLureVM.ResetForNewLure();
 
                 // Subscribe to the ad lure confirmed event
                 _addLureVM.AddLureConfirmed += OnAddLureConfirmed;
@@ -232,6 +232,7 @@ namespace TrollTrack.Features.Lures
                         Weight = lureEntity.Weight,
                         TopColors = lureEntity.TopColors,
                         BottomColors = lureEntity.BottomColors,
+                        Images = lureEntity.Images,
                     };
                 }
                 else
@@ -247,6 +248,7 @@ namespace TrollTrack.Features.Lures
                         Weight = lureEntity.Weight,
                         TopColors = lureEntity.TopColors,
                         BottomColors = lureEntity.BottomColors,
+                        Images = lureEntity.Images,
                     };
                 }
 

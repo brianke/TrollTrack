@@ -7,6 +7,7 @@
     "Buoyancy": "Floating",
     "Length": 4.75,
     "Weight": 0.625,
+    "PrimaryImageId": "50F3FC9A-7F6A-481E-9C51-8A1B14BB0A67",
     "Images": [
       {
         "Id": "50F3FC9A-7F6A-481E-9C51-8A1B14BB0A67",
@@ -30,6 +31,7 @@
     "Buoyancy": "Floating",
     "Length": 4.75,
     "Weight": 0.625,
+    "PrimaryImageId": "F18FDCA8-ED55-4DCF-996F-29DAC1A638E6",
     "Images": [
       {
         "Id": "F18FDCA8-ED55-4DCF-996F-29DAC1A638E6",
@@ -53,6 +55,7 @@
     "Buoyancy": "Floating",
     "Length": 4.75,
     "Weight": 0.625,
+    "PrimaryImageId": "78DCDB86-E511-43F3-BD9F-B6F44467C015",
     "Images": [
       {
         "Id": "78DCDB86-E511-43F3-BD9F-B6F44467C015",
@@ -76,6 +79,7 @@
     "Buoyancy": "Floating",
     "Length": 4.75,
     "Weight": 0.625,
+    "PrimaryImageId": "49EDAEB5-D1FD-4831-A7E7-3A7B19980596",
     "Images": [
       {
         "Id": "49EDAEB5-D1FD-4831-A7E7-3A7B19980596",
@@ -99,6 +103,7 @@
     "Buoyancy": "Floating",
     "Length": 4.75,
     "Weight": 0.625,
+    "PrimaryImageId": "E55C6F59-3A9F-4E16-A1E2-D714814A3854",
     "Images": [
       {
         "Id": "E55C6F59-3A9F-4E16-A1E2-D714814A3854",
@@ -122,6 +127,7 @@
     "Buoyancy": "Floating",
     "Length": 4.75,
     "Weight": 0.625,
+    "PrimaryImageId": "323FA851-D3EB-4500-91DE-D47261887239",
     "Images": [
       {
         "Id": "323FA851-D3EB-4500-91DE-D47261887239",
@@ -145,6 +151,7 @@
     "Buoyancy": "NA",
     "Length": 2.75,
     "Weight": 0.0625,
+    "PrimaryImageId": "CC01902C-DC20-4737-B039-9E5F5DD90BC7",
     "Images": [
       {
         "Id": "CC01902C-DC20-4737-B039-9E5F5DD90BC7",
@@ -167,6 +174,7 @@
     "Buoyancy": "NA",
     "Length": 2.75,
     "Weight": 0.0625,
+    "PrimaryImageId": "D4B039B4-2978-4CA8-9478-6B993201872E",
     "Images": [
       {
         "Id": "D4B039B4-2978-4CA8-9478-6B993201872E",
@@ -192,6 +200,7 @@
     "Buoyancy": "NA",
     "Length": 3.25,
     "Weight": 0.0625,
+    "PrimaryImageId": "E5115039-3213-4D6D-A183-6565A019683A",
     "Images": [
       {
         "Id": "E5115039-3213-4D6D-A183-6565A019683A",
@@ -215,6 +224,7 @@
     "Buoyancy": "NA",
     "Length": 3.25,
     "Weight": 0.0625,
+    "PrimaryImageId": "2612476A-1733-4454-8902-9B8872727362",
     "Images": [
       {
         "Id": "2612476A-1733-4454-8902-9B8872727362",
@@ -237,6 +247,7 @@
     "Buoyancy": "NA",
     "Length": 3.25,
     "Weight": 0.0625,
+    "PrimaryImageId": "D6A1CB3D-21FE-4EFD-9AC0-415DFB4C0822",
     "Images": [
       {
         "Id": "D6A1CB3D-21FE-4EFD-9AC0-415DFB4C0822",
