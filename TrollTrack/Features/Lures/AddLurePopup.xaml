@@ -184,8 +184,7 @@
                                                    InputTransparent="False">
                                                 <Image.GestureRecognizers>
                                                     <TapGestureRecognizer
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                                          Path=BindingContext.SetPrimaryLureImageCommand}"
+                                                        Command="{Binding Source={StaticResource VmProxy}, Path=Data.SetPrimaryLureImageCommand}"
                                                         CommandParameter="{Binding .}" />
                                                 </Image.GestureRecognizers>
                                             </Image>
@@ -233,8 +232,7 @@
                                                 VerticalOptions="Start"
                                                 Margin="0"
                                                 Padding="0"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                                  Path=BindingContext.RemoveLureImageCommand}"
+                                                Command="{Binding Source={StaticResource VmProxy}, Path=Data.RemoveLureImageCommand}"
                                                 CommandParameter="{Binding .}" />
                                     </Grid>
                                 </DataTemplate>
