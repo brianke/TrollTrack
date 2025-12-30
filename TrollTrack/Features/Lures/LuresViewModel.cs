@@ -233,6 +233,7 @@ namespace TrollTrack.Features.Lures
                         TopColors = lureEntity.TopColors,
                         BottomColors = lureEntity.BottomColors,
                         Images = lureEntity.Images,
+                        PrimaryImageId = lureEntity.PrimaryImageId,
                     };
                 }
                 else
@@ -249,6 +250,7 @@ namespace TrollTrack.Features.Lures
                         TopColors = lureEntity.TopColors,
                         BottomColors = lureEntity.BottomColors,
                         Images = lureEntity.Images,
+                        PrimaryImageId = lureEntity.PrimaryImageId,
                     };
                 }
 

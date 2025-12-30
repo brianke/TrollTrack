@@ -62,4 +62,29 @@ public partial class AddLurePopup : ContentPage
 
         System.Diagnostics.Debug.WriteLine("AddLurePopup: OnDisappearing - reset initialization flag");
     }
+
+    private void OnRemoveImageClicked(object sender, EventArgs e)
+    {
+        if (BindingContext is not AddLureViewModel vm)
+            return;
+
+        if (sender is not Button btn)
+            return;
+
+        if (btn.BindingContext is not LureImageEntity image)
+            return;
+
+        if (vm.RemoveLureImageCommand.CanExecute(image))
+            vm.RemoveLureImageCommand.Execute(image);
+    }
+
+    private void OnSetPrimaryClicked(object sender, EventArgs e)
+    {
+        if (BindingContext is not AddLureViewModel vm) return;
+        if (sender is not Button btn) return;
+        if (btn.BindingContext is not LureImageEntity image) return;
+
+        if (vm.SetPrimaryLureImageCommand.CanExecute(image))
+            vm.SetPrimaryLureImageCommand.Execute(image);
+    }
 }

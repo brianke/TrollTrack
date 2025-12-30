@@ -62,37 +62,45 @@
         </CollectionView>
 
         <!-- Image Modal Overlay -->
+        <!-- Put this as the LAST child of your root Grid on the Lures page -->
         <Grid IsVisible="{Binding IsImageModalVisible}"
-              Style="{StaticResource ModalOverlay}"
+              BackgroundColor="#80000000"
+              ZIndex="999"
+              RowDefinitions="*"
+              ColumnDefinitions="*"
               x:DataType="vm:LuresViewModel"
               Grid.RowSpan="2">
 
-            <BoxView Color="Transparent">
-                <BoxView.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding CloseImageCommand}" />
-                </BoxView.GestureRecognizers>
-            </BoxView>
+            <!-- Optional: tap outside to close -->
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding CloseImageCommand}" />
+            </Grid.GestureRecognizers>
 
-            <VerticalStackLayout VerticalOptions="Center" 
-                                 HorizontalOptions="Center"
-                                 Spacing="10">
+            <!-- Modal card that fills most of the screen -->
+            <Border Margin="12"
+                    Padding="10"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                    StrokeShape="RoundRectangle 16"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill">
 
-                <!-- Close button above the image -->
-                <Button Command="{Binding CloseImageCommand}" 
-                        Style="{StaticResource CloseButton}"
-                        HorizontalOptions="End"/>
+                <Grid RowDefinitions="Auto,*">
 
-                <!-- Image container -->
-                <Border Style="{StaticResource ModalContent}">
-                    <Grid>
-                        <Image Source="{Binding SelectedImagePath}"
-                               Aspect="AspectFit"
-                               VerticalOptions="Fill"
-                               HorizontalOptions="Fill" 
-                               Background="Transparent"/>
-                    </Grid>
-                </Border>
-            </VerticalStackLayout>
+                    <!-- Close button -->
+                    <Button Text="✕"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            Command="{Binding CloseImageCommand}" />
+
+                    <!-- BIG image -->
+                    <Image Grid.Row="1"
+                           Source="{Binding SelectedImagePath}"
+                           Aspect="AspectFit"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill" />
+                </Grid>
+            </Border>
         </Grid>
+
     </Grid>
 </ContentPage>

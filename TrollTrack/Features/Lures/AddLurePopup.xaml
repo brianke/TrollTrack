@@ -168,79 +168,60 @@
 
                         <CollectionView ItemsSource="{Binding LureImages}"
                                         SelectionMode="None"
-                                        HeightRequest="130"
+                                        HeightRequest="150"
                                         ItemsLayout="HorizontalList"
-                                        Margin="0,5,0,0">   
+                                        Margin="0,5,0,0">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate x:DataType="e:LureImageEntity">
                                     <Grid WidthRequest="140" HeightRequest="140" Margin="2">
 
-                                        <!-- Image (tap to set primary) -->
-                                        <Border >
-                                            <Image Source="{Binding Path}"
-                                                   WidthRequest="100"
-                                                   HeightRequest="100"
-                                                   Aspect="AspectFill"
-                                                   InputTransparent="False">
-                                                <Image.GestureRecognizers>
-                                                    <TapGestureRecognizer
-                                                        Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                                          Path=BindingContext.SetPrimaryLureImageCommand}"
-                                                        CommandParameter="{Binding .}" />
-                                                </Image.GestureRecognizers>
-                                            </Image>
-                                        </Border>
+                                        <Image Source="{Binding Path}"
+                                                WidthRequest="130"
+                                                HeightRequest="130"
+                                                Aspect="AspectFill"
+                                                InputTransparent="True" />
 
-                                        <!-- Primary star badge (top-left) -->
-                                        <!--<Border ZIndex="9"
-                                                WidthRequest="32"
-                                                HeightRequest="32"
-                                                HorizontalOptions="Start"
-                                                VerticalOptions="Start"
-                                                Margin="6"
-                                                BackgroundColor="Transparent">
-                                            <Border.IsVisible>
-                                                <MultiBinding Converter="{StaticResource GuidEqualsMultiConverter}">
-                                                    <Binding Path="Id" />
-                                                    <Binding Source="{RelativeSource AncestorType={x:Type ContentPage}}"
-                                                             Path="BindingContext.PrimaryImageId" />
-                                                </MultiBinding>
-                                            </Border.IsVisible>-->
-
-                                        <Label ZIndex="9"
-                                               Text="★"
-                                               FontSize="18"
-                                               Margin="6"
-                                               HorizontalOptions="Start"
-                                               VerticalOptions="Start"
-                                               TextColor="{AppThemeBinding Light=#E0A800, Dark=#FFD166}">
-                                            <Label.IsVisible>
-                                                <MultiBinding Converter="{StaticResource GuidEqualsMultiConverter}">
-                                                    <Binding Path="Id" />
-                                                    <Binding Source="{RelativeSource AncestorType={x:Type ContentPage}}"
-                                                             Path="BindingContext.PrimaryImageId" />
-                                                </MultiBinding>
-                                            </Label.IsVisible>
-                                        </Label>
-                                        <!--</Border>-->
-
-                                         <!--Remove button (top-right)--> 
                                         <Button Text="✕"
                                                 ZIndex="10"
                                                 WidthRequest="32"
                                                 HeightRequest="32"
                                                 HorizontalOptions="End"
                                                 VerticalOptions="Start"
-                                                Margin="0"
+                                                Margin="6"
                                                 Padding="0"
-                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                                  Path=BindingContext.RemoveLureImageCommand}"
-                                                CommandParameter="{Binding .}" />
+                                                Clicked="OnRemoveImageClicked" />
+
+                                        <Button BackgroundColor="Transparent"
+                                                BorderWidth="0"
+                                                Padding="0"
+                                                Margin="0"
+                                                HorizontalOptions="Fill"
+                                                VerticalOptions="Fill"
+                                                ZIndex="1"
+                                                Clicked="OnSetPrimaryClicked" />
+
+                                        <Label ZIndex="20"
+                                               Text="★"
+                                               FontSize="18"
+                                               Margin="6"
+                                               HorizontalOptions="Start"
+                                               VerticalOptions="Start"
+                                               BackgroundColor="Transparent"
+                                               TextColor="{AppThemeBinding Light=#E0A800, Dark=#FFD166}"
+                                               InputTransparent="True">
+                                            <Label.IsVisible>
+                                                <MultiBinding Converter="{StaticResource GuidEqualsMultiConverter}">
+                                                    <Binding Path="Id" />
+                                                    <Binding Source="{x:Reference AddLurePage}" Path="BindingContext.PrimaryImageId" />
+                                                    <!--<Binding Source="{RelativeSource AncestorType={x:Type ContentPage}}"
+                                                                Path="BindingContext.PrimaryImageId" />-->
+                                                </MultiBinding>
+                                            </Label.IsVisible>
+                                        </Label>
                                     </Grid>
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
-
 
                     </VerticalStackLayout>
                 </Border>
