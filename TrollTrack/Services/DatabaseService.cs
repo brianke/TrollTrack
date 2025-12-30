@@ -49,6 +49,8 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<RodSetupEntity>();
                 await _database.CreateTableAsync<WeatherDataEntity>();
                 await _database.CreateTableAsync<CustomClarityEntity>();
+                await _database.CreateTableAsync<LureTopColorEntity>();
+                await _database.CreateTableAsync<LureBottomColorEntity>();
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }
@@ -1083,11 +1085,24 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
                 var entity = await db.GetWithChildrenAsync<LureDataEntity>(id, recursive: true);
+
+                if (entity == null)
+                    return null;
+
+                entity.Images ??= new List<LureImageEntity>();
+
+                // Heal PrimaryImageId if it's invalid
+                if (entity.PrimaryImageId != Guid.Empty &&
+                    !entity.Images.Any(i => i.Id == entity.PrimaryImageId))
+                {
+                    entity.PrimaryImageId = entity.Images.FirstOrDefault()?.Id ?? Guid.Empty;
+                }
+
                 return entity;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error getting lure by ID: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error getting lure by ID: {ex}");
                 return null;
             }
         }
@@ -1097,16 +1112,47 @@ namespace TrollTrack.Services
             try
             {
                 var db = await GetDatabaseAsync();
-                var entity = ConvertToLureEntity(lureData);
-                await db.InsertOrReplaceWithChildrenAsync(entity, recursive: true);
+
+                // Ensure lure has an Id BEFORE setting child FKs
+                if (lureData.Id == Guid.Empty)
+                    lureData.Id = Guid.NewGuid();
+
+                // Normalize incoming images
+                lureData.Images ??= new List<LureImageEntity>();
+
+                foreach (var img in lureData.Images)
+                {
+                    // CRITICAL: set FK so rows are linked
+                    img.LureDataEntityId = lureData.Id;
+
+                    // CRITICAL: keep stable IDs so we don't insert duplicates every save
+                    if (img.Id == Guid.Empty)
+                        img.Id = Guid.NewGuid();
+                }
+
+                // If editing an existing lure, delete images that were removed
+                var existingImages = await db.Table<LureImageEntity>()
+                                             .Where(i => i.LureDataEntityId == lureData.Id)
+                                             .ToListAsync();
+
+                var incomingIds = lureData.Images.Select(i => i.Id).ToHashSet();
+                var toDelete = existingImages.Where(e => !incomingIds.Contains(e.Id)).ToList();
+
+                if (toDelete.Count > 0)
+                    await db.DeleteAllAsync(toDelete);
+
+                // Save lure + children
+                await db.InsertOrReplaceWithChildrenAsync(lureData, recursive: true);
+
                 return 1;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error saving lure: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error saving lure: {ex}");
                 throw;
             }
         }
+
 
         public async Task<List<LureDataEntity>> GetAllLureDataAsync()
         {
@@ -1114,18 +1160,28 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
                 var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
-                var lures = entities.Select(ConvertFromLureEntity).ToList();
 
-                System.Diagnostics.Debug.WriteLine($"Loaded {lures.Count} lures");
-                return lures;
+                foreach (var lure in entities)
+                {
+                    lure.Images ??= new List<LureImageEntity>();
 
+                    // Heal PrimaryImageId if it's invalid
+                    if (lure.PrimaryImageId != Guid.Empty &&
+                        !lure.Images.Any(i => i.Id == lure.PrimaryImageId))
+                    {
+                        lure.PrimaryImageId = lure.Images.FirstOrDefault()?.Id ?? Guid.Empty;
+                    }
+                }
+
+                return entities;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error getting all lures: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error getting all lures: {ex}");
                 return new List<LureDataEntity>();
             }
         }
+
 
         public async Task<int> LoadLuresJsonAsync()
         {
@@ -1292,33 +1348,40 @@ namespace TrollTrack.Services
                 Longitude = _location != null ? _location.Longitude : 0.00,
             };
 
-
             return catchData;
         }
 
-        private LureDataEntity ConvertToLureEntity(LureDataEntity lureData)
-        {
-            var entity = new LureDataEntity
-            {
-                Id = lureData.Id == Guid.Empty ? Guid.NewGuid() : lureData.Id,
-                Manufacturer = lureData.Manufacturer,
-                Color = lureData.Color,
-                Buoyancy = lureData.Buoyancy,
-                Weight = lureData.Weight,
-                Length = lureData.Length,
-                Images = new List<LureImageEntity>()
-            };
+        //private LureDataEntity ConvertToLureEntity(LureDataEntity lureData)
+        //{
+        //    var lureId = lureData.Id == Guid.Empty ? Guid.NewGuid() : lureData.Id;
 
-            if (lureData.Images != null)
-            {
-                foreach (var image in lureData.Images)
-                {
-                    entity.Images.Add(new LureImageEntity { Id = Guid.NewGuid(), Path = image.Path });
-                }
-            }
+        //    var entity = new LureDataEntity
+        //    {
+        //        Id = lureId,
+        //        Manufacturer = lureData.Manufacturer,
+        //        LureType = lureData.LureType,
+        //        Description = lureData.Description,
+        //        Buoyancy = lureData.Buoyancy,
+        //        Weight = lureData.Weight,
+        //        Length = lureData.Length,
+        //        Images = new List<LureImageEntity>()
+        //    };
 
-            return entity;
-        }
+        //    if (lureData.Images != null)
+        //    {
+        //        foreach (var image in lureData.Images)
+        //        {
+        //            entity.Images.Add(new LureImageEntity
+        //            {
+        //                Id = image.Id == Guid.Empty ? Guid.NewGuid() : image.Id,
+        //                Path = image.Path,
+        //                LureDataEntityId = lureId // IMPORTANT: FK
+        //            });
+        //        }
+        //    }
+
+        //    return entity;
+        //}
 
         private LureDataEntity ConvertFromLureEntity(LureDataEntity entity)
         {
@@ -1326,7 +1389,8 @@ namespace TrollTrack.Services
             {
                 Id = entity.Id,
                 Manufacturer = entity.Manufacturer,
-                Color = entity.Color,
+                LureType = entity.LureType,
+                Description = entity.Description,
                 Buoyancy = entity.Buoyancy,
                 Weight = entity.Weight,
                 Length = entity.Length,
@@ -1350,6 +1414,7 @@ namespace TrollTrack.Services
             {
                 Id = entity.Id,
                 Manufacturer = entity.Manufacturer,
+                DiverType = entity.DiverType,
                 Name = entity.Name,
                 Setting = entity.Setting,
             };
@@ -1424,16 +1489,19 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
 
-                await db.DeleteAllAsync<CatchDataEntity>();
-                await db.DeleteAllAsync<CustomClarityEntity>();
-                await db.DeleteAllAsync<LocationDataEntity>();
-                await db.DeleteAllAsync<FishInfoEntity>();
-                await db.DeleteAllAsync<DiverDataEntity>();
-                await db.DeleteAllAsync<LureDataEntity>();
-                await db.DeleteAllAsync<LureImageEntity>();
-                await db.DeleteAllAsync<TripDataEntity>();
-                await db.DeleteAllAsync<RodSetupEntity>();
-                await db.DeleteAllAsync<WeatherDataEntity>();
+                await db.DropTableAsync<CatchDataEntity>();
+                await db.DropTableAsync<CustomClarityEntity>();
+                await db.DropTableAsync<LocationDataEntity>();
+                await db.DropTableAsync<FishInfoEntity>();
+                await db.DropTableAsync<DiverDataEntity>();
+                await db.DropTableAsync<LureDataEntity>();
+                await db.DropTableAsync<LureImageEntity>();
+                await db.DropTableAsync<TripDataEntity>();
+                await db.DropTableAsync<RodSetupEntity>();
+                await db.DropTableAsync<WeatherDataEntity>();
+                await db.DropTableAsync<LureTopColorEntity>();
+                await db.DropTableAsync<LureBottomColorEntity>();
+
 
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
 

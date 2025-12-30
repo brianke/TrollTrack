@@ -2,25 +2,64 @@
   {
     "Id": "68E2F4AD-23EB-4A4C-932E-7886362532E6",
     "Manufacturer": "",
+    "DiverType": "NA",
     "Name": "Diver Not Used",
+    "Size": "",
+    "Color": "",
     "Setting": ""
   },
   {
     "Id": "9C7BBD9A-0150-41C2-82BA-9FCEE9C58591",
     "Manufacturer": "Luhr-Jensen",
-    "Name": "Dipsy Diver Size 0",
+    "DiverType": "Dipsy",
+    "Name": "Dipsy Diver",
+    "Size": "000",
+    "Color": "Watermelon",
     "Setting": "0"
   },
   {
     "Id": "C11F7873-7CC8-459D-9218-8AF8D66A50E8",
     "Manufacturer": "Luhr-Jensen",
-    "Name": "Dipsy Diver Size 0",
+    "DiverType": "Dipsy",
+    "Name": "Dipsy Diver",
+    "Size": "001",
+    "Color": "Pink Fire UV",
     "Setting": "1"
   },
   {
     "Id": "EB107F1A-BBAE-4E5F-B118-C7BE3D4F019B",
     "Manufacturer": "Luhr-Jensen",
-    "Name": "Dipsy Diver Size 0",
+    "DiverType": "Dipsy",
+    "Name": "Dipsy Diver",
+    "Size": "003",
+    "Color": "Flourescent Green UV",
     "Setting": "2"
+  },
+  {
+    "Id": "69C4255C-D55D-4D64-964A-1AC555EFE8FA",
+    "Manufacturer": "Luhr-Jensen",
+    "DiverType": "Jet",
+    "Name": "Jet Diver",
+    "Size": "3.5",
+    "Color": "Clear UV Moonjelly",
+    "Setting": ""
+  },
+  {
+    "Id": "B04638AC-3848-4BF9-BB0C-720F48E5A390",
+    "Manufacturer": "Bass Pro Shops",
+    "DiverType": "InlineWeight",
+    "Name": "Trolling Weight",
+    "Size": "2 oz",
+    "Color": "Gray",
+    "Setting": ""
+  },
+  {
+    "Id": "2216A862-DFD5-4E92-B6EC-4A8651B4B7A1",
+    "Manufacturer": "Bass Pro Shops",
+    "DiverType": "InlineWeight",
+    "Name": "Trolling Weight",
+    "Size": "3 oz",
+    "Color": "Gray",
+    "Setting": ""
   }
 ]

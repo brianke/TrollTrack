@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Name="AddLurePage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:TrollTrack.Features.Lures"
+             xmlns:views="clr-namespace:TrollTrack.Features.Lures"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             xmlns:converters="clr-namespace:TrollTrack.Converters"
+             x:Class="TrollTrack.Features.Lures.AddLurePopup"
+             x:DataType="vm:AddLureViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#1C1C1C}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:EnumToDisplayStringConverter x:Key="EnumToDisplayStringConverter" />
+            <converters:GuidEqualsMultiConverter x:Key="GuidEqualsMultiConverter" />
+            <converters:LureImageSourceConverter x:Key="LureImageSourceConverter" />
+            <!-- This is key, makes the page VM accessible inside DataTemplates -->
+            <converters:BindingProxy x:Key="VmProxy" Data="{Binding}" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
+
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="10" Margin="0,10,0,20">
+            <Label Text="{Binding Title}"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+        </VerticalStackLayout>
+
+        <!-- Main Content -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="20">
+
+                <!-- Lure Details -->
+                <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}"
+                        Padding="20"
+                        Margin="0,0,0,10">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="15"/>
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="12">
+
+                        <Label Text="Manufacturer"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+
+                        <Entry Text="{Binding Manufacturer}"
+                               Placeholder="Enter manufacturer name"
+                               FontSize="16"
+                               BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#3C3C3C}"
+                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
+                               PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
+
+                        <Label Text="Type"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+
+                        <Picker ItemsSource="{Binding LureTypeList}"
+                                SelectedItem="{Binding SelectedLureType}">
+                            <Picker.ItemDisplayBinding>
+                                <Binding Path="." Converter="{StaticResource EnumToDisplayStringConverter}" />
+                            </Picker.ItemDisplayBinding>
+                        </Picker>
+
+                        <Label Text="Description"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+
+                        <Entry Text="{Binding LureDescription}"
+                               Placeholder="Enter description"
+                               FontSize="16"
+                               BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#3C3C3C}"
+                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
+                               PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
+
+                        <Label Text="Buoyancy"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+
+                        <Picker ItemsSource="{Binding BuoyancyList}"
+                                SelectedItem="{Binding SelectedBuoyancy}">
+                            <Picker.ItemDisplayBinding>
+                                <Binding Path="." Converter="{StaticResource EnumToDisplayStringConverter}" />
+                            </Picker.ItemDisplayBinding>
+                        </Picker>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="6">
+                                <Label Text="Length (in)"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                                <Entry Text="{Binding LengthText}"
+                                       Placeholder="Enter length"
+                                       Keyboard="Numeric"
+                                       FontSize="16"
+                                       BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#3C3C3C}"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
+                                       PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                <Label Text="Weight (oz)"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                                <Entry Text="{Binding WeightText}"
+                                       Placeholder="Enter weight"
+                                       Keyboard="Numeric"
+                                       FontSize="16"
+                                       BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#3C3C3C}"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
+                                       PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
+                            </VerticalStackLayout>
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Images -->
+                <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}"
+                        Padding="20"
+                        Margin="0,0,0,10">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="15"/>
+                    </Border.StrokeShape>
+
+                    <VerticalStackLayout Spacing="12">
+
+                        <Label Text="Photos"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+
+                        <Label Text="Pick multiple photos, or take multiple. Tap a photo to set it as Primary."
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <Button Grid.Column="0"
+                                    Text="Pick from Gallery"
+                                    Command="{Binding PickLureImagesCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#E8F2FB, Dark=#2A3A46}"
+                                    TextColor="{AppThemeBinding Light=#0B4F78, Dark=#CFE9FF}"
+                                    FontAttributes="Bold"
+                                    CornerRadius="10"
+                                    HeightRequest="44"/>
+
+                            <Button Grid.Column="1"
+                                    Text="Take Photo(s)"
+                                    Command="{Binding TakeLurePhotosCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#E8FBEF, Dark=#243A2E}"
+                                    TextColor="{AppThemeBinding Light=#0A6A2A, Dark=#CFFFE0}"
+                                    FontAttributes="Bold"
+                                    CornerRadius="10"
+                                    HeightRequest="44"/>
+                        </Grid>
+
+                        <CollectionView ItemsSource="{Binding LureImages}"
+                                        SelectionMode="None"
+                                        HeightRequest="150"
+                                        ItemsLayout="HorizontalList"
+                                        Margin="0,5,0,0">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="e:LureImageEntity">
+                                    <Grid WidthRequest="140" HeightRequest="140" Margin="2">
+
+                                        <Image Source="{Binding Path}"
+                                                WidthRequest="130"
+                                                HeightRequest="130"
+                                                Aspect="AspectFill"
+                                                InputTransparent="True" />
+
+                                        <Button Text="✕"
+                                                ZIndex="10"
+                                                WidthRequest="32"
+                                                HeightRequest="32"
+                                                HorizontalOptions="End"
+                                                VerticalOptions="Start"
+                                                Margin="6"
+                                                Padding="0"
+                                                Clicked="OnRemoveImageClicked" />
+
+                                        <Button BackgroundColor="Transparent"
+                                                BorderWidth="0"
+                                                Padding="0"
+                                                Margin="0"
+                                                HorizontalOptions="Fill"
+                                                VerticalOptions="Fill"
+                                                ZIndex="1"
+                                                Clicked="OnSetPrimaryClicked" />
+
+                                        <Label ZIndex="20"
+                                               Text="★"
+                                               FontSize="18"
+                                               Margin="6"
+                                               HorizontalOptions="Start"
+                                               VerticalOptions="Start"
+                                               BackgroundColor="Transparent"
+                                               TextColor="{AppThemeBinding Light=#E0A800, Dark=#FFD166}"
+                                               InputTransparent="True">
+                                            <Label.IsVisible>
+                                                <MultiBinding Converter="{StaticResource GuidEqualsMultiConverter}">
+                                                    <Binding Path="Id" />
+                                                    <Binding Source="{x:Reference AddLurePage}" Path="BindingContext.PrimaryImageId" />
+                                                    <!--<Binding Source="{RelativeSource AncestorType={x:Type ContentPage}}"
+                                                                Path="BindingContext.PrimaryImageId" />-->
+                                                </MultiBinding>
+                                            </Label.IsVisible>
+                                        </Label>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Footer Buttons -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,15,0,0">
+
+            <Button Grid.Column="0"
+                    Text="Cancel"
+                    Command="{Binding CancelAddLureCommand}"
+                    BackgroundColor="{AppThemeBinding Light=#DDDDDD, Dark=#444444}"
+                    TextColor="{AppThemeBinding Light=#111111, Dark=#FFFFFF}"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    HeightRequest="50"/>
+
+            <Button Grid.Column="1"
+                    Text="{Binding AddButtonText}"
+                    Command="{Binding AddLureCommand}"
+                    BackgroundColor="{AppThemeBinding Light=#2E8BC0, Dark=#4A9FD8}"
+                    TextColor="#FFFFFF"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    HeightRequest="50">
+                <Button.Triggers>
+                    <Trigger TargetType="Button" Property="IsEnabled" Value="False">
+                        <Setter Property="Opacity" Value="0.5" />
+                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#CCCCCC, Dark=#555555}" />
+                    </Trigger>
+                </Button.Triggers>
+            </Button>
+
+        </Grid>
+
+    </Grid>
+</ContentPage>

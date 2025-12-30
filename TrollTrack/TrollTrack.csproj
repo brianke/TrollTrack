@@ -72,22 +72,44 @@
 
 		<!-- Raw Assets -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		<Compile Remove="Services\IRodSetupService.cs" />
+		<Compile Remove="Services\RodSetupService.cs" />
 		<None Remove="Resources\Images\Lures\Bandit_BlueShiner.png" />
 		<None Remove="Resources\Images\Lures\Bandit_ChromeBlackBack.png" />
 		<None Remove="Resources\Images\Lures\Bandit_ChromeBlueBack.png" />
 		<None Remove="Resources\Images\Lures\Bandit_CoconutCandy.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_blueshiner.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_chromeblackback.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_chromeblueback.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_coconutcandy.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_humblebee.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_purplemist.png" />
 		<None Remove="Resources\Images\Lures\Bandit_HumbleBee.png" />
 		<None Remove="Resources\Images\Lures\Bandit_PurpleMist.png" />
+		<None Remove="Resources\Images\Lures\eye_slammer_weapon_rig_atomic_blueberry.png" />
+		<None Remove="Resources\Images\Lures\eye_slammer_weapon_rig_mtn_dew.png" />
+		<None Remove="Resources\Images\Lures\inline_trolling_keel_weight.png" />
+		<None Remove="Resources\Images\Lures\inline_trolling_weight.png" />
+		<None Remove="Resources\Images\Lures\moonshine_lures_agent_orange.png" />
+		<None Remove="Resources\Images\Lures\moonshine_lures_jj_mac_muffin.png" />
+		<None Remove="Resources\Images\Lures\walleye_sport_fruit_loopz_walleye_weapon.png" />
 		<EmbeddedResource Include="Configuration\appsettings.json" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <MauiImage Include="Resources\Images\Lures\bandit_blueshiner.png" />
-	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblackback.png" />
-	  <MauiImage Include="Resources\Images\Lures\bandit_chromeblueback.png" />
-	  <MauiImage Include="Resources\Images\Lures\bandit_coconutcandy.png" />
-	  <MauiImage Include="Resources\Images\Lures\bandit_humblebee.png" />
-	  <MauiImage Include="Resources\Images\Lures\bandit_purplemist.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_blueshiner.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_chromeblackback.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_chromeblueback.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_coconutcandy.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_humblebee.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_purplemist.png" />
+	  <MauiImage Include="Resources\Images\Lures\eye_slammer_weapon_rig_atomic_blueberry.png" />
+	  <MauiImage Include="Resources\Images\Lures\eye_slammer_weapon_rig_mtn_dew.png" />
+	  <MauiImage Include="Resources\Images\Lures\inline_trolling_keel_weight.png" />
+	  <MauiImage Include="Resources\Images\Lures\inline_trolling_weight.png" />
+	  <MauiImage Include="Resources\Images\Lures\moonshine_lures_agent_orange.png" />
+	  <MauiImage Include="Resources\Images\Lures\moonshine_lures_jj_mac_muffin.png" />
+	  <MauiImage Include="Resources\Images\Lures\walleye_sport_fruit_loopz_walleye_weapon.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -112,12 +134,18 @@
 	  <Compile Update="Features\Catches\ActiveTripView.xaml.cs">
 	    <DependentUpon>NewTripView.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Features\Lures\AddLurePopup.xaml.cs">
+	    <DependentUpon>AddLurePopup.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 	<ItemGroup>
 	  <MauiXaml Update="Features\Catches\CatchesView.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Features\Catches\ActiveTripView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\Lures\AddLurePopup.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Features\RodSetup\RodSetupPopup.xaml">

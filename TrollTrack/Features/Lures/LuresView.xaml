@@ -8,22 +8,38 @@
              x:DataType="vm:LuresViewModel"
              Title="{Binding Title}">
     <Grid>
-        <CollectionView ItemsSource="{Binding Lures}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Button Text="+ Add Lure"
+                Style="{StaticResource CircularButton}"
+                WidthRequest="120"
+                HeightRequest="40"
+                CornerRadius="20"
+                Command="{Binding AddLureCommand}" />
+
+
+        <CollectionView ItemsSource="{Binding Lures}"
+                        Grid.Row="1">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="e:LureDataEntity">
                     <Border Style="{StaticResource LureCard}">
+                        <!--<Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnImageTapped" />
+                        </Border.GestureRecognizers>-->
                         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
                             <Image Grid.RowSpan="2" 
                                    Source="{Binding PrimaryImage.Path}" 
                                    Style="{StaticResource LureImage}">
                                 <Image.GestureRecognizers>                                    
-                                    <!-- Using the code behind here as I could not get RelayCommand to work directly from here -->
+                                    <!-- Using the code behind here as I could not get RelayCommand to work directly from here --> 
                                     <TapGestureRecognizer Tapped="OnImageTapped" />
                                 </Image.GestureRecognizers>
                             </Image>
                             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Padding="10,0,0,0">
                                 <Label Text="{Binding Manufacturer}" Style="{StaticResource LureTitle}" />
-                                <Label Text="{Binding Color}" Style="{StaticResource LureSubtitle}" />
+                                <Label Text="{Binding Description}" Style="{StaticResource LureSubtitle}" />
                             </VerticalStackLayout>
                             <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,*,*" Margin="0,10,0,0" Padding="10,0,0,0">
                                 <VerticalStackLayout>
@@ -46,36 +62,45 @@
         </CollectionView>
 
         <!-- Image Modal Overlay -->
+        <!-- Put this as the LAST child of your root Grid on the Lures page -->
         <Grid IsVisible="{Binding IsImageModalVisible}"
-              Style="{StaticResource ModalOverlay}"
-              x:DataType="vm:LuresViewModel">
+              BackgroundColor="#80000000"
+              ZIndex="999"
+              RowDefinitions="*"
+              ColumnDefinitions="*"
+              x:DataType="vm:LuresViewModel"
+              Grid.RowSpan="2">
 
-            <BoxView Color="Transparent">
-                <BoxView.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding CloseImageCommand}" />
-                </BoxView.GestureRecognizers>
-            </BoxView>
+            <!-- Optional: tap outside to close -->
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding CloseImageCommand}" />
+            </Grid.GestureRecognizers>
 
-            <VerticalStackLayout VerticalOptions="Center" 
-                                 HorizontalOptions="Center"
-                                 Spacing="10">
+            <!-- Modal card that fills most of the screen -->
+            <Border Margin="12"
+                    Padding="10"
+                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                    StrokeShape="RoundRectangle 16"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill">
 
-                <!-- Close button above the image -->
-                <Button Command="{Binding CloseImageCommand}" 
-                        Style="{StaticResource CloseButton}"
-                        HorizontalOptions="End"/>
+                <Grid RowDefinitions="Auto,*">
 
-                <!-- Image container -->
-                <Border Style="{StaticResource ModalContent}">
-                    <Grid>
-                        <Image Source="{Binding SelectedImagePath}"
-                               Aspect="AspectFit"
-                               VerticalOptions="Fill"
-                               HorizontalOptions="Fill" 
-                               Background="Transparent"/>
-                    </Grid>
-                </Border>
-            </VerticalStackLayout>
+                    <!-- Close button -->
+                    <Button Text="✕"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            Command="{Binding CloseImageCommand}" />
+
+                    <!-- BIG image -->
+                    <Image Grid.Row="1"
+                           Source="{Binding SelectedImagePath}"
+                           Aspect="AspectFit"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill" />
+                </Grid>
+            </Border>
         </Grid>
+
     </Grid>
 </ContentPage>

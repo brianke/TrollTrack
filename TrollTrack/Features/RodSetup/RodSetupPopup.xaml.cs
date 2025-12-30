@@ -64,36 +64,4 @@ public partial class RodSetupPopup : ContentPage
 
         System.Diagnostics.Debug.WriteLine("RodSetupPopup: OnDisappearing - reset initialization flag");
     }
-
-    /// <summary>
-    /// Handle OK button click - validate and save the rod configuration
-    /// </summary>
-    private async void OnOkClicked(object sender, EventArgs e)
-    {
-        if (_viewModel.SelectedLure == null)
-        {
-            await DisplayAlert("No Lure Selected", "Please select a lure for this rod.", "OK");
-            return;
-        }
-
-        if (_viewModel.LineOut <= 0)
-        {
-            await DisplayAlert("Invalid Line Out", "Please enter a valid line out distance greater than 0.", "OK");
-            return;
-        }
-
-        // Create the rod configuration with both lure and line out
-        _viewModel.ConfirmRodSetup(_viewModel.Id);
-        await Navigation.PopModalAsync();
-    }
-
-    /// <summary>
-    /// Handle cancel button click
-    /// </summary>
-    private async void OnCancelClicked(object sender, EventArgs e)
-    {
-        // Clear any selections
-        _viewModel.CancelRodSetup();
-        await Navigation.PopModalAsync();
-    }
 }
