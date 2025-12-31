@@ -49,8 +49,8 @@ namespace TrollTrack.Services
                 await _database.CreateTableAsync<RodSetupEntity>();
                 await _database.CreateTableAsync<WeatherDataEntity>();
                 await _database.CreateTableAsync<CustomClarityEntity>();
-                await _database.CreateTableAsync<LureTopColorEntity>();
-                await _database.CreateTableAsync<LureBottomColorEntity>();
+                //await _database.CreateTableAsync<LureFrontColorEntity>();
+                //await _database.CreateTableAsync<LureBackColorEntity>();
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }
@@ -1182,6 +1182,46 @@ namespace TrollTrack.Services
             }
         }
 
+        /// <summary>
+        /// Retrieve a simple list of lures with minimal data to display on the Lures tab
+        /// </summary>
+        /// <returns></returns>
+        public async Task<List<LureDataEntity>> GetAllLureSimpleDataAsync()
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                var entities = await db.Table<LureDataEntity>().ToListAsync();
+
+                foreach (var lure in entities)
+                {
+                    lure.Images ??= new List<LureImageEntity>();
+
+                    // Heal PrimaryImageId if it's invalid
+                    if (lure.PrimaryImageId != Guid.Empty &&
+                        !lure.Images.Any(i => i.Id == lure.PrimaryImageId))
+                    {
+                        lure.PrimaryImageId = lure.Images.FirstOrDefault()?.Id ?? Guid.Empty;
+                    }
+
+                    // Keep ONLY the primary image in Images
+                    var primary = lure.PrimaryImageId != Guid.Empty
+                        ? lure.Images.FirstOrDefault(i => i.Id == lure.PrimaryImageId)
+                        : lure.Images.FirstOrDefault();
+
+                    lure.Images = primary != null
+                        ? new List<LureImageEntity> { primary }
+                        : new List<LureImageEntity>();
+                }
+
+                return entities;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting all lures: {ex}");
+                return new List<LureDataEntity>();
+            }
+        }
 
         public async Task<int> LoadLuresJsonAsync()
         {
@@ -1499,8 +1539,8 @@ namespace TrollTrack.Services
                 await db.DropTableAsync<TripDataEntity>();
                 await db.DropTableAsync<RodSetupEntity>();
                 await db.DropTableAsync<WeatherDataEntity>();
-                await db.DropTableAsync<LureTopColorEntity>();
-                await db.DropTableAsync<LureBottomColorEntity>();
+                //await db.DropTableAsync<LureFrontColorEntity>();
+                //await db.DropTableAsync<LureBackColorEntity>();
 
 
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");

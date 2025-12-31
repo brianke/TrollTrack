@@ -16,6 +16,8 @@
             <converters:EnumToDisplayStringConverter x:Key="EnumToDisplayStringConverter" />
             <converters:GuidEqualsMultiConverter x:Key="GuidEqualsMultiConverter" />
             <converters:LureImageSourceConverter x:Key="LureImageSourceConverter" />
+            <converters:LureColorToMauiColorConverter x:Key="LureColorToMauiColorConverter" />
+
             <!-- This is key, makes the page VM accessible inside DataTemplates -->
             <converters:BindingProxy x:Key="VmProxy" Data="{Binding}" />
         </ResourceDictionary>
@@ -46,6 +48,7 @@
 
                     <VerticalStackLayout Spacing="12">
 
+                        <!-- Lure Manufacturer -->
                         <Label Text="Manufacturer"
                                FontSize="18"
                                FontAttributes="Bold"
@@ -58,18 +61,7 @@
                                TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
                                PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
 
-                        <Label Text="Type"
-                               FontSize="18"
-                               FontAttributes="Bold"
-                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
-
-                        <Picker ItemsSource="{Binding LureTypeList}"
-                                SelectedItem="{Binding SelectedLureType}">
-                            <Picker.ItemDisplayBinding>
-                                <Binding Path="." Converter="{StaticResource EnumToDisplayStringConverter}" />
-                            </Picker.ItemDisplayBinding>
-                        </Picker>
-
+                        <!-- Lure Description -->
                         <Label Text="Description"
                                FontSize="18"
                                FontAttributes="Bold"
@@ -82,18 +74,39 @@
                                TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
                                PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
 
-                        <Label Text="Buoyancy"
-                               FontSize="18"
-                               FontAttributes="Bold"
-                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                        <!-- Lure Type & Buoyancy -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="6">
+                                <Label Text="Type"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
 
-                        <Picker ItemsSource="{Binding BuoyancyList}"
-                                SelectedItem="{Binding SelectedBuoyancy}">
-                            <Picker.ItemDisplayBinding>
-                                <Binding Path="." Converter="{StaticResource EnumToDisplayStringConverter}" />
-                            </Picker.ItemDisplayBinding>
-                        </Picker>
+                                <Picker ItemsSource="{Binding LureTypeList}"
+                                        SelectedItem="{Binding SelectedLureType}">
+                                    <Picker.ItemDisplayBinding>
+                                        <Binding Path="." Converter="{StaticResource EnumToDisplayStringConverter}" />
+                                    </Picker.ItemDisplayBinding>
+                                </Picker>
 
+                            </VerticalStackLayout>
+
+                            <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                <Label Text="Buoyancy"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+
+                                <Picker ItemsSource="{Binding BuoyancyList}"
+                                        SelectedItem="{Binding SelectedBuoyancy}">
+                                    <Picker.ItemDisplayBinding>
+                                        <Binding Path="." Converter="{StaticResource EnumToDisplayStringConverter}" />
+                                    </Picker.ItemDisplayBinding>
+                                </Picker>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <!-- Length & Weight -->
                         <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                             <VerticalStackLayout Grid.Column="0" Spacing="6">
                                 <Label Text="Length (in)"
@@ -124,6 +137,89 @@
                             </VerticalStackLayout>
                         </Grid>
 
+                        <!-- Front Colors (selected circles + comma string) -->
+                        <VerticalStackLayout Spacing="6">
+                            <Grid ColumnDefinitions="Auto,* ,Auto" ColumnSpacing="12">
+                                <Label Text="Front:"
+                                       VerticalOptions="Center"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+
+                                <Label Grid.Column="1"
+                                       Text="{Binding FrontColorsDisplay}"
+                                       VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+
+                                <Button Grid.Column="2"
+                                        Text="Pick"
+                                        Command="{Binding OpenFrontColorsCommand}"
+                                        CornerRadius="10"
+                                        HeightRequest="40" />
+                            </Grid>
+
+                            <!-- Row of circles -->
+                            <ScrollView Orientation="Horizontal">
+                                <HorizontalStackLayout Spacing="8"
+                               BindableLayout.ItemsSource="{Binding SelectedFrontColors}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border WidthRequest="22"
+                                                    HeightRequest="22"
+                                                    StrokeThickness="2"
+                                                    Stroke="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"
+                                                    BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="999" />
+                                                </Border.StrokeShape>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </HorizontalStackLayout>
+                            </ScrollView>
+                        </VerticalStackLayout>
+
+                        <!-- Back Colors (selected circles + comma string) -->
+                        <VerticalStackLayout Spacing="6">
+                            <Grid ColumnDefinitions="Auto,* ,Auto" ColumnSpacing="12">
+                                <Label Text="Back:"
+                                       VerticalOptions="Center"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+
+                                <Label Grid.Column="1"
+                                       Text="{Binding BackColorsDisplay}"
+                                       VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+
+                                <Button Grid.Column="2"
+                                        Text="Pick"
+                                        Command="{Binding OpenBackColorsCommand}"
+                                        CornerRadius="10"
+                                        HeightRequest="40" />
+                            </Grid>
+
+                            <!-- Row of circles -->
+                            <ScrollView Orientation="Horizontal">
+                                <HorizontalStackLayout Spacing="8"
+                               BindableLayout.ItemsSource="{Binding SelectedBackColors}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border WidthRequest="22"
+                                                    HeightRequest="22"
+                                                    StrokeThickness="2"
+                                                    Stroke="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"
+                                                    BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="999" />
+                                                </Border.StrokeShape>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </HorizontalStackLayout>
+                            </ScrollView>
+                        </VerticalStackLayout>
                     </VerticalStackLayout>
                 </Border>
 
@@ -259,6 +355,91 @@
                 </Button.Triggers>
             </Button>
 
+        </Grid>
+        <!-- Color Picker Modal Overlay -->
+        <Grid IsVisible="{Binding IsColorPickerVisible}"
+      BackgroundColor="#80000000"
+      ZIndex="999"
+      RowDefinitions="*"
+      ColumnDefinitions="*">
+
+            <Border Margin="18"
+            Padding="16"
+            BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16" />
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
+
+                    <Label Text="{Binding ColorPickerTitle}"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+
+                    <!-- Colors grid -->
+                    <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding ColorOptions}"
+                            SelectionMode="None">
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout Span="6" Orientation="Vertical" />
+                        </CollectionView.ItemsLayout>
+
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AddLureViewModel+LureColorOption">
+                                <Grid WidthRequest="44" HeightRequest="44">
+
+                                    <!-- color circle -->
+                                    <Border BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}"
+                                    StrokeThickness="3"
+                                    Stroke="Transparent"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    WidthRequest="34"
+                                    HeightRequest="34">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="999" />
+                                        </Border.StrokeShape>
+
+                                        <!-- Dark ring when selected -->
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border"
+                                                 Binding="{Binding IsSelected}"
+                                                 Value="True">
+                                                <Setter Property="Stroke"
+                                                Value="{AppThemeBinding Light=#333333, Dark=#DDDDDD}" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                    </Border>
+
+                                    <!-- clickable overlay (Button is more reliable than GestureRecognizer) -->
+                                    <Button BackgroundColor="Transparent"
+                                    BorderWidth="0"
+                                    Padding="0"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
+                                                      Path=BindingContext.ToggleColorCommand}"
+                                    CommandParameter="{Binding .}" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Button Grid.Column="0"
+                        Text="Close"
+                        Command="{Binding CloseColorPickerCommand}"
+                        CornerRadius="10"
+                        HeightRequest="44" />
+
+                        <Button Grid.Column="1"
+                        Text="Done"
+                        Command="{Binding CloseColorPickerCommand}"
+                        CornerRadius="10"
+                        HeightRequest="44" />
+                    </Grid>
+
+                </Grid>
+            </Border>
         </Grid>
 
     </Grid>

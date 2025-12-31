@@ -3,21 +3,22 @@ using System.Xml.Linq;
 
 namespace TrollTrack.Features.Shared.Models.Entities
 {
-    [Table("LureTopColors")]
-    public class LureTopColorEntity
+/*
+    [Table("LureFrontColors")]
+    public class LureFrontColorEntity
     {
 
         /// <summary>
         /// Override the default GetHashCode() so SelectedItem can find the matching item
         /// </summary>
-        /// <returns>hashcode of <see cref="LureTopColorEntity"/></returns>
+        /// <returns>hashcode of <see cref="LureFrontColorEntity"/></returns>
         public override int GetHashCode()
         {
             return HelperClass.CalculateHashCode(this,
-                    () => this.Id,
-                    () => this.LureId,
-                    () => this.Color,
-                    () => this.DisplayOrder);
+                    () => this.Id);    //,
+                    //() => this.LureId,
+                    //() => this.Color,
+                    //() => this.DisplayOrder);
         }
 
         /// <summary>
@@ -27,7 +28,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
         /// <returns></returns>
         public override bool Equals(System.Object? obj)
         {
-            var item = obj as LureTopColorEntity;
+            var item = obj as LureFrontColorEntity;
 
             if (item == null)
             {
@@ -35,10 +36,10 @@ namespace TrollTrack.Features.Shared.Models.Entities
             }
 
             // ?? String.Empty will return empty string if LureDataEntity is null (avoids a object is null error)
-            return (this.Id).Equals(item.Id)
-                    && (this.LureId).Equals(item.LureId)
-                    && (this.Color).Equals(item.Color)
-                    && (this.DisplayOrder).Equals(item.DisplayOrder);
+            return (this.Id).Equals(item.Id);
+                    //&& (this.LureId).Equals(item.LureId)
+                    //&& (this.Color).Equals(item.Color)
+                    //&& (this.DisplayOrder).Equals(item.DisplayOrder);
         }
 
 
@@ -50,17 +51,17 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         public LureColor Color { get; set; } = LureColor.NA;
 
-        public int DisplayOrder { get; set; } // For ordering colors (primary, secondary, etc.)
+        //public int DisplayOrder { get; set; } // For ordering colors (primary, secondary, etc.)
     }
 
-    [Table("LureBottomColors")]
-    public class LureBottomColorEntity
+    [Table("LureBackColors")]
+    public class LureBackColorEntity
     {
 
         /// <summary>
         /// Override the default GetHashCode() so SelectedItem can find the matching item
         /// </summary>
-        /// <returns>hashcode of <see cref="LureBottomColorEntity"/></returns>
+        /// <returns>hashcode of <see cref="LureBackColorEntity"/></returns>
         public override int GetHashCode()
         {
             return HelperClass.CalculateHashCode(this,
@@ -78,7 +79,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
         /// <returns></returns>
         public override bool Equals(System.Object? obj)
         {
-            var item = obj as LureBottomColorEntity;
+            var item = obj as LureBackColorEntity;
 
             if (item == null)
             {
@@ -101,11 +102,13 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         public LureColor Color { get; set; } = LureColor.NA;
 
-        public int DisplayOrder { get; set; } // For ordering colors (primary, secondary, etc.)
+        //public int DisplayOrder { get; set; } // For ordering colors (primary, secondary, etc.)
     }
+*/
+
 
     /// <summary>
-    /// Represents all Buoyancy types
+    /// Represents all available Colors
     /// </summary>
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum LureColor

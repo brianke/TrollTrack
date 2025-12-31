@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TrollTrack.Features.Shared;
+using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Converters
 {
@@ -283,5 +284,22 @@ namespace TrollTrack.Converters
             get => GetValue(DataProperty);
             set => SetValue(DataProperty, value);
         }
+    }
+
+    public class LureColorToMauiColorConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is AddLureViewModel.LureColorOption opt)
+                return ColorPalette.GetColor(opt.Color);
+
+            if (value is LureColor lc)
+                return ColorPalette.GetColor(lc);
+
+            return Colors.Transparent;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotSupportedException();
     }
 }

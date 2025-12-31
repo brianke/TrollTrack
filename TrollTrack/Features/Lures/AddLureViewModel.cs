@@ -56,6 +56,32 @@ public partial class AddLureViewModel : BaseViewModel
     [ObservableProperty]
     private Guid _primaryImageId = Guid.Empty;
 
+    // Color picker modal state
+    [ObservableProperty]
+    private bool _isColorPickerVisible;
+
+    [ObservableProperty]
+    private string _colorPickerTitle = "Select Colors";
+
+    // What the modal displays
+    [ObservableProperty]
+    private ObservableCollection<LureColorOption> _colorOptions = new();
+
+    // Selected colors (front/back)
+    [ObservableProperty]
+    private ObservableCollection<LureColor> _selectedFrontColors = new();
+
+    [ObservableProperty]
+    private ObservableCollection<LureColor> _selectedBackColors = new();
+
+    // Text shown on AddLurePopup
+    [ObservableProperty]
+    private string _frontColorsDisplay = string.Empty;
+
+    [ObservableProperty]
+    private string _backColorsDisplay = string.Empty;
+
+    private bool _pickingFront = true;
     #endregion
 
     #region Events
@@ -225,6 +251,82 @@ public partial class AddLureViewModel : BaseViewModel
 
     #endregion
 
+    #region Color Picker helpers
+    private void RefreshColorDisplays()
+    {
+        FrontColorsDisplay = SelectedFrontColors.Count == 0
+            ? "(none)"
+            : string.Join(", ", SelectedFrontColors);
+
+        BackColorsDisplay = SelectedBackColors.Count == 0
+            ? "(none)"
+            : string.Join(", ", SelectedBackColors);
+    }
+
+    private IEnumerable<LureColor> AllPickableColors =>
+        Enum.GetValues<LureColor>().Where(c => c != LureColor.NA); // enum is in LureColorEntity.cs
+
+    private void BuildColorOptions()
+    {
+        var selected = _pickingFront ? SelectedFrontColors : SelectedBackColors;
+
+        ColorOptions = new ObservableCollection<LureColorOption>(
+            AllPickableColors.Select(c => new LureColorOption(c, selected.Contains(c)))
+        );
+    }
+
+    #endregion Color Picker helpers
+
+    #region Color Picker commands
+
+    [RelayCommand]
+    private void OpenFrontColors()
+    {
+        _pickingFront = true;
+        ColorPickerTitle = "Select Front Colors";
+        BuildColorOptions();
+        IsColorPickerVisible = true;
+    }
+
+    [RelayCommand]
+    private void OpenBackColors()
+    {
+        _pickingFront = false;
+        ColorPickerTitle = "Select Back Colors";
+        BuildColorOptions();
+        IsColorPickerVisible = true;
+    }
+
+    [RelayCommand]
+    private void CloseColorPicker()
+    {
+        IsColorPickerVisible = false;
+    }
+
+    [RelayCommand]
+    private void ToggleColor(LureColorOption? option)
+    {
+        if (option == null) return;
+
+        option.IsSelected = !option.IsSelected;
+
+        var target = _pickingFront ? SelectedFrontColors : SelectedBackColors;
+
+        if (option.IsSelected)
+        {
+            if (!target.Contains(option.Color))
+                target.Add(option.Color);
+        }
+        else
+        {
+            target.Remove(option.Color);
+        }
+
+        RefreshColorDisplays();
+    }
+
+    #endregion Color Picker commands
+
     #region Add/Cancel
 
     [RelayCommand(CanExecute = nameof(CanAddLure))]
@@ -248,7 +350,11 @@ public partial class AddLureViewModel : BaseViewModel
             Images = images,
 
             // Only if your LureDataEntity has this property (you said you are using it)
-            PrimaryImageId = primaryId
+            PrimaryImageId = primaryId,
+
+            // Save colors back to the DB-backed JSON columns via the JSON-facing helpers
+            FrontColors = SelectedFrontColors.Select(c => c.ToString()).ToList(),
+            BackColors = SelectedBackColors.Select(c => c.ToString()).ToList()
         };
 
         AddLureConfirmed?.Invoke(this, lureData);
@@ -277,4 +383,22 @@ public partial class AddLureViewModel : BaseViewModel
     }
 
     #endregion
+    /// <summary>
+    /// Class for displaying Lure Color Options during setup of new lure
+    /// </summary>
+    public partial class LureColorOption : ObservableObject
+    {
+        public LureColorOption(LureColor color, bool isSelected)
+        {
+            Color = color;
+            _isSelected = isSelected;
+        }
+
+        public LureColor Color { get; }
+
+        [ObservableProperty]
+        private bool _isSelected;
+    }
 }
+
+

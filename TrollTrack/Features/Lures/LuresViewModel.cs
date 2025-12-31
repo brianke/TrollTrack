@@ -230,8 +230,8 @@ namespace TrollTrack.Features.Lures
                         Buoyancy = lureEntity.Buoyancy,
                         Length = lureEntity.Length,
                         Weight = lureEntity.Weight,
-                        TopColors = lureEntity.TopColors,
-                        BottomColors = lureEntity.BottomColors,
+                        FrontColors = lureEntity.FrontColors,
+                        BackColors = lureEntity.BackColors,
                         Images = lureEntity.Images,
                         PrimaryImageId = lureEntity.PrimaryImageId,
                     };
@@ -247,8 +247,8 @@ namespace TrollTrack.Features.Lures
                         Buoyancy = lureEntity.Buoyancy,
                         Length = lureEntity.Length,
                         Weight = lureEntity.Weight,
-                        TopColors = lureEntity.TopColors,
-                        BottomColors = lureEntity.BottomColors,
+                        FrontColors = lureEntity.FrontColors,
+                        BackColors = lureEntity.BackColors,
                         Images = lureEntity.Images,
                         PrimaryImageId = lureEntity.PrimaryImageId,
                     };
