@@ -387,7 +387,7 @@
 
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:AddLureViewModel+LureColorOption">
-                                <Grid WidthRequest="44" HeightRequest="44">
+                                <Grid WidthRequest="64" HeightRequest="64">
 
                                     <!-- color circle -->
                                     <Border BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}"
@@ -395,8 +395,8 @@
                                             Stroke="Transparent"
                                             HorizontalOptions="Center"
                                             VerticalOptions="Center"
-                                            WidthRequest="34"
-                                            HeightRequest="34">
+                                            WidthRequest="54"
+                                            HeightRequest="54">
                                         <Border.StrokeShape>
                                             <RoundRectangle CornerRadius="999" />
                                         </Border.StrokeShape>

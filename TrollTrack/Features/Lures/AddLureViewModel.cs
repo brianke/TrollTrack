@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models.Entities;
@@ -11,6 +12,9 @@ namespace TrollTrack.Features.Lures;
 public partial class AddLureViewModel : BaseViewModel
 {
     #region Observable Properties
+
+    private readonly NotifyCollectionChangedEventHandler _frontColorsChangedHandler;
+    private readonly NotifyCollectionChangedEventHandler _backColorsChangedHandler;
 
     [ObservableProperty]
     private string _addButtonText = "Add Lure";
@@ -94,6 +98,12 @@ public partial class AddLureViewModel : BaseViewModel
         : base(locationService, databaseService)
     {
         Title = "Add New Lure";
+
+        _frontColorsChangedHandler = (_, __) => OnFrontColorsChanged();
+        _backColorsChangedHandler = (_, __) => OnBackColorsChanged();
+
+        SelectedFrontColors.CollectionChanged += _frontColorsChangedHandler;
+        SelectedBackColors.CollectionChanged += _backColorsChangedHandler;
     }
 
     public Task InitializeAsync() => Task.CompletedTask;
@@ -263,6 +273,46 @@ public partial class AddLureViewModel : BaseViewModel
             : string.Join(", ", SelectedBackColors);
     }
 
+    private void OnFrontColorsChanged()
+    {
+        OnPropertyChanged(nameof(SelectedFrontColors));
+        RefreshColorDisplays();
+    }
+
+    private void OnBackColorsChanged()
+    {
+        OnPropertyChanged(nameof(SelectedBackColors));
+        RefreshColorDisplays();
+    }
+
+    partial void OnSelectedFrontColorsChanging(ObservableCollection<LureColor> value)
+    {
+        if (_frontColorsChangedHandler != null)
+            SelectedFrontColors.CollectionChanged -= _frontColorsChangedHandler;
+    }
+
+    partial void OnSelectedFrontColorsChanged(ObservableCollection<LureColor> value)
+    {
+        if (_frontColorsChangedHandler != null)
+            value.CollectionChanged += _frontColorsChangedHandler;
+
+        OnFrontColorsChanged();
+    }
+
+    partial void OnSelectedBackColorsChanging(ObservableCollection<LureColor> value)
+    {
+        if (_backColorsChangedHandler != null)
+            SelectedBackColors.CollectionChanged -= _backColorsChangedHandler;
+    }
+
+    partial void OnSelectedBackColorsChanged(ObservableCollection<LureColor> value)
+    {
+        if (_backColorsChangedHandler != null)
+            value.CollectionChanged += _backColorsChangedHandler;
+
+        OnBackColorsChanged();
+    }
+
     private IEnumerable<LureColor> AllPickableColors =>
         Enum.GetValues<LureColor>().Where(c => c != LureColor.NA); // enum is in LureColorEntity.cs
 
@@ -310,17 +360,15 @@ public partial class AddLureViewModel : BaseViewModel
 
         option.IsSelected = !option.IsSelected;
 
-        var target = _pickingFront ? SelectedFrontColors : SelectedBackColors;
+        var selectedColors = ColorOptions
+            .Where(c => c.IsSelected)
+            .Select(c => c.Color)
+            .ToList();
 
-        if (option.IsSelected)
-        {
-            if (!target.Contains(option.Color))
-                target.Add(option.Color);
-        }
+        if (_pickingFront)
+            SelectedFrontColors = new ObservableCollection<LureColor>(selectedColors);
         else
-        {
-            target.Remove(option.Color);
-        }
+            SelectedBackColors = new ObservableCollection<LureColor>(selectedColors);
 
         RefreshColorDisplays();
     }
@@ -380,6 +428,9 @@ public partial class AddLureViewModel : BaseViewModel
 
         LureImages.Clear();
         PrimaryImageId = Guid.Empty;
+
+        SelectedFrontColors = new ObservableCollection<LureColor>();
+        SelectedBackColors = new ObservableCollection<LureColor>();
     }
 
     #endregion
