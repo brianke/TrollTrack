@@ -164,7 +164,7 @@ namespace TrollTrack.Converters
     /// <summary>
     /// Converts a string comparison to a boolean value
     /// </summary>
-    public class StringComparisonToBooleanConverter: IValueConverter
+    public class StringComparisonToBooleanConverter : IValueConverter
     {
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
@@ -286,6 +286,7 @@ namespace TrollTrack.Converters
         }
     }
 
+
     public class LureColorToMauiColorConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -296,10 +297,29 @@ namespace TrollTrack.Converters
             if (value is LureColor lc)
                 return ColorPalette.GetColor(lc);
 
+            if (value is string s && TryParseLureColorString(s, out var parsedFromString))
+                return ColorPalette.GetColor(parsedFromString);
+
             return Colors.Transparent;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
             => throw new NotSupportedException();
+
+
+        internal static bool TryParseLureColorString(string? value, out LureColor color)
+        {
+            color = LureColor.NA;
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            // Normalize common formatting differences (e.g., "Fluorescent Pink", "fluorescent-pink")
+            var normalized = value.Trim()
+                                  .Replace(" ", string.Empty)
+                                  .Replace("-", string.Empty)
+                                  .Replace("_", string.Empty);
+
+            return Enum.TryParse(normalized, ignoreCase: true, out color);
+        }
     }
 }

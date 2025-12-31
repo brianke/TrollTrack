@@ -161,7 +161,7 @@
                             <!-- Row of circles -->
                             <ScrollView Orientation="Horizontal">
                                 <HorizontalStackLayout Spacing="8"
-                               BindableLayout.ItemsSource="{Binding SelectedFrontColors}">
+                                                       BindableLayout.ItemsSource="{Binding SelectedFrontColors}">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate>
                                             <Border WidthRequest="22"
@@ -358,14 +358,14 @@
         </Grid>
         <!-- Color Picker Modal Overlay -->
         <Grid IsVisible="{Binding IsColorPickerVisible}"
-      BackgroundColor="#80000000"
-      ZIndex="999"
-      RowDefinitions="*"
-      ColumnDefinitions="*">
+              BackgroundColor="#80000000"
+              ZIndex="999"
+              RowDefinitions="*"
+              ColumnDefinitions="*">
 
             <Border Margin="18"
-            Padding="16"
-            BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}">
+                    Padding="16"
+                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}">
                 <Border.StrokeShape>
                     <RoundRectangle CornerRadius="16" />
                 </Border.StrokeShape>
@@ -373,9 +373,9 @@
                 <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
 
                     <Label Text="{Binding ColorPickerTitle}"
-                   FontSize="18"
-                   FontAttributes="Bold"
-                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
 
                     <!-- Colors grid -->
                     <CollectionView Grid.Row="1"
@@ -391,12 +391,12 @@
 
                                     <!-- color circle -->
                                     <Border BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}"
-                                    StrokeThickness="3"
-                                    Stroke="Transparent"
-                                    HorizontalOptions="Center"
-                                    VerticalOptions="Center"
-                                    WidthRequest="34"
-                                    HeightRequest="34">
+                                            StrokeThickness="3"
+                                            Stroke="Transparent"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center"
+                                            WidthRequest="34"
+                                            HeightRequest="34">
                                         <Border.StrokeShape>
                                             <RoundRectangle CornerRadius="999" />
                                         </Border.StrokeShape>
@@ -404,21 +404,19 @@
                                         <!-- Dark ring when selected -->
                                         <Border.Triggers>
                                             <DataTrigger TargetType="Border"
-                                                 Binding="{Binding IsSelected}"
-                                                 Value="True">
+                                                         Binding="{Binding IsSelected}"
+                                                         Value="True">
                                                 <Setter Property="Stroke"
-                                                Value="{AppThemeBinding Light=#333333, Dark=#DDDDDD}" />
+                                                        Value="{AppThemeBinding Light=#333333, Dark=#DDDDDD}" />
                                             </DataTrigger>
                                         </Border.Triggers>
                                     </Border>
 
                                     <!-- clickable overlay (Button is more reliable than GestureRecognizer) -->
                                     <Button BackgroundColor="Transparent"
-                                    BorderWidth="0"
-                                    Padding="0"
-                                    Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}},
-                                                      Path=BindingContext.ToggleColorCommand}"
-                                    CommandParameter="{Binding .}" />
+                                            BorderWidth="0"
+                                            Padding="0"
+                                            Clicked="OnColorClicked" />
                                 </Grid>
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
@@ -426,16 +424,16 @@
 
                     <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12">
                         <Button Grid.Column="0"
-                        Text="Close"
-                        Command="{Binding CloseColorPickerCommand}"
-                        CornerRadius="10"
-                        HeightRequest="44" />
+                                Text="Close"
+                                Command="{Binding CloseColorPickerCommand}"
+                                CornerRadius="10"
+                                HeightRequest="44" />
 
                         <Button Grid.Column="1"
-                        Text="Done"
-                        Command="{Binding CloseColorPickerCommand}"
-                        CornerRadius="10"
-                        HeightRequest="44" />
+                                Text="Done"
+                                Command="{Binding CloseColorPickerCommand}"
+                                CornerRadius="10"
+                                HeightRequest="44" />
                     </Grid>
 
                 </Grid>
