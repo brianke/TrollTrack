@@ -163,7 +163,7 @@
                                 <HorizontalStackLayout Spacing="8"
                                                        BindableLayout.ItemsSource="{Binding SelectedFrontColors}">
                                     <BindableLayout.ItemTemplate>
-                                        <DataTemplate>
+                                        <DataTemplate x:DataType="e:LureColor">
                                             <Border WidthRequest="22"
                                                     HeightRequest="22"
                                                     StrokeThickness="2"
@@ -205,7 +205,7 @@
                                 <HorizontalStackLayout Spacing="8"
                                BindableLayout.ItemsSource="{Binding SelectedBackColors}">
                                     <BindableLayout.ItemTemplate>
-                                        <DataTemplate>
+                                        <DataTemplate x:DataType="e:LureColor">
                                             <Border WidthRequest="22"
                                                     HeightRequest="22"
                                                     StrokeThickness="2"
