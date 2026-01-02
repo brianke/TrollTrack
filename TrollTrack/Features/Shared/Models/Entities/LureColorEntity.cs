@@ -246,5 +246,14 @@ namespace TrollTrack.Features.Shared.Models.Entities
         {
             return Colors.TryGetValue(LureColor, out var color) ? color : Colors[LureColor.White];
         }
+
+        public static string GetCategory(LureColor lureColor)
+        {
+            var value = (int)lureColor;
+            if (value >= 200) return "Special";
+            if (value >= 150) return "Metallic";
+            if (value >= 100) return "Fluorescent";
+            return "Regular";
+        }
     }
 }

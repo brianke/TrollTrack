@@ -69,7 +69,7 @@ public partial class AddLureViewModel : BaseViewModel
 
     // What the modal displays
     [ObservableProperty]
-    private ObservableCollection<LureColorOption> _colorOptions = new();
+    private ObservableCollection<ColorGroup> _groupedColorOptions = new();
 
     // Selected colors (front/back)
     [ObservableProperty]
@@ -320,9 +320,15 @@ public partial class AddLureViewModel : BaseViewModel
     {
         var selected = _pickingFront ? SelectedFrontColors : SelectedBackColors;
 
-        ColorOptions = new ObservableCollection<LureColorOption>(
-            AllPickableColors.Select(c => new LureColorOption(c, selected.Contains(c)))
-        );
+        var allColorOptions = AllPickableColors
+            .Select(c => new LureColorOption(c, selected.Contains(c)))
+            .ToList();
+
+        var grouped = allColorOptions
+            .GroupBy(o => ColorPalette.GetCategory(o.Color))
+            .Select(g => new ColorGroup(g.Key, g.OrderBy(o => o.Color.ToString())));
+
+        GroupedColorOptions = new ObservableCollection<ColorGroup>(grouped);
     }
 
     #endregion Color Picker helpers
@@ -360,7 +366,8 @@ public partial class AddLureViewModel : BaseViewModel
 
         option.IsSelected = !option.IsSelected;
 
-        var selectedColors = ColorOptions
+        var selectedColors = GroupedColorOptions
+            .SelectMany(g => g)
             .Where(c => c.IsSelected)
             .Select(c => c.Color)
             .ToList();
@@ -449,6 +456,16 @@ public partial class AddLureViewModel : BaseViewModel
 
         [ObservableProperty]
         private bool _isSelected;
+    }
+
+    public class ColorGroup : ObservableCollection<LureColorOption>
+    {
+        public string Name { get; }
+
+        public ColorGroup(string name, IEnumerable<LureColorOption> colors) : base(colors)
+        {
+            Name = name;
+        }
     }
 }
 

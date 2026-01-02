@@ -379,11 +379,21 @@
 
                     <!-- Colors grid -->
                     <CollectionView Grid.Row="1"
-                            ItemsSource="{Binding ColorOptions}"
-                            SelectionMode="None">
+                                    ItemsSource="{Binding GroupedColorOptions}"
+                                    SelectionMode="None"
+                                    IsGrouped="True">
                         <CollectionView.ItemsLayout>
                             <GridItemsLayout Span="6" Orientation="Vertical" />
                         </CollectionView.ItemsLayout>
+
+                        <CollectionView.GroupHeaderTemplate>
+                            <DataTemplate>
+                                <Label Text="{Binding Name}"
+                                       FontAttributes="Bold"
+                                       FontSize="16"
+                                       Padding="0,12,0,4" />
+                            </DataTemplate>
+                        </CollectionView.GroupHeaderTemplate>
 
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="vm:AddLureViewModel+LureColorOption">
