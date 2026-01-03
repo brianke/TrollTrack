@@ -85,7 +85,11 @@ public partial class AddLureViewModel : BaseViewModel
     [ObservableProperty]
     private string _backColorsDisplay = string.Empty;
 
-    private bool _pickingFront = true;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPickingBack))]
+    private bool _isPickingFront = true;
+
+    public bool IsPickingBack => !IsPickingFront;
     #endregion
 
     #region Events
@@ -318,7 +322,7 @@ public partial class AddLureViewModel : BaseViewModel
 
     private void BuildColorOptions()
     {
-        var selected = _pickingFront ? SelectedFrontColors : SelectedBackColors;
+        var selected = IsPickingFront ? SelectedFrontColors : SelectedBackColors;
 
         var allColorOptions = AllPickableColors
             .Select(c => new LureColorOption(c, selected.Contains(c)))
@@ -338,7 +342,7 @@ public partial class AddLureViewModel : BaseViewModel
     [RelayCommand]
     private void OpenFrontColors()
     {
-        _pickingFront = true;
+        IsPickingFront = true;
         ColorPickerTitle = "Select Front Colors";
         BuildColorOptions();
         IsColorPickerVisible = true;
@@ -347,7 +351,7 @@ public partial class AddLureViewModel : BaseViewModel
     [RelayCommand]
     private void OpenBackColors()
     {
-        _pickingFront = false;
+        IsPickingFront = false;
         ColorPickerTitle = "Select Back Colors";
         BuildColorOptions();
         IsColorPickerVisible = true;
@@ -372,7 +376,7 @@ public partial class AddLureViewModel : BaseViewModel
             .Select(c => c.Color)
             .ToList();
 
-        if (_pickingFront)
+        if (IsPickingFront)
             SelectedFrontColors = new ObservableCollection<LureColor>(selectedColors);
         else
             SelectedBackColors = new ObservableCollection<LureColor>(selectedColors);

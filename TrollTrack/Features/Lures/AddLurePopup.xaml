@@ -363,14 +363,14 @@
               RowDefinitions="*"
               ColumnDefinitions="*">
 
-            <Border Margin="18"
-                    Padding="16"
-                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}">
+            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}">
                 <Border.StrokeShape>
-                    <RoundRectangle CornerRadius="16" />
+                    <RoundRectangle CornerRadius="0" />
                 </Border.StrokeShape>
 
-                <Grid RowDefinitions="Auto,*,Auto" RowSpacing="12">
+                <Grid RowDefinitions="Auto,*,Auto,Auto"
+                      RowSpacing="12"
+                      Padding="16">
 
                     <Label Text="{Binding ColorPickerTitle}"
                            FontSize="18"
@@ -446,6 +446,49 @@
                                 HeightRequest="44" />
                     </Grid>
 
+                    <!-- Selected colors list -->
+                    <Grid Grid.Row="3" Margin="0,10,0,0">
+
+                        <!-- Selected Front Colors -->
+                        <ScrollView Orientation="Horizontal" IsVisible="{Binding IsPickingFront}">
+                            <HorizontalStackLayout Spacing="8"
+                                                   BindableLayout.ItemsSource="{Binding SelectedFrontColors}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="e:LureColor">
+                                        <Border WidthRequest="22"
+                                                HeightRequest="22"
+                                                StrokeThickness="2"
+                                                Stroke="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"
+                                                BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="999" />
+                                            </Border.StrokeShape>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                        </ScrollView>
+
+                        <!-- Selected Back Colors -->
+                        <ScrollView Orientation="Horizontal" IsVisible="{Binding IsPickingBack}">
+                            <HorizontalStackLayout Spacing="8"
+                                                   BindableLayout.ItemsSource="{Binding SelectedBackColors}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="e:LureColor">
+                                        <Border WidthRequest="22"
+                                                HeightRequest="22"
+                                                StrokeThickness="2"
+                                                Stroke="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"
+                                                BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
+                                            <Border.StrokeShape>
+                                                <RoundRectangle CornerRadius="999" />
+                                            </Border.StrokeShape>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                        </ScrollView>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>
