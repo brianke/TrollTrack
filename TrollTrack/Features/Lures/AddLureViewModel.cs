@@ -86,10 +86,15 @@ public partial class AddLureViewModel : BaseViewModel
     private string _backColorsDisplay = string.Empty;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsPickingBack))]
     private bool _isPickingFront = true;
 
-    public bool IsPickingBack => !IsPickingFront;
+    [ObservableProperty]
+    private bool _isPickingBack = false;
+
+    partial void OnIsPickingFrontChanged(bool value)
+    {
+        IsPickingBack = !value;
+    }
     #endregion
 
     #region Events
