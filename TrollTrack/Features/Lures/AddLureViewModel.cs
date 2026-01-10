@@ -1,11 +1,8 @@
 ﻿using CommunityToolkit.Maui.Core.Extensions;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Diagnostics;
 using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models.Entities;
+using static TrollTrack.Features.Lures.AddLureViewModel.LureColorOption;
 
 namespace TrollTrack.Features.Lures;
 
@@ -69,7 +66,7 @@ public partial class AddLureViewModel : BaseViewModel
 
     // What the modal displays
     [ObservableProperty]
-    private ObservableCollection<LureColorOption> _colorOptions = new();
+    private ObservableCollection<ColorGroup> _groupedColorOptions = new();
 
     // Selected colors (front/back)
     [ObservableProperty]
@@ -85,7 +82,17 @@ public partial class AddLureViewModel : BaseViewModel
     [ObservableProperty]
     private string _backColorsDisplay = string.Empty;
 
-    private bool _pickingFront = true;
+    [ObservableProperty]
+    private bool _isPickingFront = true;
+
+    [ObservableProperty]
+    public bool _isPickingBack = false;
+
+    partial void OnIsPickingFrontChanged(bool value)
+    {
+        IsPickingBack = !value;
+    }
+
     #endregion
 
     #region Events
@@ -265,12 +272,12 @@ public partial class AddLureViewModel : BaseViewModel
     private void RefreshColorDisplays()
     {
         FrontColorsDisplay = SelectedFrontColors.Count == 0
-            ? "(none)"
-            : string.Join(", ", SelectedFrontColors);
+           ? "(none)"
+           : string.Join(", ", SelectedFrontColors.Select(c => c.ToDisplayString()));
 
         BackColorsDisplay = SelectedBackColors.Count == 0
             ? "(none)"
-            : string.Join(", ", SelectedBackColors);
+            : string.Join(", ", SelectedBackColors.Select(c => c.ToDisplayString()));
     }
 
     private void OnFrontColorsChanged()
@@ -297,6 +304,8 @@ public partial class AddLureViewModel : BaseViewModel
             value.CollectionChanged += _frontColorsChangedHandler;
 
         OnFrontColorsChanged();
+        RefreshColorDisplays();
+
     }
 
     partial void OnSelectedBackColorsChanging(ObservableCollection<LureColor> value)
@@ -311,6 +320,8 @@ public partial class AddLureViewModel : BaseViewModel
             value.CollectionChanged += _backColorsChangedHandler;
 
         OnBackColorsChanged();
+        RefreshColorDisplays();
+
     }
 
     private IEnumerable<LureColor> AllPickableColors =>
@@ -318,11 +329,39 @@ public partial class AddLureViewModel : BaseViewModel
 
     private void BuildColorOptions()
     {
-        var selected = _pickingFront ? SelectedFrontColors : SelectedBackColors;
+        var selected = IsPickingFront ? SelectedFrontColors : SelectedBackColors;
 
-        ColorOptions = new ObservableCollection<LureColorOption>(
-            AllPickableColors.Select(c => new LureColorOption(c, selected.Contains(c)))
-        );
+        var allColorOptions = AllPickableColors
+            .Select(c => new LureColorOption(c, selected.Contains(c)))
+            .ToList();
+
+        var categoryOrder = new Dictionary<string, int>
+        {
+            { "Regular", 0 },
+            { "Fluorescent", 1 },
+            { "Metallic", 2 },
+            { "Special", 3 }
+        };
+
+        var grouped = allColorOptions
+                    .GroupBy(o => ColorPalette.GetCategory(o.Color))
+                    .OrderBy(g => categoryOrder.TryGetValue(g.Key, out var order) ? order : int.MaxValue)
+                    .Select(g => new ColorGroup(g.Key, g.OrderBy(c =>
+                    {
+                        var hue = ColorPalette.GetColorHue(c.Color);
+                        var saturation = ColorPalette.GetColorSaturation(c.Color);
+
+                        // Neutrals (very low saturation) should go at the end
+                        // For rainbow order, sort by hue (red=0° → violet=270°)
+                        // If saturation is very low (< 0.1), treat as neutral and put at end
+                        if (saturation < 0.1)
+                        {
+                            return 1000 + hue; // Put neutrals after all colorful items
+                        }
+                        return hue;
+                    }).ThenByDescending(c => ColorPalette.GetColorSaturation(c.Color))));
+
+        GroupedColorOptions = new ObservableCollection<ColorGroup>(grouped);
     }
 
     #endregion Color Picker helpers
@@ -332,7 +371,7 @@ public partial class AddLureViewModel : BaseViewModel
     [RelayCommand]
     private void OpenFrontColors()
     {
-        _pickingFront = true;
+        IsPickingFront = true;
         ColorPickerTitle = "Select Front Colors";
         BuildColorOptions();
         IsColorPickerVisible = true;
@@ -341,7 +380,7 @@ public partial class AddLureViewModel : BaseViewModel
     [RelayCommand]
     private void OpenBackColors()
     {
-        _pickingFront = false;
+        IsPickingFront = false;
         ColorPickerTitle = "Select Back Colors";
         BuildColorOptions();
         IsColorPickerVisible = true;
@@ -360,12 +399,15 @@ public partial class AddLureViewModel : BaseViewModel
 
         option.IsSelected = !option.IsSelected;
 
-        var selectedColors = ColorOptions
+        var selectedColors = GroupedColorOptions
+            .SelectMany(g => g)
             .Where(c => c.IsSelected)
             .Select(c => c.Color)
+            .OrderBy(c => ColorPalette.GetColorHue(c))
+            .OrderBy(c => ColorPalette.GetColorSaturation(c))
             .ToList();
 
-        if (_pickingFront)
+        if (IsPickingFront)
             SelectedFrontColors = new ObservableCollection<LureColor>(selectedColors);
         else
             SelectedBackColors = new ObservableCollection<LureColor>(selectedColors);
@@ -450,6 +492,17 @@ public partial class AddLureViewModel : BaseViewModel
         [ObservableProperty]
         private bool _isSelected;
     }
+
+    public class ColorGroup : ObservableCollection<LureColorOption>
+    {
+        public string Name { get; }
+
+        public ColorGroup(string name, IEnumerable<LureColorOption> colors) : base(colors)
+        {
+            Name = name;
+        }
+    }
 }
+
 
 

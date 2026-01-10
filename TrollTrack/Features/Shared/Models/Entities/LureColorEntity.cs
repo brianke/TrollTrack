@@ -1,112 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using CommunityToolkit.Maui.Core.Extensions;
+using Microsoft.Maui.Graphics;
+using System.Text.Json.Serialization;
 using System.Xml.Linq;
 
 namespace TrollTrack.Features.Shared.Models.Entities
 {
-/*
-    [Table("LureFrontColors")]
-    public class LureFrontColorEntity
-    {
-
-        /// <summary>
-        /// Override the default GetHashCode() so SelectedItem can find the matching item
-        /// </summary>
-        /// <returns>hashcode of <see cref="LureFrontColorEntity"/></returns>
-        public override int GetHashCode()
-        {
-            return HelperClass.CalculateHashCode(this,
-                    () => this.Id);    //,
-                    //() => this.LureId,
-                    //() => this.Color,
-                    //() => this.DisplayOrder);
-        }
-
-        /// <summary>
-        /// Override Equals method
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public override bool Equals(System.Object? obj)
-        {
-            var item = obj as LureFrontColorEntity;
-
-            if (item == null)
-            {
-                return false;
-            }
-
-            // ?? String.Empty will return empty string if LureDataEntity is null (avoids a object is null error)
-            return (this.Id).Equals(item.Id);
-                    //&& (this.LureId).Equals(item.LureId)
-                    //&& (this.Color).Equals(item.Color)
-                    //&& (this.DisplayOrder).Equals(item.DisplayOrder);
-        }
-
-
-        [PrimaryKey]
-        public Guid Id { get; set; } = Guid.NewGuid();
-
-        [ForeignKey(typeof(LureDataEntity))]
-        public Guid LureId { get; set; }
-
-        public LureColor Color { get; set; } = LureColor.NA;
-
-        //public int DisplayOrder { get; set; } // For ordering colors (primary, secondary, etc.)
-    }
-
-    [Table("LureBackColors")]
-    public class LureBackColorEntity
-    {
-
-        /// <summary>
-        /// Override the default GetHashCode() so SelectedItem can find the matching item
-        /// </summary>
-        /// <returns>hashcode of <see cref="LureBackColorEntity"/></returns>
-        public override int GetHashCode()
-        {
-            return HelperClass.CalculateHashCode(this,
-                    () => this.Id);
-            
-                    //() => this.LureId,
-                    //() => this.Color,
-                    //() => this.DisplayOrder);
-        }
-
-        /// <summary>
-        /// Override Equals method
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public override bool Equals(System.Object? obj)
-        {
-            var item = obj as LureBackColorEntity;
-
-            if (item == null)
-            {
-                return false;
-            }
-
-            // ?? String.Empty will return empty string if LureDataEntity is null (avoids a object is null error)
-            return (this.Id).Equals(item.Id);
-
-                    //&& (this.LureId).Equals(item.LureId)
-                    //&& (this.Color).Equals(item.Color)
-                    //&& (this.DisplayOrder).Equals(item.DisplayOrder);
-        }
-
-        [PrimaryKey]
-        public Guid Id { get; set; } = Guid.NewGuid();
-
-        [ForeignKey(typeof(LureDataEntity))]
-        public Guid LureId { get; set; }
-
-        public LureColor Color { get; set; } = LureColor.NA;
-
-        //public int DisplayOrder { get; set; } // For ordering colors (primary, secondary, etc.)
-    }
-*/
-
-
     /// <summary>
     /// Represents all available Colors
     /// </summary>
@@ -115,54 +13,135 @@ namespace TrollTrack.Features.Shared.Models.Entities
     {
         NA = 0,
 
-        // Basic Colors
-        White = 1,
-        Black = 2,
-        Gray= 3,
-        Silver = 4,
+        // Neutrals (8)
+        Black,
+        [Description("Dark Slate Gray")]
+        DarkSlateGray,
+        [Description("Dim Gray")]
+        DimGray,
+        [Description("Slate Gray")]
+        SlateGray,
+        Gray,
+        [Description("Dark Gray")]
+        DarkGray,
+        Silver,
+        White,
 
-        // Primary Colors
-        Red = 10,
-        Blue = 11,
-        Yellow = 12,
-        Green = 13,
+        // Reds (8)
+        [Description("Dark Red")]
+        DarkRed,
+        Maroon,
+        Firebrick,
+        Crimson,
+        Red,
+        [Description("Indian Red")]
+        IndianRed,
+        [Description("Light Coral")]
+        LightCoral,
+        Salmon,
 
-        // Secondary Colors
-        Orange = 20,
-        Purple = 21,
-        Pink = 22,
-        Brown = 23,
+        // Oranges (8)
+        [Description("Dark Orange")]
+        DarkOrange,
+        [Description("Orange Red")]
+        OrangeRed,
+        Orange,
+        Tomato,
+        Coral,
+        [Description("Light Salmon")]
+        LightSalmon,
+        [Description("Peach Puff")]
+        PeachPuff,
+        [Description("Navajo White")]
+        NavajoWhite,
 
-        // Extended Colors
-        Cyan = 30,
-        Magenta = 31,
-        Lime = 32,
-        Navy = 33,
-        Teal = 34,
-        Olive = 35,
-        Maroon = 36,
-        Aqua = 37,
-        Fuchsia = 38,
-        Gold = 39,
-        Tan = 40,
-        Beige = 41,
-        Ivory = 42,
-        Lavender = 43,
-        Mint = 44,
-        Peach = 45,
-        Coral = 46,
-        Salmon = 47,
-        Crimson = 48,
-        Indigo = 49,
-        Violet = 50,
-        Turquoise = 60,
+        // Yellows (8)
+        Gold,
+        Yellow,
+        [Description("Light Yellow")]
+        LightYellow,
+        [Description("Lemon Chiffon")]
+        LemonChiffon,
+        Khaki,
+        [Description("Dark Khaki")]
+        DarkKhaki,
+        Goldenrod,
+        [Description("Pale Goldenrod")]
+        PaleGoldenrod,
+
+        // Greens (8)
+        [Description("Dark Green")]
+        DarkGreen,
+        Green,
+        [Description("Forest Green")]
+        ForestGreen,
+        [Description("Sea Green")]
+        SeaGreen,
+        [Description("Medium Sea Green")]
+        MediumSeaGreen,
+        [Description("Lime Green")]
+        LimeGreen,
+        [Description("Lawn Green")]
+        LawnGreen,
+        [Description("Yellow Green")]
+        YellowGreen,
+
+        // Teals/Cyans (8)
+        Teal,
+        [Description("Dark Cyan")]
+        DarkCyan,
+        [Description("Cadet Blue")]
+        CadetBlue,
+        [Description("Dark Turquoise")]
+        DarkTurquoise,
+        [Description("Medium Turquoise")]
+        MediumTurquoise,
+        Turquoise,
+        Aquamarine,
+        Cyan,
+
+        // Blues (8)
+        Navy,
+        [Description("Midnight Blue")]
+        MidnightBlue,
+        [Description("Dark Blue")]
+        DarkBlue,
+        [Description("Medium Blue")]
+        MediumBlue,
+        Blue,
+        [Description("Royal Blue")]
+        RoyalBlue,
+        [Description("Dodger Blue")]
+        DodgerBlue,
+        [Description("Deep Sky Blue")]
+        DeepSkyBlue,
+
+        // Purples/Pinks (8)
+        Indigo,
+        Purple,
+        [Description("Dark Magenta")]
+        DarkMagenta,
+        [Description("Blue Violet")]
+        BlueViolet,
+        [Description("Medium Purple")]
+        MediumPurple,
+        Violet,
+        Fuchsia,
+        [Description("Deep Pink")]
+        DeepPink,
 
         // Fluorescent Colors
+        [Description("Fluorescent Pink")]
         FluorescentPink = 100,
+        [Description("Fluorescent Green")]
         FluorescentGreen = 101,
+        [Description("Fluorescent Yellow")]
         FluorescentYellow = 102,
+        [Description("Fluorescent Orange")]
         FluorescentOrange = 103,
+        [Description("Fluorescent Blue")]
         FluorescentBlue = 104,
+        [Description("Fluorescent Red")]
         FluorescentRed = 105,
 
         // Metallic
@@ -176,11 +155,90 @@ namespace TrollTrack.Features.Shared.Models.Entities
         Holographic = 202
     }
 
-
     public static class ColorPalette
     {
-        public static readonly Dictionary<LureColor, Color> Colors = new()
+        public static readonly Dictionary<LureColor, Color> LureColors = new()
         {
+            // Neutrals (8)
+            { LureColor.Black, Colors.Black },
+            { LureColor.DarkSlateGray, Colors.DarkSlateGray },
+            { LureColor.DimGray, Colors.DimGray },
+            { LureColor.SlateGray, Colors.SlateGray },
+            { LureColor.Gray, Colors.Gray },
+            { LureColor.DarkGray, Colors.DarkGray },
+            { LureColor.Silver, Colors.Silver },
+            { LureColor.White, Colors.White },
+
+            // Reds (8)
+            { LureColor.DarkRed, Colors.DarkRed },
+            { LureColor.Maroon, Colors.Maroon },
+            { LureColor.Firebrick, Colors.Firebrick },
+            { LureColor.Crimson, Colors.Crimson },
+            { LureColor.Red, Colors.Red },
+            { LureColor.IndianRed, Colors.IndianRed },
+            { LureColor.LightCoral, Colors.LightCoral },
+            { LureColor.Salmon, Colors.Salmon },
+
+            // Oranges (8)
+            { LureColor.DarkOrange, Colors.DarkOrange },
+            { LureColor.OrangeRed, Colors.OrangeRed },
+            { LureColor.Orange, Colors.Orange },
+            { LureColor.Tomato, Colors.Tomato },
+            { LureColor.Coral, Colors.Coral },
+            { LureColor.LightSalmon, Colors.LightSalmon },
+            { LureColor.PeachPuff, Colors.PeachPuff },
+            { LureColor.NavajoWhite, Colors.NavajoWhite },
+
+            // Yellows (8)
+            { LureColor.Gold, Colors.Gold },
+            { LureColor.Yellow, Colors.Yellow },
+            { LureColor.LightYellow, Colors.LightYellow },
+            { LureColor.LemonChiffon, Colors.LemonChiffon },
+            { LureColor.Khaki, Colors.Khaki },
+            { LureColor.DarkKhaki, Colors.DarkKhaki },
+            { LureColor.Goldenrod, Colors.Goldenrod },
+            { LureColor.PaleGoldenrod, Colors.PaleGoldenrod },
+
+            // Greens (8)
+            { LureColor.DarkGreen, Colors.DarkGreen },
+            { LureColor.Green, Colors.Green },
+            { LureColor.ForestGreen, Colors.ForestGreen },
+            { LureColor.SeaGreen, Colors.SeaGreen },
+            { LureColor.MediumSeaGreen, Colors.MediumSeaGreen },
+            { LureColor.LimeGreen, Colors.LimeGreen },
+            { LureColor.LawnGreen, Colors.LawnGreen },
+            { LureColor.YellowGreen, Colors.YellowGreen },
+
+            // Teals/Cyans (8)
+            { LureColor.Teal, Colors.Teal },
+            { LureColor.DarkCyan, Colors.DarkCyan },
+            { LureColor.CadetBlue, Colors.CadetBlue },
+            { LureColor.DarkTurquoise, Colors.DarkTurquoise },
+            { LureColor.MediumTurquoise, Colors.MediumTurquoise },
+            { LureColor.Turquoise, Colors.Turquoise },
+            { LureColor.Aquamarine, Colors.Aquamarine },
+            { LureColor.Cyan, Colors.Cyan },
+
+            // Blues (8)
+            { LureColor.Navy, Colors.Navy },
+            { LureColor.MidnightBlue, Colors.MidnightBlue },
+            { LureColor.DarkBlue, Colors.DarkBlue },
+            { LureColor.MediumBlue, Colors.MediumBlue },
+            { LureColor.Blue, Colors.Blue },
+            { LureColor.RoyalBlue, Colors.RoyalBlue },
+            { LureColor.DodgerBlue, Colors.DodgerBlue },
+            { LureColor.DeepSkyBlue, Colors.DeepSkyBlue },
+
+            // Purples/Pinks (8)
+            { LureColor.Indigo, Colors.Indigo },
+            { LureColor.Purple, Colors.Purple },
+            { LureColor.DarkMagenta, Colors.DarkMagenta },
+            { LureColor.BlueViolet, Colors.BlueViolet },
+            { LureColor.MediumPurple, Colors.MediumPurple },
+            { LureColor.Violet, Colors.Violet },
+            { LureColor.Fuchsia, Colors.Fuchsia },
+            { LureColor.DeepPink, Colors.DeepPink },
+/*
             // Basic Colors
             { LureColor.White, Color.FromArgb("#FFFFFF") },
             { LureColor.Black, Color.FromArgb("#000000") },
@@ -207,7 +265,6 @@ namespace TrollTrack.Features.Shared.Models.Entities
             { LureColor.Teal, Color.FromArgb("#008080") },
             { LureColor.Olive, Color.FromArgb("#808000") },
             { LureColor.Maroon, Color.FromArgb("#800000") },
-            { LureColor.Aqua, Color.FromArgb("#00FFFF") },
             { LureColor.Fuchsia, Color.FromArgb("#FF00FF") },
             { LureColor.Gold, Color.FromArgb("#FFD700") },
             { LureColor.Tan, Color.FromArgb("#D2B48C") },
@@ -222,7 +279,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
             { LureColor.Indigo, Color.FromArgb("#4B0082") },
             { LureColor.Violet, Color.FromArgb("#EE82EE") },
             { LureColor.Turquoise, Color.FromArgb("#40E0D0") },
-        
+*/        
             // Fluorescent Colors (bright, saturated versions)
             { LureColor.FluorescentPink, Color.FromArgb("#FF10F0") },
             { LureColor.FluorescentGreen, Color.FromArgb("#39FF14") },
@@ -242,9 +299,29 @@ namespace TrollTrack.Features.Shared.Models.Entities
             { LureColor.Clear, Color.FromArgb("#F0FFFFFF") }, // Very light transparent white
         };
 
+
         public static Color GetColor(LureColor LureColor)
         {
-            return Colors.TryGetValue(LureColor, out var color) ? color : Colors[LureColor.White];
+            return LureColors.TryGetValue(LureColor, out var color) ? color : LureColors[LureColor.White];
+        }
+
+        public static double GetColorHue(LureColor LureColor)
+        {
+            return LureColors.TryGetValue(LureColor, out var color) ? color.GetDegreeHue() : LureColors[LureColor.White].GetDegreeHue();
+        }
+
+        public static float GetColorSaturation(LureColor LureColor)
+        {
+            return LureColors.TryGetValue(LureColor, out var color) ? color.GetSaturation() : LureColors[LureColor.White].GetSaturation();
+        }
+
+        public static string GetCategory(LureColor lureColor)
+        {
+            var value = (int)lureColor;
+            if (value >= 200) return "Special";
+            if (value >= 150) return "Metallic";
+            if (value >= 100) return "Fluorescent";
+            return "Regular";
         }
     }
 }
