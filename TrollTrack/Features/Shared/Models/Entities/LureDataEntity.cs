@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Xml.Linq;
 
 namespace TrollTrack.Features.Shared.Models.Entities
@@ -133,13 +134,43 @@ namespace TrollTrack.Features.Shared.Models.Entities
             }
         }
 
-        // List of colors on the top or front of a lure
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<LureTopColorEntity>? TopColors { get; set; }
+        [JsonIgnore]
+        public string FrontColorsJson { get; set; } = "[]";
 
-        // List of colors on the bottom or back of a lure
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<LureBottomColorEntity>? BottomColors { get; set; }
+        [JsonIgnore]
+        public string BackColorsJson { get; set; } = "[]";
+
+        // JSON-facing properties (NOT stored as DB columns)
+        [Ignore]
+        [JsonPropertyName("FrontColors")]
+        public List<string> FrontColors
+        {
+            get => JsonSerializer.Deserialize<List<string>>(FrontColorsJson) ?? new();
+            set => FrontColorsJson = JsonSerializer.Serialize(value ?? new());
+        }
+
+        [Ignore]
+        [JsonPropertyName("BackColors")]
+        public List<string> BackColors
+        {
+            get => JsonSerializer.Deserialize<List<string>>(BackColorsJson) ?? new();
+            set => BackColorsJson = JsonSerializer.Serialize(value ?? new());
+        }
+
+        // Optional: your enum lists for in-app usage (also not DB columns)
+        [Ignore]
+        public List<LureColor> FrontColorsList =>
+            FrontColors.Select(s => Enum.TryParse<LureColor>(s, true, out var c) ? c : (LureColor?)null)
+                       .Where(c => c.HasValue)
+                       .Select(c => c!.Value)
+                       .ToList();
+
+        [Ignore]
+        public List<LureColor> BackColorsList =>
+            BackColors.Select(s => Enum.TryParse<LureColor>(s, true, out var c) ? c : (LureColor?)null)
+                      .Where(c => c.HasValue)
+                      .Select(c => c!.Value)
+                      .ToList();
 
         // Display name for picker
         [Ignore]

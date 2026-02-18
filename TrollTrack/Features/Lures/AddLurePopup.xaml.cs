@@ -87,4 +87,19 @@ public partial class AddLurePopup : ContentPage
         if (vm.SetPrimaryLureImageCommand.CanExecute(image))
             vm.SetPrimaryLureImageCommand.Execute(image);
     }
+
+    private void OnColorClicked(object sender, EventArgs e)
+    {
+        if (BindingContext is not AddLureViewModel vm)
+            return;
+
+        if (sender is not Button btn)
+            return;
+
+        if (btn.BindingContext is not AddLureViewModel.LureColorOption option)
+            return;
+
+        if (vm.ToggleColorCommand.CanExecute(option))
+            vm.ToggleColorCommand.Execute(option);
+    }
 }

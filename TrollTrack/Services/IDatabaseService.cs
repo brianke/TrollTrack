@@ -44,6 +44,7 @@ namespace TrollTrack.Services
 
         Task<int> SaveLureAsync(LureDataEntity lureData);
         Task<List<LureDataEntity>> GetAllLureDataAsync();
+        Task<List<LureDataEntity>> GetAllLureSimpleDataAsync();
         Task<LureDataEntity?> GetLureByIdAsync(Guid id);
 
         #endregion
