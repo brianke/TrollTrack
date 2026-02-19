@@ -46,35 +46,22 @@ public partial class ActiveTripView : ContentView
         Debug.WriteLine("Button Released - Stopping timer");
         _longPressTimer.Stop();
 
-        // Small delay to let long press handler capture _currentRod if it triggered.
-        // Clear on main thread to avoid cross-thread access.
+        // Small delay to let long press complete if it triggered
         Task.Delay(100).ContinueWith(_ =>
         {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                _currentRod = null;
-            });
+            _currentRod = null;
         });
     }
 
     /// <summary>
     /// Timer elapsed - long press detected!
     /// </summary>
-    private void OnLongPressTimerElapsed(object? sender, ElapsedEventArgs e)
+    private async void OnLongPressTimerElapsed(object? sender, ElapsedEventArgs e)
     {
         _isLongPress = true;
         Debug.WriteLine("??? LONG PRESS DETECTED! ???");
 
         if (_currentRod is RodSetupEntity rod)
-        {
-            // Fire-and-forget with exception handling - can't await in event handler
-            _ = HandleLongPressAsync(rod);
-        }
-    }
-
-    private async Task HandleLongPressAsync(RodSetupEntity rod)
-    {
-        try
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
@@ -89,24 +76,15 @@ public partial class ActiveTripView : ContentView
                     else
                     {
                         Debug.WriteLine("EditRodCommand cannot execute or doesn't exist");
-                        if (Shell.Current != null)
-                            await Shell.Current.DisplayAlert("Info",
-                                $"Long press detected on {rod.Name}\nEdit command not available",
-                                "OK");
+                        await Shell.Current.DisplayAlert("Info",
+                            $"Long press detected on {rod.Name}\nEdit command not available",
+                            "OK");
                     }
                 }
             });
         }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"Long press handler error: {ex.Message}");
-            await MainThread.InvokeOnMainThreadAsync(async () =>
-            {
-                if (Shell.Current != null)
-                    await Shell.Current.DisplayAlert("Error", $"Failed to edit rod: {ex.Message}", "OK");
-            });
-        }
     }
+
     #endregion
 
     #region Quick Tap - Add Catch
