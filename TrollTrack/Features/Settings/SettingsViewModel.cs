@@ -25,18 +25,6 @@ public partial class SettingsViewModel : BaseViewModel
 
     #endregion
 
-    #region Initialization
-
-    public async Task InitializeAsync()
-    {
-        IsInitializing = true;
-        //await LoadDataAsync(isRefresh: false);
-        IsInitializing = false;
-    }
-
-
-    #endregion Initialization
-
     #region Commands
 
     [RelayCommand]

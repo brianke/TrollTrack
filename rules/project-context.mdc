@@ -15,7 +15,7 @@ Use the data in the TrollTrack solution (in the \TrollTrack folder) to complete 
 Produce code based on my request.
 
 #Guardrails
-Do not assume requests that I have not made. I want to build the app in very minimal steps and not get confused with multiple changes. Any code additions or changes should be verified to work for any Maui platform (Android, iOS, etc.)
+Do not assume requests that I have not made. I want to build the app in very minimal steps and not get confused with multiple changes.
 
 #Evaluation
 Be sure to list all assumptions in your analysis, highlight import caveats, limitation or risks. Follow up with additional questions if you need more information.

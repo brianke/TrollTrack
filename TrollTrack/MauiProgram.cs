@@ -55,18 +55,7 @@ namespace TrollTrack
 
             // Seed data on first run
             var dbService = app.Services.GetRequiredService<IDatabaseService>();
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await dbService.SeedInitialDataAsync();
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Seed data failed: {ex.Message}");
-                    // Optional: Use ILogger if available
-                }
-            });
+            dbService.SeedInitialDataAsync();
 
             return app;
         }

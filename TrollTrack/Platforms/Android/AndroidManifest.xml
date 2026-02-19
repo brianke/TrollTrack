@@ -17,9 +17,7 @@
 	<application
         android:allowBackup="true"
         android:supportsRtl="true"
-        android:theme="@style/Maui.SplashTheme"
-		android:icon="@mipmap/trolltrack_app_icon"
-		android:roundIcon="@mipmap/trolltrack_app_icon">
+        android:theme="@style/Maui.SplashTheme">
 	</application>
 
 	<!-- Network permissions -->
