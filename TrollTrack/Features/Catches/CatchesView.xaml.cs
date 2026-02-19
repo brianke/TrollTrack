@@ -19,12 +19,15 @@ public partial class CatchesView : ContentPage
 
     }
 
-    
-    protected override async void OnAppearing()
+
+    protected override void OnAppearing()
     {
         base.OnAppearing();
+        _ = InitializeWhenAppearingAsync();
+    }
 
-        // Initialize the ViewModel when the page appears
+    private async Task InitializeWhenAppearingAsync()
+    {
         try
         {
             await _viewModel.InitializeAsync();
@@ -32,8 +35,15 @@ public partial class CatchesView : ContentPage
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error initializing Catches ViewModel: {ex.Message}");
-            // Optionally show error message to user
-            await DisplayAlert("Error", "Failed to load catch data. Please try again.", "OK");
+            try
+            {
+                await DisplayAlert("Error", "Failed to load catch data. Please try again.", "OK");
+            }
+            catch (Exception alertEx)
+            {
+                // Page may have been navigated away before alert could show
+                System.Diagnostics.Debug.WriteLine($"Error showing alert: {alertEx.Message}");
+            }
         }
     }
 
@@ -41,7 +51,6 @@ public partial class CatchesView : ContentPage
     {
         base.OnDisappearing();
 
-        // The ViewModel will handle its own cleanup through BaseViewModel's Dispose
         // No additional cleanup needed here
     }
 

@@ -11,6 +11,10 @@ namespace TrollTrack.Services
     {
         private readonly IDatabaseService _databaseService;
 
+        // Add lock object for thread-safe access to _locationHistory
+        private readonly object _locationHistoryLock = new object();
+
+
         // set default locaiton which will be used as a return value if actual position cannot be obtained
         private static LocationDataEntity defaultLocation = new LocationDataEntity
         {
@@ -73,9 +77,9 @@ namespace TrollTrack.Services
                     LocationUpdated?.Invoke(this, locationEntity);
 
                     //TODO: remove before release, just for testing
-                    var (town, coords) = LocationData.GetRandomLocation();
-                    locationEntity.Latitude = coords.Latitude;
-                    locationEntity.Longitude = coords.Longitude;
+                    //var (town, coords) = LocationData.GetRandomLocation();
+                    //locationEntity.Latitude = coords.Latitude;
+                    //locationEntity.Longitude = coords.Longitude;
                     //TODO
 
                     return locationEntity;
@@ -125,9 +129,13 @@ namespace TrollTrack.Services
         /// <returns></returns>
         public async Task<List<LocationDataEntity>> GetLocationHistoryAsync()
         {
-            return await Task.FromResult(_locationHistory.ToList());
+            List<LocationDataEntity> copy;
+            lock (_locationHistoryLock)
+            {
+                copy = _locationHistory.ToList();
+            }
+            return await Task.FromResult(copy);
         }
-
         /// <summary>
         /// Save the current location to the list of historical locations asynchronously
         /// </summary>
@@ -137,19 +145,18 @@ namespace TrollTrack.Services
         {
             if (location != null)
             {
-                _locationHistory.Add(location);
-
-                // Keep only last 100 locations to prevent memory issues
-                if (_locationHistory.Count > 100)
+                lock (_locationHistoryLock)
                 {
-                    _locationHistory.RemoveAt(0);
+                    _locationHistory.Add(location);
+                    if (_locationHistory.Count > 100)
+                    {
+                        _locationHistory.RemoveAt(0);
+                    }
                 }
             }
 
             await Task.CompletedTask;
         }
-
-
     }
 
 

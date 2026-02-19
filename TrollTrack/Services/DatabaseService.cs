@@ -17,6 +17,9 @@ namespace TrollTrack.Services
         private Task? _initializationTask;  // Store the Task itself
         private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
 
+        // Add: serialize all DB operations for thread safety
+        private readonly SemaphoreSlim _dbAccessSemaphore = new(1, 1);
+
         public DatabaseService()
         {
             _databasePath = Path.Combine(FileSystem.AppDataDirectory, AppConfig.Constants.DatabaseName);
@@ -67,20 +70,44 @@ namespace TrollTrack.Services
 
         private async Task<SQLiteAsyncConnection> GetDatabaseAsync()
         {
-            // If we have a task, await it (whether in progress or completed)
             if (_initializationTask == null)
             {
-                // Use Interlocked to ensure only ONE thread creates the task
                 var newTask = InitializeAsync();
-                if (Interlocked.CompareExchange(ref _initializationTask, newTask, null) != null)
-                {
-                    // Another thread beat us to it, use their task instead
-                    // Our newTask will be garbage collected
-                }
+                if (Interlocked.CompareExchange(ref _initializationTask, newTask, null) != null) { }
             }
 
             await _initializationTask;
             return _database!;
+        }
+
+        /// <summary>
+        /// Wraps a database operation to ensure single-threaded access to SQLite.
+        /// </summary>
+        private async Task<T> ExecuteDbOperationAsync<T>(Func<Task<T>> operation)
+        {
+            await _dbAccessSemaphore.WaitAsync();
+            try
+            {
+                return await operation();
+            }
+            finally
+            {
+                _dbAccessSemaphore.Release();
+            }
+        }
+
+        private async Task ExecuteDbOperationAsync(Func<Task> operation)
+        {
+            var db = await GetDatabaseAsync();
+            await _dbAccessSemaphore.WaitAsync();
+            try
+            {
+                await operation();
+            }
+            finally
+            {
+                _dbAccessSemaphore.Release();
+            }
         }
 
         // Add a public method for initial data setup
@@ -99,29 +126,25 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-
-                // Save weather entity first if it exists
-                if (trip.WeatherEntity != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    await db.InsertOrReplaceAsync(trip.WeatherEntity);
-                    trip.WeatherEntityId = trip.WeatherEntity.Id;
-                }
-
-                // Save the trip
-                await db.InsertOrReplaceAsync(trip);
-
-                // Save catches with TripId set
-                if (trip.Catches != null && trip.Catches.Any())
-                {
-                    foreach (var catchEntity in trip.Catches)
+                    var db = await GetDatabaseAsync();
+                    if (trip.WeatherEntity != null)
                     {
-                        catchEntity.TripId = trip.Id; // Ensure TripId is set
-                        await db.InsertOrReplaceWithChildrenAsync(catchEntity, recursive: true);
+                        await db.InsertOrReplaceAsync(trip.WeatherEntity);
+                        trip.WeatherEntityId = trip.WeatherEntity.Id;
                     }
-                }
-
-                return 1;
+                    await db.InsertOrReplaceAsync(trip);
+                    if (trip.Catches != null && trip.Catches.Any())
+                    {
+                        foreach (var catchEntity in trip.Catches)
+                        {
+                            catchEntity.TripId = trip.Id;
+                            await db.InsertOrReplaceWithChildrenAsync(catchEntity, recursive: true);
+                        }
+                    }
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -137,13 +160,16 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
+                return await ExecuteDbOperationAsync(async () =>
+                {
+                    var db = await GetDatabaseAsync();
 
-                // Update the trip and its children (catches)
-                await db.UpdateWithChildrenAsync(tripData);
+                    // Update the trip and its children (catches)
+                    await db.UpdateWithChildrenAsync(tripData);
 
-                Debug.WriteLine($"Updated trip: {tripData.TripName}, IsActive: {tripData.IsActive}");
-                return 1;
+                    Debug.WriteLine($"Updated trip: {tripData.TripName}, IsActive: {tripData.IsActive}");
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -159,37 +185,40 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var trip = await db.FindAsync<TripDataEntity>(id);
-
-                if (trip == null)
-                    return null;
-
-                // Load weather entity separately if needed
-                if (trip.WeatherEntityId != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    try
+                    var db = await GetDatabaseAsync();
+                    var trip = await db.FindAsync<TripDataEntity>(id);
+
+                    if (trip == null)
+                        return null;
+
+                    // Load weather entity separately if needed
+                    if (trip.WeatherEntityId != null)
                     {
-                        trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(trip.WeatherEntityId.Value);
+                        try
+                        {
+                            trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(trip.WeatherEntityId.Value);
+                        }
+                        catch
+                        {
+                            // Weather entity not found, continue
+                        }
                     }
-                    catch
+
+                    // Load catches for this trip
+                    trip.Catches = await db.Table<CatchDataEntity>()
+                        .Where(c => c.TripId == id)
+                        .ToListAsync();
+
+                    // Load children for each catch
+                    foreach (var catchEntity in trip.Catches)
                     {
-                        // Weather entity not found, continue
+                        await db.GetChildrenAsync(catchEntity, recursive: true);
                     }
-                }
 
-                // Load catches for this trip
-                trip.Catches = await db.Table<CatchDataEntity>()
-                    .Where(c => c.TripId == id)
-                    .ToListAsync();
-
-                // Load children for each catch
-                foreach (var catchEntity in trip.Catches)
-                {
-                    await db.GetChildrenAsync(catchEntity, recursive: true);
-                }
-
-                return trip;
+                    return trip;
+                });
             }
             catch (Exception ex)
             {
@@ -205,40 +234,43 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var activeTrip = await db.Table<TripDataEntity>()
-                    .Where(t => t.IsActive)
-                    .FirstOrDefaultAsync();
-
-                if (activeTrip != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    // Load weather entity
-                    if (activeTrip.WeatherEntityId != null)
+                    var db = await GetDatabaseAsync();
+                    var activeTrip = await db.Table<TripDataEntity>()
+                        .Where(t => t.IsActive)
+                        .FirstOrDefaultAsync();
+
+                    if (activeTrip != null)
                     {
-                        try
+                        // Load weather entity
+                        if (activeTrip.WeatherEntityId != null)
                         {
-                            activeTrip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
-                                activeTrip.WeatherEntityId.Value);
+                            try
+                            {
+                                activeTrip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
+                                    activeTrip.WeatherEntityId.Value);
+                            }
+                            catch
+                            {
+                                // Weather entity not found, continue
+                            }
                         }
-                        catch
+
+                        // Load catches for this trip
+                        activeTrip.Catches = await db.Table<CatchDataEntity>()
+                            .Where(c => c.TripId == activeTrip.Id)
+                            .ToListAsync();
+
+                        // Load children for each catch
+                        foreach (var catchEntity in activeTrip.Catches)
                         {
-                            // Weather entity not found, continue
+                            await db.GetChildrenAsync(catchEntity, recursive: true);
                         }
                     }
 
-                    // Load catches for this trip
-                    activeTrip.Catches = await db.Table<CatchDataEntity>()
-                        .Where(c => c.TripId == activeTrip.Id)
-                        .ToListAsync();
-
-                    // Load children for each catch
-                    foreach (var catchEntity in activeTrip.Catches)
-                    {
-                        await db.GetChildrenAsync(catchEntity, recursive: true);
-                    }
-                }
-
-                return activeTrip;
+                    return activeTrip;
+                });
             }
             catch (Exception ex)
             {
@@ -254,40 +286,43 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var trips = await db.Table<TripDataEntity>()
-                    .OrderByDescending(t => t.TripDate)
-                    .ToListAsync();
-
-                // Load weather entities and catches for each trip
-                foreach (var trip in trips)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    if (trip.WeatherEntityId != null)
-                    {
-                        try
-                        {
-                            trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
-                                trip.WeatherEntityId.Value);
-                        }
-                        catch
-                        {
-                            // Weather entity not found, continue
-                        }
-                    }
-
-                    // Load catches
-                    trip.Catches = await db.Table<CatchDataEntity>()
-                        .Where(c => c.TripId == trip.Id)
+                    var db = await GetDatabaseAsync();
+                    var trips = await db.Table<TripDataEntity>()
+                        .OrderByDescending(t => t.TripDate)
                         .ToListAsync();
 
-                    // Load children for each catch
-                    foreach (var catchEntity in trip.Catches)
+                    // Load weather entities and catches for each trip
+                    foreach (var trip in trips)
                     {
-                        await db.GetChildrenAsync(catchEntity, recursive: true);
-                    }
-                }
+                        if (trip.WeatherEntityId != null)
+                        {
+                            try
+                            {
+                                trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
+                                    trip.WeatherEntityId.Value);
+                            }
+                            catch
+                            {
+                                // Weather entity not found, continue
+                            }
+                        }
 
-                return trips;
+                        // Load catches
+                        trip.Catches = await db.Table<CatchDataEntity>()
+                            .Where(c => c.TripId == trip.Id)
+                            .ToListAsync();
+
+                        // Load children for each catch
+                        foreach (var catchEntity in trip.Catches)
+                        {
+                            await db.GetChildrenAsync(catchEntity, recursive: true);
+                        }
+                    }
+
+                    return trips;
+                });
             }
             catch (Exception ex)
             {
@@ -303,41 +338,44 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var trips = await db.Table<TripDataEntity>()
-                    .OrderByDescending(t => t.TripDate)
-                    .Take(count)
-                    .ToListAsync();
-
-                // Load weather and catches for each trip
-                foreach (var trip in trips)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    if (trip.WeatherEntityId != null)
-                    {
-                        try
-                        {
-                            trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
-                                trip.WeatherEntityId.Value);
-                        }
-                        catch
-                        {
-                            // Weather entity not found, continue
-                        }
-                    }
-
-                    // Load catches
-                    trip.Catches = await db.Table<CatchDataEntity>()
-                        .Where(c => c.TripId == trip.Id)
+                    var db = await GetDatabaseAsync();
+                    var trips = await db.Table<TripDataEntity>()
+                        .OrderByDescending(t => t.TripDate)
+                        .Take(count)
                         .ToListAsync();
 
-                    // Load children for each catch
-                    foreach (var catchEntity in trip.Catches)
+                    // Load weather and catches for each trip
+                    foreach (var trip in trips)
                     {
-                        await db.GetChildrenAsync(catchEntity, recursive: true);
-                    }
-                }
+                        if (trip.WeatherEntityId != null)
+                        {
+                            try
+                            {
+                                trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
+                                    trip.WeatherEntityId.Value);
+                            }
+                            catch
+                            {
+                                // Weather entity not found, continue
+                            }
+                        }
 
-                return trips;
+                        // Load catches
+                        trip.Catches = await db.Table<CatchDataEntity>()
+                            .Where(c => c.TripId == trip.Id)
+                            .ToListAsync();
+
+                        // Load children for each catch
+                        foreach (var catchEntity in trip.Catches)
+                        {
+                            await db.GetChildrenAsync(catchEntity, recursive: true);
+                        }
+                    }
+
+                    return trips;
+                });
             }
             catch (Exception ex)
             {
@@ -353,40 +391,43 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var trips = await db.Table<TripDataEntity>()
-                    .Where(t => t.TripDate >= startDate && t.TripDate <= endDate)
-                    .ToListAsync();
-
-                // Load weather and catches for each trip
-                foreach (var trip in trips)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    if (trip.WeatherEntityId != null)
-                    {
-                        try
-                        {
-                            trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
-                                trip.WeatherEntityId.Value);
-                        }
-                        catch
-                        {
-                            // Weather entity not found, continue
-                        }
-                    }
-
-                    // Load catches
-                    trip.Catches = await db.Table<CatchDataEntity>()
-                        .Where(c => c.TripId == trip.Id)
+                    var db = await GetDatabaseAsync();
+                    var trips = await db.Table<TripDataEntity>()
+                        .Where(t => t.TripDate >= startDate && t.TripDate <= endDate)
                         .ToListAsync();
 
-                    // Load children for each catch
-                    foreach (var catchEntity in trip.Catches)
+                    // Load weather and catches for each trip
+                    foreach (var trip in trips)
                     {
-                        await db.GetChildrenAsync(catchEntity, recursive: true);
-                    }
-                }
+                        if (trip.WeatherEntityId != null)
+                        {
+                            try
+                            {
+                                trip.WeatherEntity = await db.GetAsync<WeatherDataEntity>(
+                                    trip.WeatherEntityId.Value);
+                            }
+                            catch
+                            {
+                                // Weather entity not found, continue
+                            }
+                        }
 
-                return trips.OrderByDescending(t => t.TripDate).ToList();
+                        // Load catches
+                        trip.Catches = await db.Table<CatchDataEntity>()
+                            .Where(c => c.TripId == trip.Id)
+                            .ToListAsync();
+
+                        // Load children for each catch
+                        foreach (var catchEntity in trip.Catches)
+                        {
+                            await db.GetChildrenAsync(catchEntity, recursive: true);
+                        }
+                    }
+
+                    return trips.OrderByDescending(t => t.TripDate).ToList();
+                });
             }
             catch (Exception ex)
             {
@@ -402,15 +443,18 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entities = await db.Table<CatchDataEntity>()
-                    .Where(c => c.TripId == tripId)
-                    .ToListAsync();
+                return await ExecuteDbOperationAsync(async () =>
+                {
+                    var db = await GetDatabaseAsync();
+                    var entities = await db.Table<CatchDataEntity>()
+                        .Where(c => c.TripId == tripId)
+                        .ToListAsync();
 
-                Debug.WriteLine($"Retrieved {entities.Count} catches for trip {tripId}");
+                    Debug.WriteLine($"Retrieved {entities.Count} catches for trip {tripId}");
 
-                var orderedEntities = entities.OrderByDescending(e => e.Timestamp);
-                return (await Task.WhenAll(orderedEntities.Select(ConvertFromCatchEntity))).ToList();
+                    var orderedEntities = entities.OrderByDescending(e => e.Timestamp);
+                    return (await Task.WhenAll(orderedEntities.Select(ConvertFromCatchEntity))).ToList();
+                });
             }
             catch (Exception ex)
             {
@@ -426,27 +470,30 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-
-                // Delete all catches associated with this trip
-                var catches = await db.Table<CatchDataEntity>()
-                    .Where(c => c.TripId == id)
-                    .ToListAsync();
-
-                foreach (var catchEntity in catches)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    await db.DeleteAsync(catchEntity, recursive: true);
-                }
+                    var db = await GetDatabaseAsync();
 
-                // Delete the trip
-                var trip = await db.FindAsync<TripDataEntity>(id);
-                if (trip != null)
-                {
-                    await db.DeleteAsync(trip);
-                    return 1;
-                }
+                    // Delete all catches associated with this trip
+                    var catches = await db.Table<CatchDataEntity>()
+                        .Where(c => c.TripId == id)
+                        .ToListAsync();
 
-                return 0;
+                    foreach (var catchEntity in catches)
+                    {
+                        await db.DeleteAsync(catchEntity, recursive: true);
+                    }
+
+                    // Delete the trip
+                    var trip = await db.FindAsync<TripDataEntity>(id);
+                    if (trip != null)
+                    {
+                        await db.DeleteAsync(trip);
+                        return 1;
+                    }
+
+                    return 0;
+                });
             }
             catch (Exception ex)
             {
@@ -467,9 +514,12 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var location = await db.GetAsync<LocationDataEntity>(id);
-                return location;
+                return await ExecuteDbOperationAsync(async () =>
+                {
+                    var db = await GetDatabaseAsync();
+                    var location = await db.GetAsync<LocationDataEntity>(id);
+                    return location;
+                });
             }
             catch (Exception ex)
             {
@@ -485,15 +535,18 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-
-                if (location.Id == Guid.Empty)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    location.Id = Guid.NewGuid();
-                }
+                    var db = await GetDatabaseAsync();
 
-                await db.InsertOrReplaceAsync(location);
-                return 1;
+                    if (location.Id == Guid.Empty)
+                    {
+                        location.Id = Guid.NewGuid();
+                    }
+
+                    await db.InsertOrReplaceAsync(location);
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -513,11 +566,14 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                //var entity = ConvertToCatchEntity(catchData);
+                return await ExecuteDbOperationAsync(async () =>
+                {
+                    var db = await GetDatabaseAsync();
+                    //var entity = ConvertToCatchEntity(catchData);
 
-                await db.InsertOrReplaceWithChildrenAsync(catchData, recursive: true);
-                return 1;
+                    await db.InsertOrReplaceWithChildrenAsync(catchData, recursive: true);
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -553,11 +609,14 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entities = await db.GetAllWithChildrenAsync<CatchDataEntity>(c => c.Timestamp >= startDate && c.Timestamp <= endDate, recursive: true);
+                return await ExecuteDbOperationAsync(async () =>
+                {
+                    var db = await GetDatabaseAsync();
+                    var entities = await db.GetAllWithChildrenAsync<CatchDataEntity>(c => c.Timestamp >= startDate && c.Timestamp <= endDate, recursive: true);
 
-                var orderedEntities = entities.OrderByDescending(e => e.Timestamp);
-                return (await Task.WhenAll(orderedEntities.Select(ConvertFromCatchEntity))).ToList();
+                    var orderedEntities = entities.OrderByDescending(e => e.Timestamp);
+                    return (await Task.WhenAll(orderedEntities.Select(ConvertFromCatchEntity))).ToList();
+                });
             }
             catch (Exception ex)
             {
@@ -583,13 +642,16 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entity = await db.GetWithChildrenAsync<CatchDataEntity>(id, recursive: true);
+                return await ExecuteDbOperationAsync(async () =>
+                {
+                    var db = await GetDatabaseAsync();
+                    var entity = await db.GetWithChildrenAsync<CatchDataEntity>(id, recursive: true);
 
-                if (entity == null)
-                    return null;
+                    if (entity == null)
+                        return null;
 
-                return await ConvertFromCatchEntity(entity);
+                    return await ConvertFromCatchEntity(entity);
+                });
             }
             catch (Exception ex)
             {
@@ -605,14 +667,17 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entityToDelete = await db.GetWithChildrenAsync<CatchDataEntity>(id);
-                if (entityToDelete != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    await db.DeleteAsync(entityToDelete, recursive: true);
-                    return 1;
-                }
-                return 0;
+                    var db = await GetDatabaseAsync();
+                    var entityToDelete = await db.GetWithChildrenAsync<CatchDataEntity>(id);
+                    if (entityToDelete != null)
+                    {
+                        await db.DeleteAsync(entityToDelete, recursive: true);
+                        return 1;
+                    }
+                    return 0;
+                });
             }
             catch (Exception ex)
             {
@@ -628,29 +693,32 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var today = DateTime.Today;
-                var tomorrow = today.AddDays(1);
-                var weekAgo = today.AddDays(-7);
-                var monthAgo = today.AddDays(-30);
-
-                var totalCatches = await db.Table<CatchDataEntity>().CountAsync();
-                var todaysCatches = await db.Table<CatchDataEntity>().Where(c => c.Timestamp >= today && c.Timestamp < tomorrow).CountAsync();
-                var weekCatches = await db.Table<CatchDataEntity>().Where(c => c.Timestamp >= weekAgo).CountAsync();
-                var monthCatches = await db.Table<CatchDataEntity>().Where(c => c.Timestamp >= monthAgo).CountAsync();
-
-                var lastCatch = await db.Table<CatchDataEntity>().OrderByDescending(c => c.Timestamp).FirstOrDefaultAsync();
-
-                var stats = new CatchStatistics
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    TotalCatches = totalCatches,
-                    TodaysCatches = todaysCatches,
-                    WeekCatches = weekCatches,
-                    MonthCatches = monthCatches,
-                    LastCatchDate = lastCatch?.Timestamp ?? DateTime.MinValue
-                };
+                    var db = await GetDatabaseAsync();
+                    var today = DateTime.Today;
+                    var tomorrow = today.AddDays(1);
+                    var weekAgo = today.AddDays(-7);
+                    var monthAgo = today.AddDays(-30);
 
-                return stats;
+                    var totalCatches = await db.Table<CatchDataEntity>().CountAsync();
+                    var todaysCatches = await db.Table<CatchDataEntity>().Where(c => c.Timestamp >= today && c.Timestamp < tomorrow).CountAsync();
+                    var weekCatches = await db.Table<CatchDataEntity>().Where(c => c.Timestamp >= weekAgo).CountAsync();
+                    var monthCatches = await db.Table<CatchDataEntity>().Where(c => c.Timestamp >= monthAgo).CountAsync();
+
+                    var lastCatch = await db.Table<CatchDataEntity>().OrderByDescending(c => c.Timestamp).FirstOrDefaultAsync();
+
+                    var stats = new CatchStatistics
+                    {
+                        TotalCatches = totalCatches,
+                        TodaysCatches = todaysCatches,
+                        WeekCatches = weekCatches,
+                        MonthCatches = monthCatches,
+                        LastCatchDate = lastCatch?.Timestamp ?? DateTime.MinValue
+                    };
+
+                    return stats;
+                });
             }
             catch (Exception ex)
             {
@@ -670,26 +738,29 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var setups = await db.Table<RodSetupEntity>()
-                    //.OrderByDescending(r => r.IsFavorite)
-                    //.ThenByDescending(r => r.LastUsed)
-                    .ToListAsync();
-
-                // Load lure information for each setup
-                foreach (var setup in setups)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    if (setup.LureId != Guid.Empty)
-                    {
-                        setup.Lure = await GetLureByIdAsync(setup.LureId);
-                    }
-                    if (setup.DiverId.HasValue)
-                    {
-                        setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
-                    }
-                }
+                    var db = await GetDatabaseAsync();
+                    var setups = await db.Table<RodSetupEntity>()
+                        //.OrderByDescending(r => r.IsFavorite)
+                        //.ThenByDescending(r => r.LastUsed)
+                        .ToListAsync();
 
-                return setups;
+                    // Load lure information for each setup
+                    foreach (var setup in setups)
+                    {
+                        if (setup.LureId != Guid.Empty)
+                        {
+                            setup.Lure = await GetLureByIdAsync(setup.LureId);
+                        }
+                        if (setup.DiverId.HasValue)
+                        {
+                            setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+                        }
+                    }
+
+                    return setups;
+                });
             }
             catch (Exception ex)
             {
@@ -705,25 +776,28 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var setup = await db.Table<RodSetupEntity>()
-                    .Where(r => r.Id == setupId)
-                    .FirstOrDefaultAsync();
-
-                if (setup != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    // Load lure information
-                    if (setup.LureId != Guid.Empty)
-                    {
-                        setup.Lure = await GetLureByIdAsync(setup.LureId);
-                    }
-                    if (setup.DiverId.HasValue)
-                    {
-                        setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
-                    }
-                }
+                    var db = await GetDatabaseAsync();
+                    var setup = await db.Table<RodSetupEntity>()
+                        .Where(r => r.Id == setupId)
+                        .FirstOrDefaultAsync();
 
-                return setup;
+                    if (setup != null)
+                    {
+                        // Load lure information
+                        if (setup.LureId != Guid.Empty)
+                        {
+                            setup.Lure = await GetLureByIdAsync(setup.LureId);
+                        }
+                        if (setup.DiverId.HasValue)
+                        {
+                            setup.Diver = await GetDiverByIdAsync(setup.DiverId.Value);
+                        }
+                    }
+
+                    return setup;
+                });
             }
             catch (Exception ex)
             {
@@ -739,36 +813,39 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-
-                if (setup.Id == 0 || setup.Id == default)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    // This is a new record - INSERT
-                    //setup.CreatedAt = DateTime.Now;
-                    //setup.LastUsed = DateTime.Now;
-                    //setup.TimesUsed = 0;
-                    //setup.CatchCount = 0;
+                    var db = await GetDatabaseAsync();
 
-                    await db.InsertAsync(setup);
-                    // setup.Id now contains the auto-generated ID
-                }
-                else
-                {
-                    // This is an existing record - UPDATE
-                    var existing = await db.GetAsync<RodSetupEntity>(setup.Id);
-                    if (existing != null)
+                    if (setup.Id == 0 || setup.Id == default)
                     {
-                        await db.UpdateAsync(setup);
+                        // This is a new record - INSERT
+                        //setup.CreatedAt = DateTime.Now;
+                        //setup.LastUsed = DateTime.Now;
+                        //setup.TimesUsed = 0;
+                        //setup.CatchCount = 0;
+
+                        await db.InsertAsync(setup);
+                        // setup.Id now contains the auto-generated ID
                     }
                     else
                     {
-                        // Weird case: Id is set but doesn't exist
-                        setup.Id = 0; // Reset to trigger INSERT
-                        await db.InsertAsync(setup);
+                        // This is an existing record - UPDATE
+                        var existing = await db.GetAsync<RodSetupEntity>(setup.Id);
+                        if (existing != null)
+                        {
+                            await db.UpdateAsync(setup);
+                        }
+                        else
+                        {
+                            // Weird case: Id is set but doesn't exist
+                            setup.Id = 0; // Reset to trigger INSERT
+                            await db.InsertAsync(setup);
+                        }
                     }
-                }
 
-                return setup.Id;
+                    return setup.Id;
+                });
             }
             catch (Exception ex)
             {
@@ -784,19 +861,22 @@ namespace TrollTrack.Services
         {
             try
             {
-                if (setup.Id <= 0)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    throw new ArgumentException("Invalid setup ID");
-                }
+                    if (setup.Id <= 0)
+                    {
+                        throw new ArgumentException("Invalid setup ID");
+                    }
 
-                if (string.IsNullOrWhiteSpace(setup.Name))
-                {
-                    throw new ArgumentException("Rod setup name is required");
-                }
+                    if (string.IsNullOrWhiteSpace(setup.Name))
+                    {
+                        throw new ArgumentException("Rod setup name is required");
+                    }
 
-                var db = await GetDatabaseAsync();
-                await db.UpdateAsync(setup);
-                return 1;
+                    var db = await GetDatabaseAsync();
+                    await db.UpdateAsync(setup);
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -812,14 +892,17 @@ namespace TrollTrack.Services
         {
             try
             {
-                if (setupId <= 0)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    throw new ArgumentException("Invalid setup ID");
-                }
+                    if (setupId <= 0)
+                    {
+                        throw new ArgumentException("Invalid setup ID");
+                    }
 
-                var db = await GetDatabaseAsync();
-                await db.DeleteAsync<RodSetupEntity>(setupId);
-                return 1;
+                    var db = await GetDatabaseAsync();
+                    await db.DeleteAsync<RodSetupEntity>(setupId);
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -932,30 +1015,33 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var savedSetups = new List<RodSetupEntity>();
-
-                await db.RunInTransactionAsync(tran =>
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    foreach (var setup in setups)
-                    {
-                        if (setup.Id > 0)
-                        {
-                            tran.Update(setup);
-                        }
-                        else
-                        {
-                            //setup.CreatedAt = DateTime.Now;
-                            //setup.LastUsed = DateTime.Now;
-                            //setup.TimesUsed = 0;
-                            //setup.CatchCount = 0;
-                            tran.Insert(setup);
-                        }
-                        savedSetups.Add(setup);
-                    }
-                });
+                    var db = await GetDatabaseAsync();
+                    var savedSetups = new List<RodSetupEntity>();
 
-                return savedSetups;
+                    await db.RunInTransactionAsync(tran =>
+                    {
+                        foreach (var setup in setups)
+                        {
+                            if (setup.Id > 0)
+                            {
+                                tran.Update(setup);
+                            }
+                            else
+                            {
+                                //setup.CreatedAt = DateTime.Now;
+                                //setup.LastUsed = DateTime.Now;
+                                //setup.TimesUsed = 0;
+                                //setup.CatchCount = 0;
+                                tran.Insert(setup);
+                            }
+                            savedSetups.Add(setup);
+                        }
+                    });
+
+                    return savedSetups;
+                });
             }
             catch (Exception ex)
             {
@@ -971,19 +1057,22 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var count = 0;
-
-                await db.RunInTransactionAsync(tran =>
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    foreach (var id in setupIds)
-                    {
-                        tran.Delete<RodSetupEntity>(id);
-                        count++;
-                    }
-                });
+                    var db = await GetDatabaseAsync();
+                    var count = 0;
 
-                return count;
+                    await db.RunInTransactionAsync(tran =>
+                    {
+                        foreach (var id in setupIds)
+                        {
+                            tran.Delete<RodSetupEntity>(id);
+                            count++;
+                        }
+                    });
+
+                    return count;
+                });
             }
             catch (Exception ex)
             {
@@ -1003,29 +1092,32 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-
-                // Check if already exists
-                var existing = await db.Table<CustomClarityEntity>()
-                    .Where(c => c.Description == clarity)
-                    .FirstOrDefaultAsync();
-
-                if (existing != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    Debug.WriteLine($"Custom clarity '{clarity}' already exists");
-                    return 0;
-                }
+                    var db = await GetDatabaseAsync();
 
-                var entity = new CustomClarityEntity
-                {
-                    Id = Guid.NewGuid(),
-                    Description = clarity,
-                    CreatedAt = DateTime.Now
-                };
+                    // Check if already exists
+                    var existing = await db.Table<CustomClarityEntity>()
+                        .Where(c => c.Description == clarity)
+                        .FirstOrDefaultAsync();
 
-                await db.InsertAsync(entity);
-                Debug.WriteLine($"Saved custom clarity: {clarity}");
-                return 1;
+                    if (existing != null)
+                    {
+                        Debug.WriteLine($"Custom clarity '{clarity}' already exists");
+                        return 0;
+                    }
+
+                    var entity = new CustomClarityEntity
+                    {
+                        Id = Guid.NewGuid(),
+                        Description = clarity,
+                        CreatedAt = DateTime.Now
+                    };
+
+                    await db.InsertAsync(entity);
+                    Debug.WriteLine($"Saved custom clarity: {clarity}");
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -1038,12 +1130,15 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entities = await db.Table<CustomClarityEntity>()
-                    .OrderBy(c => c.Description)
-                    .ToListAsync();
+                return await ExecuteDbOperationAsync(async () =>
+                {
+                    var db = await GetDatabaseAsync();
+                    var entities = await db.Table<CustomClarityEntity>()
+                        .OrderBy(c => c.Description)
+                        .ToListAsync();
 
-                return entities.Select(e => e.Description).ToList();
+                    return entities.Select(e => e.Description).ToList();
+                });
             }
             catch (Exception ex)
             {
@@ -1056,17 +1151,20 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entity = await db.Table<CustomClarityEntity>()
-                    .Where(c => c.Description == clarity)
-                    .FirstOrDefaultAsync();
-
-                if (entity != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    return await db.DeleteAsync(entity);
-                }
+                    var db = await GetDatabaseAsync();
+                    var entity = await db.Table<CustomClarityEntity>()
+                        .Where(c => c.Description == clarity)
+                        .FirstOrDefaultAsync();
 
-                return 0;
+                    if (entity != null)
+                    {
+                        return await db.DeleteAsync(entity);
+                    }
+
+                    return 0;
+                });
             }
             catch (Exception ex)
             {
@@ -1083,22 +1181,25 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entity = await db.GetWithChildrenAsync<LureDataEntity>(id, recursive: true);
-
-                if (entity == null)
-                    return null;
-
-                entity.Images ??= new List<LureImageEntity>();
-
-                // Heal PrimaryImageId if it's invalid
-                if (entity.PrimaryImageId != Guid.Empty &&
-                    !entity.Images.Any(i => i.Id == entity.PrimaryImageId))
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    entity.PrimaryImageId = entity.Images.FirstOrDefault()?.Id ?? Guid.Empty;
-                }
+                    var db = await GetDatabaseAsync();
+                    var entity = await db.GetWithChildrenAsync<LureDataEntity>(id, recursive: true);
 
-                return entity;
+                    if (entity == null)
+                        return null;
+
+                    entity.Images ??= new List<LureImageEntity>();
+
+                    // Heal PrimaryImageId if it's invalid
+                    if (entity.PrimaryImageId != Guid.Empty &&
+                        !entity.Images.Any(i => i.Id == entity.PrimaryImageId))
+                    {
+                        entity.PrimaryImageId = entity.Images.FirstOrDefault()?.Id ?? Guid.Empty;
+                    }
+
+                    return entity;
+                });
             }
             catch (Exception ex)
             {
@@ -1111,40 +1212,43 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-
-                // Ensure lure has an Id BEFORE setting child FKs
-                if (lureData.Id == Guid.Empty)
-                    lureData.Id = Guid.NewGuid();
-
-                // Normalize incoming images
-                lureData.Images ??= new List<LureImageEntity>();
-
-                foreach (var img in lureData.Images)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    // CRITICAL: set FK so rows are linked
-                    img.LureDataEntityId = lureData.Id;
+                    var db = await GetDatabaseAsync();
 
-                    // CRITICAL: keep stable IDs so we don't insert duplicates every save
-                    if (img.Id == Guid.Empty)
-                        img.Id = Guid.NewGuid();
-                }
+                    // Ensure lure has an Id BEFORE setting child FKs
+                    if (lureData.Id == Guid.Empty)
+                        lureData.Id = Guid.NewGuid();
 
-                // If editing an existing lure, delete images that were removed
-                var existingImages = await db.Table<LureImageEntity>()
-                                             .Where(i => i.LureDataEntityId == lureData.Id)
-                                             .ToListAsync();
+                    // Normalize incoming images
+                    lureData.Images ??= new List<LureImageEntity>();
 
-                var incomingIds = lureData.Images.Select(i => i.Id).ToHashSet();
-                var toDelete = existingImages.Where(e => !incomingIds.Contains(e.Id)).ToList();
+                    foreach (var img in lureData.Images)
+                    {
+                        // CRITICAL: set FK so rows are linked
+                        img.LureDataEntityId = lureData.Id;
 
-                if (toDelete.Count > 0)
-                    await db.DeleteAllAsync(toDelete);
+                        // CRITICAL: keep stable IDs so we don't insert duplicates every save
+                        if (img.Id == Guid.Empty)
+                            img.Id = Guid.NewGuid();
+                    }
 
-                // Save lure + children
-                await db.InsertOrReplaceWithChildrenAsync(lureData, recursive: true);
+                    // If editing an existing lure, delete images that were removed
+                    var existingImages = await db.Table<LureImageEntity>()
+                                                 .Where(i => i.LureDataEntityId == lureData.Id)
+                                                 .ToListAsync();
 
-                return 1;
+                    var incomingIds = lureData.Images.Select(i => i.Id).ToHashSet();
+                    var toDelete = existingImages.Where(e => !incomingIds.Contains(e.Id)).ToList();
+
+                    if (toDelete.Count > 0)
+                        await db.DeleteAllAsync(toDelete);
+
+                    // Save lure + children
+                    await db.InsertOrReplaceWithChildrenAsync(lureData, recursive: true);
+
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -1158,22 +1262,25 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
-
-                foreach (var lure in entities)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    lure.Images ??= new List<LureImageEntity>();
+                    var db = await GetDatabaseAsync();
+                    var entities = await db.GetAllWithChildrenAsync<LureDataEntity>(recursive: true);
 
-                    // Heal PrimaryImageId if it's invalid
-                    if (lure.PrimaryImageId != Guid.Empty &&
-                        !lure.Images.Any(i => i.Id == lure.PrimaryImageId))
+                    foreach (var lure in entities)
                     {
-                        lure.PrimaryImageId = lure.Images.FirstOrDefault()?.Id ?? Guid.Empty;
-                    }
-                }
+                        lure.Images ??= new List<LureImageEntity>();
 
-                return entities;
+                        // Heal PrimaryImageId if it's invalid
+                        if (lure.PrimaryImageId != Guid.Empty &&
+                            !lure.Images.Any(i => i.Id == lure.PrimaryImageId))
+                        {
+                            lure.PrimaryImageId = lure.Images.FirstOrDefault()?.Id ?? Guid.Empty;
+                        }
+                    }
+
+                    return entities;
+                });
             }
             catch (Exception ex)
             {
@@ -1190,31 +1297,34 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entities = await db.Table<LureDataEntity>().ToListAsync();
-
-                foreach (var lure in entities)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    lure.Images ??= new List<LureImageEntity>();
+                    var db = await GetDatabaseAsync();
+                    var entities = await db.Table<LureDataEntity>().ToListAsync();
 
-                    // Heal PrimaryImageId if it's invalid
-                    if (lure.PrimaryImageId != Guid.Empty &&
-                        !lure.Images.Any(i => i.Id == lure.PrimaryImageId))
+                    foreach (var lure in entities)
                     {
-                        lure.PrimaryImageId = lure.Images.FirstOrDefault()?.Id ?? Guid.Empty;
+                        lure.Images ??= new List<LureImageEntity>();
+
+                        // Heal PrimaryImageId if it's invalid
+                        if (lure.PrimaryImageId != Guid.Empty &&
+                            !lure.Images.Any(i => i.Id == lure.PrimaryImageId))
+                        {
+                            lure.PrimaryImageId = lure.Images.FirstOrDefault()?.Id ?? Guid.Empty;
+                        }
+
+                        // Keep ONLY the primary image in Images
+                        var primary = lure.PrimaryImageId != Guid.Empty
+                            ? lure.Images.FirstOrDefault(i => i.Id == lure.PrimaryImageId)
+                            : lure.Images.FirstOrDefault();
+
+                        lure.Images = primary != null
+                            ? new List<LureImageEntity> { primary }
+                            : new List<LureImageEntity>();
                     }
 
-                    // Keep ONLY the primary image in Images
-                    var primary = lure.PrimaryImageId != Guid.Empty
-                        ? lure.Images.FirstOrDefault(i => i.Id == lure.PrimaryImageId)
-                        : lure.Images.FirstOrDefault();
-
-                    lure.Images = primary != null
-                        ? new List<LureImageEntity> { primary }
-                        : new List<LureImageEntity>();
-                }
-
-                return entities;
+                    return entities;
+                });
             }
             catch (Exception ex)
             {
@@ -1227,21 +1337,24 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-
-                using var stream = await FileSystem.OpenAppPackageFileAsync("lures.json");
-                using var reader = new StreamReader(stream);
-                var json = await reader.ReadToEndAsync();
-                var lureList = JsonSerializer.Deserialize<List<LureDataEntity>>(json);
-
-                if (lureList != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    foreach (var lure in lureList)
+                    var db = await GetDatabaseAsync();
+
+                    using var stream = await FileSystem.OpenAppPackageFileAsync("lures.json");
+                    using var reader = new StreamReader(stream);
+                    var json = await reader.ReadToEndAsync();
+                    var lureList = JsonSerializer.Deserialize<List<LureDataEntity>>(json);
+
+                    if (lureList != null)
                     {
-                        await SaveLureAsync(lure);
+                        foreach (var lure in lureList)
+                        {
+                            await SaveLureAsync(lure);
+                        }
                     }
-                }
-                return 1;
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -1257,13 +1370,16 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                if (diver.Id == Guid.Empty)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    diver.Id = Guid.NewGuid();
-                }
-                await db.InsertOrReplaceAsync(diver);
-                return 1;
+                    var db = await GetDatabaseAsync();
+                    if (diver.Id == Guid.Empty)
+                    {
+                        diver.Id = Guid.NewGuid();
+                    }
+                    await db.InsertOrReplaceAsync(diver);
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -1276,13 +1392,15 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entities = await db.GetAllWithChildrenAsync<DiverDataEntity>(recursive: true);
-                var divers = entities.Select(ConvertFromDiverEntity).ToList();
+                return await ExecuteDbOperationAsync(async () =>
+                {
+                    var db = await GetDatabaseAsync();
+                    var entities = await db.GetAllWithChildrenAsync<DiverDataEntity>(recursive: true);
+                    var divers = entities.Select(ConvertFromDiverEntity).ToList();
 
-                System.Diagnostics.Debug.WriteLine($"Loaded {divers.Count} lures");
-                return divers;
-
+                    System.Diagnostics.Debug.WriteLine($"Loaded {divers.Count} lures");
+                    return divers;
+                });
             }
             catch (Exception ex)
             {
@@ -1295,8 +1413,11 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                return await db.GetAsync<DiverDataEntity>(id);
+                return await ExecuteDbOperationAsync(async () =>
+                {
+                    var db = await GetDatabaseAsync();
+                    return await db.GetAsync<DiverDataEntity>(id);
+                });
             }
             catch (Exception ex)
             {
@@ -1309,14 +1430,17 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-                var entityToDelete = await db.GetAsync<DiverDataEntity>(id);
-                if (entityToDelete != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    await db.DeleteAsync(entityToDelete);
-                    return 1;
-                }
-                return 0;
+                    var db = await GetDatabaseAsync();
+                    var entityToDelete = await db.GetAsync<DiverDataEntity>(id);
+                    if (entityToDelete != null)
+                    {
+                        await db.DeleteAsync(entityToDelete);
+                        return 1;
+                    }
+                    return 0;
+                });
             }
             catch (Exception ex)
             {
@@ -1329,21 +1453,24 @@ namespace TrollTrack.Services
         {
             try
             {
-                var db = await GetDatabaseAsync();
-
-                using var stream = await FileSystem.OpenAppPackageFileAsync("divers.json");
-                using var reader = new StreamReader(stream);
-                var json = await reader.ReadToEndAsync();
-                var diverList = JsonSerializer.Deserialize<List<DiverDataEntity>>(json);
-
-                if (diverList != null)
+                return await ExecuteDbOperationAsync(async () =>
                 {
-                    foreach (var diver in diverList)
+                    var db = await GetDatabaseAsync();
+
+                    using var stream = await FileSystem.OpenAppPackageFileAsync("divers.json");
+                    using var reader = new StreamReader(stream);
+                    var json = await reader.ReadToEndAsync();
+                    var diverList = JsonSerializer.Deserialize<List<DiverDataEntity>>(json);
+
+                    if (diverList != null)
                     {
-                        await SaveDiverAsync(diver);
+                        foreach (var diver in diverList)
+                        {
+                            await SaveDiverAsync(diver);
+                        }
                     }
-                }
-                return 1;
+                    return 1;
+                });
             }
             catch (Exception ex)
             {
@@ -1544,7 +1671,6 @@ namespace TrollTrack.Services
 
 
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
-
             }
             catch (Exception ex)
             {

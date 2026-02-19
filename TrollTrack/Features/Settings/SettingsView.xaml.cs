@@ -17,14 +17,34 @@ public partial class SettingsView : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        _ = InitializeWhenAppearingAsync();
     }
 
+    private async Task InitializeWhenAppearingAsync()
+    {
+        try
+        {
+            await _viewModel.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error initializing Settings ViewModel: {ex.Message}");
+            try
+            {
+                await DisplayAlert("Error", "Failed to load settings data. Please try again.", "OK");
+            }
+            catch (Exception alertEx)
+            {
+                // Page may have been navigated away before alert could show
+                System.Diagnostics.Debug.WriteLine($"Error showing alert: {alertEx.Message}");
+            }
+        }
+    }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
 
-        // The ViewModel will handle its own cleanup through BaseViewModel's Dispose
         // No additional cleanup needed here
     }
 
