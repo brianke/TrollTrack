@@ -54,7 +54,7 @@
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\trolltrack_app_icon.png" ForegroundFile="Resources\AppIcon\trolltrack_app_icon.png" Color="#00000000" />
+		<MauiIcon Include="Resources\AppIcon\trolltrack_app_icon.png" BaseSize="1024,1024" Color="#FFFFFFFF" />	
 		<!-- Styles -->
 		<MauiXaml Update="Resources\Styles\*.xaml">
 			<SubType>Designer</SubType>

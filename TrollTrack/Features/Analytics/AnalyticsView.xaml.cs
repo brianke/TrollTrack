@@ -14,11 +14,14 @@ public partial class AnalyticsView : ContentPage
     }
 
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
+        _ = InitializeWhenAppearingAsync();
+    }
 
-        // Initialize the ViewModel when the page appears
+    private async Task InitializeWhenAppearingAsync()
+    {
         try
         {
             await _viewModel.InitializeAsync();
@@ -26,8 +29,15 @@ public partial class AnalyticsView : ContentPage
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Error initializing Analytics ViewModel: {ex.Message}");
-            // Optionally show error message to user
-            await DisplayAlert("Error", "Failed to load analytics data. Please try again.", "OK");
+            try
+            {
+                await DisplayAlert("Error", "Failed to load analytics data. Please try again.", "OK");
+            }
+            catch (Exception alertEx)
+            {
+                // Page may have been navigated away before alert could show
+                System.Diagnostics.Debug.WriteLine($"Error showing alert: {alertEx.Message}");
+            }
         }
     }
 
@@ -35,7 +45,6 @@ public partial class AnalyticsView : ContentPage
     {
         base.OnDisappearing();
 
-        // The ViewModel will handle its own cleanup through BaseViewModel's Dispose
         // No additional cleanup needed here
     }
 }

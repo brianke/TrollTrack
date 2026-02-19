@@ -291,21 +291,21 @@ namespace TrollTrack.Features.Shared
 
         #region Event Handlers
 
-        private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            switch (e.PropertyName)
-            {
-                case nameof(IsBusy):
-                    BusyStateChanged?.Invoke(this, IsBusy);
-                    break;
-                case nameof(ErrorMessage):
-                    if (!string.IsNullOrEmpty(ErrorMessage))
-                    {
-                        ErrorOccurred?.Invoke(this, ErrorMessage);
-                    }
-                    break;
-            }
-        }
+        //private void OnPropertyChanged(object sender, PropertyChangedEventArgs e)
+        //{
+        //    switch (e.PropertyName)
+        //    {
+        //        case nameof(IsBusy):
+        //            BusyStateChanged?.Invoke(this, IsBusy);
+        //            break;
+        //        case nameof(ErrorMessage):
+        //            if (!string.IsNullOrEmpty(ErrorMessage))
+        //            {
+        //                ErrorOccurred?.Invoke(this, ErrorMessage);
+        //            }
+        //            break;
+        //    }
+        //}
 
         #region Property Change Handlers
 
@@ -499,7 +499,7 @@ namespace TrollTrack.Features.Shared
         /// <param name="busyMessage">Message to show while busy</param>
         /// <param name="showErrorAlert">Whether to show error alerts to user</param>
         /// <returns>Operation result or default value</returns>
-        protected async Task<T?> ExecuteSafelyAsync<T>(Func<Task<T>> operation, T defaultValue = default, string busyMessage = "", bool showErrorAlert = true)
+        protected async Task<T?> ExecuteSafelyAsync<T>(Func<Task<T>> operation, T defaultValue = default, string busyMessage = "defaultBusyMessage", bool showErrorAlert = true)
         {
             ArgumentNullException.ThrowIfNull(operation);
             ArgumentException.ThrowIfNullOrEmpty(busyMessage);
