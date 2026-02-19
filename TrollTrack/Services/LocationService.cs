@@ -73,9 +73,9 @@ namespace TrollTrack.Services
                     LocationUpdated?.Invoke(this, locationEntity);
 
                     //TODO: remove before release, just for testing
-                    var (town, coords) = LocationData.GetRandomLocation();
-                    locationEntity.Latitude = coords.Latitude;
-                    locationEntity.Longitude = coords.Longitude;
+                    //var (town, coords) = LocationData.GetRandomLocation();
+                    //locationEntity.Latitude = coords.Latitude;
+                    //locationEntity.Longitude = coords.Longitude;
                     //TODO
 
                     return locationEntity;

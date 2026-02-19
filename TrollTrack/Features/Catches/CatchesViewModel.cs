@@ -25,6 +25,7 @@ public partial class CatchesViewModel : BaseViewModel
     private bool _hasActiveTrip;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(StartNewTripCommand))]
     private string _newTripName = string.Empty;
 
     [ObservableProperty]
@@ -56,6 +57,8 @@ public partial class CatchesViewModel : BaseViewModel
 
     [ObservableProperty]
     private string _clarity = "Clear";
+
+    private bool CanStartNewTrip() => !string.IsNullOrWhiteSpace(NewTripName);
 
     #endregion Trip Properties
 
@@ -167,7 +170,7 @@ public partial class CatchesViewModel : BaseViewModel
 
     #region Trip Management Commands
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanStartNewTrip))]
     private async Task StartNewTripAsync()
     {
         try

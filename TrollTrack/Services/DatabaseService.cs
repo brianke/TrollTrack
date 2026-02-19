@@ -39,18 +39,7 @@ namespace TrollTrack.Services
                 await _database.ExecuteAsync("PRAGMA foreign_keys = ON;");
 
                 // Create tables for your existing models
-                await _database.CreateTableAsync<CatchDataEntity>();
-                await _database.CreateTableAsync<LocationDataEntity>();
-                await _database.CreateTableAsync<FishInfoEntity>();
-                await _database.CreateTableAsync<DiverDataEntity>();
-                await _database.CreateTableAsync<LureDataEntity>();
-                await _database.CreateTableAsync<LureImageEntity>();
-                await _database.CreateTableAsync<TripDataEntity>();
-                await _database.CreateTableAsync<RodSetupEntity>();
-                await _database.CreateTableAsync<WeatherDataEntity>();
-                await _database.CreateTableAsync<CustomClarityEntity>();
-                //await _database.CreateTableAsync<LureFrontColorEntity>();
-                //await _database.CreateTableAsync<LureBackColorEntity>();
+                await CreateAllTablesAsync(_database);
 
                 System.Diagnostics.Debug.WriteLine($"Database initialized at: {_databasePath}");
             }
@@ -1523,6 +1512,20 @@ namespace TrollTrack.Services
             }
         }
 
+        private async Task CreateAllTablesAsync(SQLiteAsyncConnection db)
+        {
+            await db.CreateTableAsync<CatchDataEntity>();
+            await db.CreateTableAsync<LocationDataEntity>();
+            await db.CreateTableAsync<FishInfoEntity>();
+            await db.CreateTableAsync<DiverDataEntity>();
+            await db.CreateTableAsync<LureDataEntity>();
+            await db.CreateTableAsync<LureImageEntity>();
+            await db.CreateTableAsync<TripDataEntity>();
+            await db.CreateTableAsync<RodSetupEntity>();
+            await db.CreateTableAsync<WeatherDataEntity>();
+            await db.CreateTableAsync<CustomClarityEntity>();
+        }
+
         public async Task ClearAllTablesAsync()
         {
             try
@@ -1542,6 +1545,8 @@ namespace TrollTrack.Services
                 //await db.DropTableAsync<LureFrontColorEntity>();
                 //await db.DropTableAsync<LureBackColorEntity>();
 
+                // Reload all the tables
+                await CreateAllTablesAsync(db);
 
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
 
