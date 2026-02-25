@@ -5,6 +5,11 @@ namespace TrollTrack
 {
     public static class MauiProgram
     {
+        /// <summary>
+        /// Seed task awaited by SeedLoadingPage before the main app shell is displayed.
+        /// </summary>
+        internal static Task? PendingSeedTask { get; set; }
+
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
@@ -46,6 +51,8 @@ namespace TrollTrack
             builder.Services.AddTransient<LuresView>();
             builder.Services.AddTransient<AddLurePopup>();
             builder.Services.AddTransient<AnalyticsView>();
+            builder.Services.AddTransient<LureSelectionPopup>();
+            builder.Services.AddTransient<LureFilterPopup>();
 
 #if DEBUG
             builder.Logging.AddDebug();
@@ -55,7 +62,7 @@ namespace TrollTrack
 
             // Seed data on first run
             var dbService = app.Services.GetRequiredService<IDatabaseService>();
-            dbService.SeedInitialDataAsync();
+            PendingSeedTask = dbService.SeedInitialDataAsync();
 
             return app;
         }

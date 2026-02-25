@@ -47,6 +47,85 @@ namespace TrollTrack.Features.RodSetup
         /// </summary>
         public bool HasSelectedLure => SelectedLure != null;
 
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredLures))]
+        private string _lureSearchText = string.Empty;
+
+        // Add after LureSearchText property:
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredLures))]
+        [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
+        private ObservableCollection<FilterOption> _filterManufacturers = new();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredLures))]
+        [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
+        private ObservableCollection<FilterOption> _filterLureTypes = new();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredLures))]
+        [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
+        private ObservableCollection<FilterOption> _filterBuoyancies = new();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredLures))]
+        [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
+        private ObservableCollection<FilterOption> _filterFrontColors = new();
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(FilteredLures))]
+        [NotifyPropertyChangedFor(nameof(HasActiveFilters))]
+        private ObservableCollection<FilterOption> _filterBackColors = new();
+
+        public bool HasActiveFilters =>
+            FilterManufacturers.Any(f => f.IsSelected) ||
+            FilterLureTypes.Any(f => f.IsSelected) ||
+            FilterBuoyancies.Any(f => f.IsSelected) ||
+            FilterFrontColors.Any(f => f.IsSelected) ||
+            FilterBackColors.Any(f => f.IsSelected) ||
+            !string.IsNullOrWhiteSpace(LureSearchText);
+
+        /// <summary>
+        /// Lures filtered by search text (Manufacturer or Description).
+        /// </summary>
+        public IEnumerable<LureDataEntity> FilteredLures
+        {
+            get
+            {
+                var result = LuresVM.Lures.AsEnumerable();
+
+                if (!string.IsNullOrWhiteSpace(LureSearchText))
+                {
+                    result = result.Where(l =>
+                        (l.Manufacturer?.Contains(LureSearchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                        (l.Description?.Contains(LureSearchText, StringComparison.OrdinalIgnoreCase) ?? false));
+                }
+
+                var selectedManufacturers = FilterManufacturers.Where(f => f.IsSelected).Select(f => f.Value).ToHashSet();
+                if (selectedManufacturers.Count > 0)
+                    result = result.Where(l => selectedManufacturers.Contains(l.Manufacturer ?? ""));
+
+                var selectedTypes = FilterLureTypes.Where(f => f.IsSelected).Select(f => f.Value).ToHashSet();
+                if (selectedTypes.Count > 0)
+                    result = result.Where(l => selectedTypes.Contains(l.LureType.ToString()));
+
+                var selectedBuoyancies = FilterBuoyancies.Where(f => f.IsSelected).Select(f => f.Value).ToHashSet();
+                if (selectedBuoyancies.Count > 0)
+                    result = result.Where(l => selectedBuoyancies.Contains(l.Buoyancy.ToString()));
+
+                var selectedFrontColors = FilterFrontColors.Where(f => f.IsSelected).Select(f => f.Value).ToHashSet();
+                if (selectedFrontColors.Count > 0)
+                    result = result.Where(l => (l.FrontColors ?? []).Any(c => selectedFrontColors.Contains(c)));
+
+                var selectedBackColors = FilterBackColors.Where(f => f.IsSelected).Select(f => f.Value).ToHashSet();
+                if (selectedBackColors.Count > 0)
+                    result = result.Where(l => (l.BackColors ?? []).Any(c => selectedBackColors.Contains(c)));
+
+                return result;
+            }
+        }        
+        
         #endregion
 
         #region Events
@@ -216,6 +295,101 @@ namespace TrollTrack.Features.RodSetup
 
         }
 
-        #endregion
+        #region Lure Search & Filtering
+
+        [RelayCommand]
+        private async Task OpenLureSelectionAsync()
+        {
+            try
+            {
+                var popup = new LureSelectionPopup(this);
+                var page = Application.Current?.Windows[0]?.Page;
+                if (page?.Navigation != null)
+                    await page.Navigation.PushModalAsync(popup);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error opening lure selection: {ex.Message}");
+                await ShowAlertAsync("Error", "Failed to open lure selection.");
+            }
+        }
+
+        [RelayCommand]
+        private async Task CancelLureSelectionAsync()
+        {
+            await Shell.Current.Navigation.PopModalAsync();
+        }
+
+        [RelayCommand]
+        private async Task OpenFilterPopupAsync()
+        {
+            LoadFilterOptions();
+            var popup = new LureFilterPopup(this);
+            var page = Application.Current?.Windows[0]?.Page;
+            if (page?.Navigation != null)
+                await page.Navigation.PushModalAsync(popup);
+        }
+
+        [RelayCommand]
+        private async Task CancelFilterPopupAsync()
+        {
+            await Shell.Current.Navigation.PopModalAsync();
+        }
+
+        [RelayCommand]
+        private async Task ApplyFiltersAsync()
+        {
+            OnPropertyChanged(nameof(FilteredLures));
+            await Shell.Current.Navigation.PopModalAsync();
+        }
+
+        [RelayCommand]
+        private void ClearFilters()
+        {
+            foreach (var f in FilterManufacturers) f.IsSelected = false;
+            foreach (var f in FilterLureTypes) f.IsSelected = false;
+            foreach (var f in FilterBuoyancies) f.IsSelected = false;
+            foreach (var f in FilterFrontColors) f.IsSelected = false;
+            foreach (var f in FilterBackColors) f.IsSelected = false;
+            LureSearchText = string.Empty;
+            OnPropertyChanged(nameof(FilteredLures));
+            OnPropertyChanged(nameof(HasActiveFilters));
+        }
+
+        private void LoadFilterOptions()
+        {
+            var lures = LuresVM.Lures;
+            if (FilterManufacturers.Count == 0)
+            {
+                FilterManufacturers = new ObservableCollection<FilterOption>(
+                    lures.Select(l => l.Manufacturer).Where(m => !string.IsNullOrEmpty(m)).Distinct().OrderBy(m => m)
+                        .Select(m => new FilterOption(m, m)));
+            }
+            if (FilterLureTypes.Count == 0)
+            {
+                FilterLureTypes = new ObservableCollection<FilterOption>(
+                    Enum.GetValues<LureTypes>().Select(t => new FilterOption(t.ToString(), t.ToDisplayString())));
+            }
+            if (FilterBuoyancies.Count == 0)
+            {
+                FilterBuoyancies = new ObservableCollection<FilterOption>(
+                    Enum.GetValues<LureBuoyancys>().Select(b => new FilterOption(b.ToString(), b.ToDisplayString())));
+            }
+            if (FilterFrontColors.Count == 0)
+            {
+                FilterFrontColors = new ObservableCollection<FilterOption>(
+                    lures.SelectMany(l => l.FrontColors ?? []).Where(c => !string.IsNullOrEmpty(c)).Distinct().OrderBy(c => c)
+                        .Select(c => new FilterOption(c, c)));
+            }
+            if (FilterBackColors.Count == 0)
+            {
+                FilterBackColors = new ObservableCollection<FilterOption>(
+                    lures.SelectMany(l => l.BackColors ?? []).Where(c => !string.IsNullOrEmpty(c)).Distinct().OrderBy(c => c)
+                        .Select(c => new FilterOption(c, c)));
+            }
+        }
+
+        #endregion Lure Search & Filtering
+        #endregion Methods
     }
 }

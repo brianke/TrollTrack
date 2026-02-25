@@ -149,6 +149,12 @@
 	  <MauiXaml Update="Features\Lures\AddLurePopup.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="Features\RodSetup\LureFilterPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\RodSetup\LureSelectionPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Features\RodSetup\RodSetupPopup.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
