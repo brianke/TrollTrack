@@ -1,4 +1,4 @@
-﻿namespace TrollTrack.Features.Shared.Models.Entities
+namespace TrollTrack.Features.Shared.Models.Entities
 {
 
     /// <summary>
@@ -34,7 +34,7 @@
         //public double WindGust { get; set; }
         public double WindDirection { get; set; } // Degrees 0-360
         //public string WindDirectionCardinal { get; set; } = string.Empty; // N, NE, E, etc.
-        public string WindSpeedUnit { get; set; } = "mph"; // mph or kph
+        public string WindSpeedUnit { get; set; } = "kt"; // knots
 
         // Visibility and Cloud Cover
         public double Visibility { get; set; } // Miles or kilometers
@@ -79,7 +79,7 @@
         private bool CalculateFishingConditions()
         {
             // Basic fishing weather logic
-            bool goodWind = WindSpeed <= 15; // Less than 15 mph wind
+            bool goodWind = WindSpeed <= 13; // Less than 13 kt (~15 mph) wind
             bool goodVisibility = Visibility >= 1; // At least 1 mile visibility
             bool noStorms = !WeatherCondition.ToLower().Contains("storm") &&
                            !WeatherCondition.ToLower().Contains("thunder");
@@ -98,9 +98,9 @@
                 return "Rising pressure - Fish may be less active";
             else if (PressureTrend < -1)
                 return "Falling pressure - Great for fishing!";
-            else if (WindSpeed < 5)
+            else if (WindSpeed < 4)
                 return "Calm conditions - Good for surface fishing";
-            else if (WindSpeed > 20)
+            else if (WindSpeed > 17)
                 return "Too windy for most fishing";
             else if (WeatherCondition.ToLower().Contains("overcast"))
                 return "Overcast skies - Excellent fishing conditions";
@@ -142,7 +142,7 @@
         public string GetFishingConditionColor()
         {
             if (IsFishingWeatherGood) return "Green";
-            if (WindSpeed > 20 || PrecipitationChance > 80) return "Red";
+            if (WindSpeed > 17 || PrecipitationChance > 80) return "Red";
             return "Orange";
         }
 

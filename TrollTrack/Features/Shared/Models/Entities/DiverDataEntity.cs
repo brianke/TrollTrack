@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text;
+using System.Text.Json.Serialization;
 
 namespace TrollTrack.Features.Shared.Models.Entities
 {
@@ -88,10 +89,25 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         // Display name for picker
         [Ignore]
-        public string DisplayName => 
-            string.IsNullOrWhiteSpace(Setting)
-                ? Name
-                : $"{Name} - {Setting} Setting";
+        public string DisplayName => BuildDisplayName();
 
+        private string BuildDisplayName()
+        {
+            var _name = new StringBuilder();
+            _name.Append(Name);
+
+            // if this is a weight, add the Size parameter
+            if (DiverType.Equals(DiverType.InlineWeight))
+            {
+                _name.Append($" ({Size})");
+            }
+
+            if (!String.IsNullOrEmpty(Setting))
+            {
+                _name.Append($" ({Setting} Setting)");
+            }
+
+            return _name.ToString();
+        }
     }
 }

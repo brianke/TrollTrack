@@ -157,7 +157,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
             set => BackColorsJson = JsonSerializer.Serialize(value ?? new());
         }
 
-        // Optional: your enum lists for in-app usage (also not DB columns)
+        // Optional: enum lists for in-app usage (also not DB columns)
         [Ignore]
         public List<LureColor> FrontColorsList =>
             FrontColors.Select(s => Enum.TryParse<LureColor>(s, true, out var c) ? c : (LureColor?)null)

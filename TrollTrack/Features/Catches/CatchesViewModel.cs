@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Maui.Views;
+using CommunityToolkit.Maui.Views;
 using TrollTrack.Features.RodSetup;
 using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models;
@@ -183,11 +183,11 @@ public partial class CatchesViewModel : BaseViewModel
 
             await ExecuteSafelyAsync(async () =>
             {
-                // Get current location and weather
-                var location = await BaseLocationService.GetCurrentLocationAsync();
-                var weather = await _weatherService.GetCurrentWeatherAsync(
-                    location.Latitude,
-                    location.Longitude);
+                // Use last known location (from Dashboard/catch) or default - no GPS request when starting trip
+                var lastKnown = await BaseLocationService.GetLastKnownLocationAsync();
+                var lat = lastKnown?.Latitude ?? TrollTrack.Configuration.AppConfig.Constants.DefaultLatitude;
+                var lon = lastKnown?.Longitude ?? TrollTrack.Configuration.AppConfig.Constants.DefaultLongitude;
+                var weather = await _weatherService.GetCurrentWeatherAsync(lat, lon);
 
                 // Create new trip
                 var trip = new TripDataEntity
@@ -398,35 +398,27 @@ public partial class CatchesViewModel : BaseViewModel
 
     [RelayCommand]
     private async Task ViewTripDetailsAsync(TripDataEntity trip)
-    //[RelayCommand(CanExecute = nameof(CanViewTripDetails))]
-    //private void ViewTripDetailsAsync(TripDataEntity trip)
     {
-        Debug.WriteLine("=== ViewTripDetails EXECUTING ===");
-
         if (trip == null)
             return;
 
-        // Navigate to trip details or set as active to view catches
-        //if (trip.IsActive)
-        //{
-        //    ActiveTrip = trip;
-        //    HasActiveTrip = true;
-        //    //StartDurationTimer();
-        //}
-        //else
-        //{
-        // TODO: Navigate to trip history/details view
-        await Shell.Current.DisplayAlert("Trip Details",
-            $"Trip: {trip.TripName}\n" +
-            $"Date: {trip.TripDate:d}\n" +
-            $"Catches: {trip.CatchCount}\n", "OK");
+        try
+        {
+            var catches = await BaseDatabaseService.GetCatchesForTripAsync(trip.Id);
+            var display = new TripCatchesDisplay(trip, catches);
+            var popup = new TripCatchesPopup(display);
 
-        //await ShowAlertAsync("Trip Details",
-        //        $"Trip: {trip.TripName}\n" +
-        //        $"Date: {trip.TripDate:d}\n" +
-        //        $"Catches: {trip.CatchCount}\n");
-            //+ $"Duration: {trip.Duration?.ToString(@"hh\:mm\:ss") ?? "N/A"}");
-        //}
+            var page = Application.Current?.Windows[0]?.Page;
+            if (page?.Navigation != null)
+            {
+                await page.Navigation.PushModalAsync(popup);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"ViewTripDetailsAsync failed: {ex.Message}");
+            await ShowAlertAsync("Error", "Failed to load trip catches.");
+        }
     }
 
     //private bool CanViewTripDetails(TripDataEntity trip)
@@ -787,6 +779,28 @@ public partial class CatchesViewModel : BaseViewModel
     #region Catches Commands
 
     [RelayCommand]
+    private async Task ViewCatchDetailAsync(CatchDataEntity? catchData)
+    {
+        if (catchData == null)
+            return;
+
+        try
+        {
+            var popup = new CatchDetailPopup(catchData);
+            var page = Application.Current?.Windows[0]?.Page;
+            if (page?.Navigation != null)
+            {
+                await page.Navigation.PushModalAsync(popup);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"CatchesViewModel ViewCatchDetailAsync failed: {ex.Message}");
+            await ShowAlertAsync("Error", "Failed to display catch details.");
+        }
+    }
+
+    [RelayCommand]
     private async Task AddNewCatchAsync(RodSetupEntity rod)
     {
         try
@@ -807,8 +821,8 @@ public partial class CatchesViewModel : BaseViewModel
 
             await ExecuteSafelyAsync(async () =>
             {
-                // Get current location
-                var currentLocation = await BaseLocationService.GetCurrentLocationAsync();
+                // Get exact location for this catch (do not reuse previous location)
+                var currentLocation = await BaseLocationService.GetExactLocationAsync();
 
                 // ✅ IMPORTANT: Save the location to the database FIRST
                 await BaseDatabaseService.SaveLocationAsync(currentLocation);
@@ -828,7 +842,12 @@ public partial class CatchesViewModel : BaseViewModel
                     LineOut = rod.LineOut,
                     Latitude = currentLocation.Latitude,
                     Longitude = currentLocation.Longitude,
-                    FishName = FishData.GetFishNameById(fishInfo.Id)
+                    FishName = FishData.GetFishNameById(fishInfo.Id),
+                    LureDisplayName = rod.Lure?.DisplayName ?? "Unknown",
+                    LureImagePath = rod.Lure?.PrimaryImage?.Path,
+                    DiverDisplayName = rod.Diver?.DisplayName ?? "None",
+                    Speed = currentLocation.Speed,
+                    Direction = currentLocation.Course
                 };
 
                 // Save catch

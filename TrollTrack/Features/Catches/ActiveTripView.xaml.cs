@@ -87,6 +87,35 @@ public partial class ActiveTripView : ContentView
 
     #endregion
 
+    #region Catch Detail - View on Tap
+
+    /// <summary>
+    /// Handle tap on catch item - calls ViewCatchDetailCommand on the ViewModel
+    /// </summary>
+    private async void OnCatchTapped(object? sender, TappedEventArgs e)
+    {
+        try
+        {
+            // Sender is the Border (the view the gesture is attached to), not the TapGestureRecognizer
+            if (sender is not Border border || border.BindingContext is not CatchDataEntity catchData)
+                return;
+
+            if (BindingContext is not CatchesViewModel viewModel)
+                return;
+
+            if (viewModel.ViewCatchDetailCommand?.CanExecute(catchData) == true)
+            {
+                await viewModel.ViewCatchDetailCommand.ExecuteAsync(catchData);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"OnCatchTapped failed: {ex.Message}");
+        }
+    }
+
+    #endregion
+
     #region Quick Tap - Add Catch
 
     /// <summary>

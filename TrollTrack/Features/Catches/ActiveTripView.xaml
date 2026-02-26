@@ -152,6 +152,9 @@
                             <SwipeView>
                                 <Border Style="{StaticResource InfoCard}"
                                         Margin="0,5">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCatchTapped" />
+                                    </Border.GestureRecognizers>
                                     <Grid ColumnDefinitions="Auto,*,Auto" 
                                           RowDefinitions="Auto,Auto,Auto"
                                           ColumnSpacing="10"

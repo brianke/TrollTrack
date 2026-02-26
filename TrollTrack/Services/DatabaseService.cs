@@ -1362,19 +1362,34 @@ namespace TrollTrack.Services
         }
 
         /// <summary>
-        /// Updated ConvertFromCatchEntity
+        /// Updated ConvertFromCatchEntity - populates all display fields including lure, diver, speed, direction
         /// </summary>
         private async Task<CatchDataEntity> ConvertFromCatchEntity(CatchDataEntity entity)
         {
-            LocationDataEntity? _location = await GetLocationByIdAsync(entity.LocationId);
+            var location = await GetLocationByIdAsync(entity.LocationId);
+            var lure = await GetLureByIdAsync(entity.LureId);
+            DiverDataEntity? diver = entity.DiverDataId.HasValue
+                ? await GetDiverByIdAsync(entity.DiverDataId.Value)
+                : null;
 
             var catchData = new CatchDataEntity
             {
                 Id = entity.Id,
                 Timestamp = entity.Timestamp,
+                TripId = entity.TripId,
+                LocationId = entity.LocationId,
+                LureId = entity.LureId,
+                DiverDataId = entity.DiverDataId,
+                LineOut = entity.LineOut,
+                FishInfoId = entity.FishInfoId,
                 FishName = FishData.GetFishNameById(entity.FishInfoId),
-                Latitude = _location != null ? _location.Latitude : 0.00,
-                Longitude = _location != null ? _location.Longitude : 0.00,
+                Latitude = location != null ? location.Latitude : 0.00,
+                Longitude = location != null ? location.Longitude : 0.00,
+                LureDisplayName = lure?.DisplayName ?? "Unknown",
+                LureImagePath = lure?.PrimaryImage?.Path,
+                DiverDisplayName = diver?.DisplayName ?? "None",
+                Speed = location?.Speed,
+                Direction = location?.Course
             };
 
             return catchData;
@@ -1532,21 +1547,20 @@ namespace TrollTrack.Services
             {
                 var db = await GetDatabaseAsync();
 
-                await db.DropTableAsync<CatchDataEntity>();
-                await db.DropTableAsync<CustomClarityEntity>();
-                await db.DropTableAsync<LocationDataEntity>();
-                await db.DropTableAsync<FishInfoEntity>();
-                await db.DropTableAsync<DiverDataEntity>();
-                await db.DropTableAsync<LureDataEntity>();
-                await db.DropTableAsync<LureImageEntity>();
-                await db.DropTableAsync<TripDataEntity>();
-                await db.DropTableAsync<RodSetupEntity>();
-                await db.DropTableAsync<WeatherDataEntity>();
-                //await db.DropTableAsync<LureFrontColorEntity>();
-                //await db.DropTableAsync<LureBackColorEntity>();
+                await db.DeleteAllAsync<CatchDataEntity>();
+                await db.DeleteAllAsync<CustomClarityEntity>();
+                await db.DeleteAllAsync<LocationDataEntity>();
+                await db.DeleteAllAsync<FishInfoEntity>();
+                await db.DeleteAllAsync<DiverDataEntity>();
+                await db.DeleteAllAsync<LureDataEntity>();
+                await db.DeleteAllAsync<LureImageEntity>();
+                await db.DeleteAllAsync<TripDataEntity>();
+                await db.DeleteAllAsync<RodSetupEntity>();
+                await db.DeleteAllAsync<WeatherDataEntity>();
 
                 // Reload all the tables
-                await CreateAllTablesAsync(db);
+                await LoadDiversJsonAsync();
+                await LoadLuresJsonAsync();
 
                 System.Diagnostics.Debug.WriteLine("All database tables cleared successfully");
 

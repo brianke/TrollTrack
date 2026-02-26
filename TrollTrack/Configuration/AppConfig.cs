@@ -1,4 +1,4 @@
-﻿namespace TrollTrack.Configuration
+namespace TrollTrack.Configuration
 {
     /// <summary>
     /// Configuration management for TrollTrack application
@@ -21,10 +21,14 @@
             public const double DefaultLongitude = -81.5188;
             public const int LocationTimeoutSeconds = 10;
 
-            // Fishing data constants
-            public const double MinTrollingSpeed = 0.5;
-            public const double MaxTrollingSpeed = 12.0;
-            public const double OptimalTrollingSpeed = 2.5;
+            // Speed conversion factors (to knots)
+            public const double MetersPerSecondToKnots = 1.94384;
+            public const double MilesPerHourToKnots = 0.868976;
+
+            // Fishing data constants (in knots)
+            public const double MinTrollingSpeed = 0.25;   // ~0.3 mph
+            public const double MaxTrollingSpeed = 10.5; // ~12 mph
+            public const double OptimalTrollingSpeed = 2.2; // ~2.5 mph
 
             // Depth ranges (feet)
             public const int MinDepth = 1;
