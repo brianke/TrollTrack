@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
@@ -135,6 +135,12 @@
 	  <Compile Update="Features\Catches\ActiveTripView.xaml.cs">
 	    <DependentUpon>NewTripView.xaml</DependentUpon>
 	  </Compile>
+	  <Compile Update="Features\Catches\CatchDetailPopup.xaml.cs">
+	    <DependentUpon>CatchDetailPopup.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Features\Catches\TripCatchesPopup.xaml.cs">
+	    <DependentUpon>TripCatchesPopup.xaml</DependentUpon>
+	  </Compile>
 	  <Compile Update="Features\Lures\AddLurePopup.xaml.cs">
 	    <DependentUpon>AddLurePopup.xaml</DependentUpon>
 	  </Compile>
@@ -144,6 +150,12 @@
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Features\Catches\ActiveTripView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\Catches\CatchDetailPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\Catches\TripCatchesPopup.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Features\Lures\AddLurePopup.xaml">

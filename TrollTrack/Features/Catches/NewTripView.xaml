@@ -40,6 +40,7 @@
                 <Entry Text="{Binding NewTripName}"
                             Placeholder="e.g., Lake Erie Morning Run"
                             PlaceholderColor="White"
+                            Keyboard="{x:Static Keyboard.Chat}"
                             Grid.Row="1" Grid.Column="1" />
 
                 <Label Text="Trip Date"
@@ -77,6 +78,7 @@
                 <Entry Text="{Binding TripNotes}"
                             Placeholder="e.g., Taking friends out for walleye"
                             PlaceholderColor="White"
+                            Keyboard="{x:Static Keyboard.Chat}"
                             Grid.Row="6" Grid.Column="1" />
 
                 <Button Text="Start Trip"
@@ -106,19 +108,19 @@
 
         <!-- View Past Trips Section -->
         <CollectionView ItemsSource="{Binding RecentTrips}"
-                                SelectionMode="Single">
+                        SelectionMode="Single">
             <!--SelectionChanged="OnTripSelectionChanged">-->
             <CollectionView.EmptyView>
                 <Label Text="No trips yet. Start your first trip!"
-                               HorizontalOptions="Center"
-                               TextColor="{StaticResource Gray500}"
-                               Margin="0,20"/>
+                       HorizontalOptions="Center"
+                       TextColor="{StaticResource Gray500}"
+                       Margin="0,20"/>
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="e:TripDataEntity">
                     <Border Style="{StaticResource InfoCard}"
-                                    Margin="0,5">
+                            Margin="0,5">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Tapped="OnTripTapped" />
                             <!--<TapGestureRecognizer 
@@ -134,19 +136,19 @@
                                 </Button>-->
                         <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
                             <Label Text="{Binding TripName}"
-                                                FontSize="18"
-                                                FontAttributes="Bold"
-                                                Grid.Row="0" Grid.Column="0"/>
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   Grid.Row="0" Grid.Column="0"/>
 
                             <Label Text="🎣 ACTIVE"
-                                           TextColor="Green"
-                                           FontAttributes="Bold"
-                                           Grid.Row="0" Grid.Column="1"
-                                           IsVisible="{Binding IsActive}"/>
+                                   TextColor="Green"
+                                   FontAttributes="Bold"
+                                   Grid.Row="0" Grid.Column="1"
+                                   IsVisible="{Binding IsActive}"/>
 
                             <Label Text="{Binding TripDate, StringFormat='{0:D}'}"
-                                           Grid.Row="1" Grid.Column="0"
-                                           Grid.ColumnSpan="2"/>
+                                   Grid.Row="1" Grid.Column="0"
+                                   Grid.ColumnSpan="2"/>
 
                             <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
                                 <Label Text="{Binding CatchCount}"/>

@@ -4,6 +4,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="TrollTrack.Features.Dashboard.DashboardView"
              xmlns:f="clr-namespace:TrollTrack.Features.Dashboard"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
              x:DataType="f:DashboardViewModel">
 
     <Grid>
@@ -48,7 +49,7 @@
                                     <Label Text="{Binding WeatherEntity.Temperature, StringFormat='{0:F0}°'}" FontSize="36" FontAttributes="Bold" HorizontalOptions="Center" />
                                     <Label Text="{Binding WeatherEntity.WeatherCondition, StringFormat='☁️ {0}'}" FontAttributes="Bold" HorizontalOptions="Center"/>
                                     <HorizontalStackLayout HorizontalOptions="Center" Margin="0,5,0,0">
-                                        <Label Text="{Binding WeatherEntity.WindSpeed,StringFormat='💨 {0:F0} mph'}" FontAttributes="Bold"/>
+                                        <Label Text="{Binding WeatherEntity.WindSpeed,StringFormat='💨 {0:F0} kt'}" FontAttributes="Bold"/>
                                         <Label Text="  " />
                                         <Label Text="➤" Rotation="{Binding WeatherEntity.WindDirection}" />
                                     </HorizontalStackLayout>
@@ -66,6 +67,63 @@
                             </Grid>
                         </StackLayout>
                     </Border>
+
+                    <!-- View Past Trips Section -->
+                    <Border Style="{StaticResource InfoCard}" Padding="10">
+                        <StackLayout>
+                            <HorizontalStackLayout HorizontalOptions="Center">
+                                <Label Text="🎣" Style="{StaticResource CardTitle}" />
+                                <Label Text="Past Trips" Style="{StaticResource CardTitle}" />
+                            </HorizontalStackLayout>
+                            <CollectionView ItemsSource="{Binding RecentTrips}"
+                                            SelectionMode="Single">
+
+                                <CollectionView.EmptyView>
+                                    <Label Text="No trips yet. Start your first trip!"
+                                           HorizontalOptions="Center"
+                                           TextColor="{StaticResource Gray500}"
+                                           Margin="0,20"/>
+                                </CollectionView.EmptyView>
+
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="e:TripDataEntity">
+                                        <Border Style="{StaticResource InfoCard}"
+                                                Margin="0,5">
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer Tapped="OnTripTapped" />
+                                            </Border.GestureRecognizers>
+
+                                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+                                                <Label Text="{Binding TripName}"
+                                                       FontSize="18"
+                                                       FontAttributes="Bold"
+                                                       Grid.Row="0" Grid.Column="0"/>
+
+                                                <Label Text="🎣 ACTIVE"
+                                                       TextColor="Green"
+                                                       FontAttributes="Bold"
+                                                       Grid.Row="0" Grid.Column="1"
+                                                       IsVisible="{Binding IsActive}"/>
+
+                                                <Label Text="{Binding TripDate, StringFormat='{0:D}'}"
+                                                       Grid.Row="1" Grid.Column="0"
+                                                       Grid.ColumnSpan="2"/>
+
+                                                <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                                                    <Label Text="{Binding CatchCount}"/>
+                                                    <Label Text=" catches"/>
+                                                    <Label Text=" • "/>
+                                                    <!--<Label Text="{Binding Location}"/>-->
+                                                </HorizontalStackLayout>
+                                            </Grid>
+
+                                        </Border>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </StackLayout>
+                    </Border>
+
                 </VerticalStackLayout>
             </ScrollView>
         </RefreshView>

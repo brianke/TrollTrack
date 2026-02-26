@@ -8,6 +8,7 @@ namespace TrollTrack.Features.Dashboard;
 public partial class DashboardViewModel : BaseViewModel
 {
     private readonly IWeatherService _weatherService;
+    private bool _hasRequestedLocationOnStart;
 
     #region Observable Properties
 
@@ -16,6 +17,10 @@ public partial class DashboardViewModel : BaseViewModel
 
     [ObservableProperty]
     private string _weatherSummary = "Loading weather...";
+
+    [ObservableProperty]
+    private ObservableCollection<TripDataEntity> _recentTrips = new();
+
 
     #endregion
 
@@ -38,6 +43,7 @@ public partial class DashboardViewModel : BaseViewModel
     {
         IsInitializing = true;
         await LoadDataAsync(isRefresh: false);
+
         IsInitializing = false;
     }
 
@@ -51,43 +57,72 @@ public partial class DashboardViewModel : BaseViewModel
     {
         try
         {
-            var statusMessage = isRefresh ? "Refreshing dashboard..." : "Initializing dashboard...";
-            await ExecuteSafelyAsync(async () =>
-            {
-                WeatherSummary = "Fetching location and weather...";
+            // Only request location on: (1) first app/dashboard load, (2) explicit refresh
+            var shouldRequestLocation = isRefresh || !_hasRequestedLocationOnStart;
 
-                if (!await GetAndSetLocationAsync(showAlerts: isRefresh))
+            if (shouldRequestLocation)
+            {
+                var statusMessage = isRefresh ? "Refreshing dashboard..." : "Initializing dashboard...";
+                await ExecuteSafelyAsync(async () =>
                 {
-                    if (!isRefresh)
+                    WeatherSummary = "Fetching location and weather...";
+
+                    if (!await GetAndSetLocationAsync(showAlerts: isRefresh))
                     {
-                        CurrentLatitude = AppConfig.Constants.DefaultLatitude;
-                        CurrentLongitude = AppConfig.Constants.DefaultLongitude;
-                        LocationName = "Default Location (Great Lakes)";
+                        if (!isRefresh)
+                        {
+                            CurrentLatitude = AppConfig.Constants.DefaultLatitude;
+                            CurrentLongitude = AppConfig.Constants.DefaultLongitude;
+                            LocationName = "Default Location (Great Lakes)";
+                        }
+                        else
+                        {
+                            WeatherSummary = "Could not update location.";
+                            return;
+                        }
+                    }
+
+                    _hasRequestedLocationOnStart = true;
+
+                    var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
+
+                    if (weather != null)
+                    {
+                        WeatherEntity = weather[0];
+                        LocationName = weather[0].LocationName ?? "Location Unavailable";
+                        WeatherSummary = $"Weather updated at {DateTime.Now:T}";
+                        if (isRefresh)
+                        {
+                            RefreshStatus = "Dashboard updated";
+                        }
                     }
                     else
                     {
-                        WeatherSummary = "Could not update location.";
-                        return;
+                        WeatherSummary = "Weather data unavailable.";
                     }
-                }
-
-                var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
-
-                if (weather != null)
+                }, statusMessage, showErrorAlert: isRefresh);
+            }
+            else
+            {
+                // Subsequent tab switch - no location request, keep cached data
+                if (WeatherEntity == null && (CurrentLatitude != 0 || CurrentLongitude != 0))
                 {
-                    WeatherEntity = weather[0];
-                    LocationName = weather[0].LocationName ?? "Location Unavailable";
-                    WeatherSummary = $"Weather updated at {DateTime.Now:T}";
-                    if (isRefresh)
-                    {
-                        RefreshStatus = "Dashboard updated";
-                    }
+                    var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
+                    if (weather != null)
+                        WeatherEntity = weather[0];
                 }
-                else
+                else if (WeatherEntity == null)
                 {
-                    WeatherSummary = "Weather data unavailable.";
+                    CurrentLatitude = AppConfig.Constants.DefaultLatitude;
+                    CurrentLongitude = AppConfig.Constants.DefaultLongitude;
+                    var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
+                    if (weather != null)
+                        WeatherEntity = weather[0];
                 }
-            }, statusMessage, showErrorAlert: isRefresh);
+            }
+
+            // Load past trips
+            await LoadRecentTripsAsync();
         }
         catch (Exception ex)
         {
@@ -132,6 +167,20 @@ public partial class DashboardViewModel : BaseViewModel
     private async Task ManageLuresAsync() => await NavigateToAsync(RouteConstants.Lures);
 
     #endregion
+
+    private async Task LoadRecentTripsAsync()
+    {
+        var trips = await BaseDatabaseService.GetRecentTripsAsync(10);
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            RecentTrips.Clear();
+            foreach (var trip in trips)
+            {
+                RecentTrips.Add(trip);
+            }
+        });
+    }
 
     #region IDisposable
 

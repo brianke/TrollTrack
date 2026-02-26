@@ -1,4 +1,4 @@
-﻿using TrollTrack.Features.Shared.Models.Entities;
+using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Features.Shared.Models
 {
@@ -20,7 +20,7 @@ namespace TrollTrack.Features.Shared.Models
         private bool CalculateFishingConditions()
         {
             // Basic fishing weather logic
-            bool goodWind = WeatherEntity.WindSpeed <= 15; // Less than 15 mph wind
+            bool goodWind = WeatherEntity.WindSpeed <= 13; // Less than 13 kt (~15 mph) wind
             bool goodVisibility = WeatherEntity.Visibility >= 1; // At least 1 mile visibility
             bool noStorms = !WeatherEntity.WeatherCondition.ToLower().Contains("storm") &&
                            !WeatherEntity.WeatherCondition.ToLower().Contains("thunder");
@@ -39,9 +39,9 @@ namespace TrollTrack.Features.Shared.Models
                 return "Rising pressure - Fish may be less active";
             else if (WeatherEntity.PressureTrend < -1)
                 return "Falling pressure - Great for fishing!";
-            else if (WeatherEntity.WindSpeed < 5)
+            else if (WeatherEntity.WindSpeed < 4)
                 return "Calm conditions - Good for surface fishing";
-            else if (WeatherEntity.WindSpeed > 20)
+            else if (WeatherEntity.WindSpeed > 17)
                 return "Too windy for most fishing";
             else if (WeatherEntity.WeatherCondition.ToLower().Contains("overcast"))
                 return "Overcast skies - Excellent fishing conditions";
@@ -83,7 +83,7 @@ namespace TrollTrack.Features.Shared.Models
         public string GetFishingConditionColor()
         {
             if (IsFishingWeatherGood) return "Green";
-            if (WeatherEntity.WindSpeed > 20 || WeatherEntity.PrecipitationChance > 80) return "Red";
+            if (WeatherEntity.WindSpeed > 17 || WeatherEntity.PrecipitationChance > 80) return "Red";
             return "Orange";
         }
 

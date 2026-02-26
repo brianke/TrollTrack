@@ -1,4 +1,4 @@
-﻿using TrollTrack.Features.Shared.Models.Entities;
+using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Features.Shared
 {
@@ -174,42 +174,12 @@ namespace TrollTrack.Features.Shared
 
         #region Location Commands
 
-        [RelayCommand]
-        public async Task UpdateLocationAsync()
-        {
-            ThrowIfDisposed();
-            try
-            {
-                await ExecuteSafelyAsync(() => GetAndSetLocationAsync(showAlerts: true), "Getting location...");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"BaseViewModel UpdateLocationAsync() failed: {ex.Message}");
-            }
-            finally
-            {
-                IsBusy = false;
-            }
-        }
+        // Location is only requested on: (1) Dashboard first load, (2) Dashboard refresh, (3) when recording a catch.
+        // UpdateLocationCommand removed to prevent unnecessary GPS requests.
 
         protected virtual async Task OnLocationUpdatedAsync(LocationDataEntity location)
         {
             await Task.CompletedTask;
-        }
-
-        // Internal method that doesn't set busy state (used by RefreshDashboard)
-        protected async Task UpdateLocationInternalAsync()
-        {
-            ThrowIfDisposed();
-
-            try
-            {
-                await GetAndSetLocationAsync(showAlerts: false);
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"Internal location update error: {ex.Message}");
-            }
         }
 
         protected async Task<bool> GetAndSetLocationAsync(bool showAlerts)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -36,6 +36,8 @@ namespace TrollTrack.Services
         // List for tracking location history
         private readonly List<LocationDataEntity> _locationHistory = new();
 
+        private LocationDataEntity? _lastKnownLocation;
+
         public LocationService(IDatabaseService databaseService)
         {
             _databaseService = databaseService;
@@ -49,35 +51,36 @@ namespace TrollTrack.Services
         {
             try
             {
+                // Try last known location first for faster response (avoids ANR on slow emulators)
+                var lastKnown = await Geolocation.GetLastKnownLocationAsync();
+                if (lastKnown != null && lastKnown.Timestamp > DateTimeOffset.UtcNow.AddMinutes(-5))
+                {
+                    IsLocationEnabled = true;
+                    var locationEntity = CreateLocationEntity(lastKnown);
+                    _lastKnownLocation = locationEntity;
+                    await SaveLocationAsync(locationEntity);
+                    LocationUpdated?.Invoke(this, locationEntity);
+                    return locationEntity;
+                }
+
+                // High (or better) accuracy required for Speed and Course - Medium returns null for these
+                // Use 10s timeout to reduce ANR risk on emulators (was 15s)
                 var request = new GeolocationRequest
                 {
-                    DesiredAccuracy = GeolocationAccuracy.Medium,
+                    DesiredAccuracy = GeolocationAccuracy.High,
                     Timeout = TimeSpan.FromSeconds(10)
                 };
 
                 var location = await Geolocation.GetLocationAsync(request);
 
 
-                // Set enabled flag and fire event
                 if (location != null)
                 {
                     IsLocationEnabled = true;
-                    var locationEntity = new LocationDataEntity
-                    {
-                        Latitude = location.Latitude,
-                        Longitude = location.Longitude,
-                        Timestamp = DateTimeOffset.Now
-                    };
-
+                    var locationEntity = CreateLocationEntity(location);
+                    _lastKnownLocation = locationEntity;
                     await SaveLocationAsync(locationEntity);
                     LocationUpdated?.Invoke(this, locationEntity);
-
-                    //TODO: remove before release, just for testing
-                    //var (town, coords) = LocationData.GetRandomLocation();
-                    //locationEntity.Latitude = coords.Latitude;
-                    //locationEntity.Longitude = coords.Longitude;
-                    //TODO
-
                     return locationEntity;
                 }
 
@@ -90,6 +93,75 @@ namespace TrollTrack.Services
                 IsLocationEnabled = false;
                 return defaultLocation;
             }
+        }
+
+        /// <summary>
+        /// Requests a fresh GPS fix. Use when recording a catch so each catch gets its own exact location.
+        /// Does not reuse last-known location.
+        /// </summary>
+        public async Task<LocationDataEntity> GetExactLocationAsync()
+        {
+            try
+            {
+                var request = new GeolocationRequest
+                {
+                    DesiredAccuracy = GeolocationAccuracy.High,
+                    Timeout = TimeSpan.FromSeconds(10)
+                };
+
+                var location = await Geolocation.GetLocationAsync(request);
+
+                if (location != null)
+                {
+                    IsLocationEnabled = true;
+                    var locationEntity = CreateLocationEntity(location);
+                    _lastKnownLocation = locationEntity;
+                    await SaveLocationAsync(locationEntity);
+                    LocationUpdated?.Invoke(this, locationEntity);
+                    return locationEntity;
+                }
+
+                // Fallback to last-known if fresh request fails (e.g. indoors)
+                var lastKnown = await Geolocation.GetLastKnownLocationAsync();
+                if (lastKnown != null)
+                {
+                    IsLocationEnabled = true;
+                    var locationEntity = CreateLocationEntity(lastKnown);
+                    _lastKnownLocation = locationEntity;
+                    await SaveLocationAsync(locationEntity);
+                    LocationUpdated?.Invoke(this, locationEntity);
+                    return locationEntity;
+                }
+
+                return defaultLocation;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Location error: {ex.Message}");
+                IsLocationEnabled = false;
+                return defaultLocation;
+            }
+        }
+
+        public Task<LocationDataEntity?> GetLastKnownLocationAsync()
+        {
+            return Task.FromResult(_lastKnownLocation);
+        }
+
+        private static LocationDataEntity CreateLocationEntity(Location location)
+        {
+            double? speedKnots = null;
+            if (location.Speed.HasValue && location.Speed.Value >= 0)
+                speedKnots = location.Speed.Value * TrollTrack.Configuration.AppConfig.Constants.MetersPerSecondToKnots;
+
+            return new LocationDataEntity
+            {
+                Latitude = location.Latitude,
+                Longitude = location.Longitude,
+                Timestamp = DateTimeOffset.Now,
+                Course = location.Course,
+                Speed = speedKnots
+            };
         }
 
         /// <summary>

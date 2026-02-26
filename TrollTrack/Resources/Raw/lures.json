@@ -14,8 +14,8 @@
           "Path": "bandit_deepcrank_blueshiner.png"
         }
       ],
-      "FrontColors": [ "Orange", "Bronze" ],
-      "BackColors": [ "Orange", "Bronze" ]
+      "FrontColors": [ "Purple" ],
+      "BackColors": [ "YellowGreen" ]
     },
     {
       "Id": "964ED109-E28B-4BC1-801A-F5A98FDDC2E2",
@@ -32,8 +32,8 @@
           "Path": "bandit_deepcrank_chromeblackback.png"
         }
       ],
-      "FrontColors": [ "Orange", "Bronze" ],
-      "BackColors": [ "Orange", "Bronze" ]
+      "FrontColors": [ "Black", "DarkSlateGrey" ],
+      "BackColors": [ "White" ]
     },
     {
       "Id": "C8A81BFB-1EED-42FF-A43E-2CFDB9CA39F4",
@@ -50,8 +50,8 @@
           "Path": "bandit_deepcrank_chromeblueback.png"
         }
       ],
-      "FrontColors": [ "Orange", "Bronze" ],
-      "BackColors": [ "Orange", "Bronze" ]
+      "FrontColors": [ "Teal" ],
+      "BackColors": [ "Orange" ]
     },
     {
       "Id": "1F2EA346-4CDF-4556-BEFB-7A7455C7EC5C",
@@ -68,8 +68,8 @@
           "Path": "bandit_deepcrank_coconutcandy.png"
         }
       ],
-      "FrontColors": [ "Orange", "Bronze" ],
-      "BackColors": [ "Orange", "Bronze" ]
+      "FrontColors": [ "Yellow", "Red" ],
+      "BackColors": [ "Orange" ]
     },
     {
       "Id": "E934B851-DA2B-482F-ABBB-FBB9F1C0A13A",
@@ -86,8 +86,8 @@
           "Path": "bandit_deepcrank_humblebee.png"
         }
       ],
-      "FrontColors": [ "Orange", "Bronze" ],
-      "BackColors": [ "Orange", "Bronze" ]
+      "FrontColors": [ "Black", "GoldenRod" ],
+      "BackColors": [ "White", "Clear" ]
     },
     {
       "Id": "731C5C81-9045-4BD9-92DA-2F8381900FA0",
@@ -104,8 +104,8 @@
           "Path": "bandit_deepcrank_purplemist.png"
         }
       ],
-      "FrontColors": [ "Orange", "Bronze" ],
-      "BackColors": [ "Orange", "Bronze" ]
+      "FrontColors": [ "Purple" ],
+      "BackColors": [ "White", "Clear" ]
     },
     {
       "Id": "E5EF9C03-B587-4BFC-A199-570D3EE77A40",
@@ -123,7 +123,7 @@
         }
       ],
       "FrontColors": [ "Orange", "Bronze" ],
-      "BackColors": [ "Orange", "Bronze" ]
+      "BackColors": [ "Bronze" ]
     },
     {
       "Id": "58F64A58-6AAE-423A-BA70-8C1006EC1FEE",
@@ -140,7 +140,7 @@
           "Path": "moonshine_lures_jj_mac_muffin.png"
         }
       ],
-      "FrontColors": [ "Orange", "Chartreuse", "Purple", "White", "Bronze" ],
+      "FrontColors": [ "Orange", "Chartreuse", "Purple", "White" ],
       "BackColors": [ "Bronze" ]
     },
     {

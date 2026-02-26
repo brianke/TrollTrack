@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             xmlns:converters="clr-namespace:TrollTrack.Converters"
+             x:Class="TrollTrack.Features.Catches.CatchDetailPopup"
+             x:DataType="e:CatchDataEntity"
+             Title="Catch Details"
+             BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#1C1C1C}">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:LureImageSourceConverter x:Key="LureImageSourceConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
+
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="8" Margin="0,10,0,20">
+            <Label Text="🐟"
+                   FontSize="48"
+                   HorizontalOptions="Center"/>
+            <Label Text="{Binding FishName}"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+            <Label Text="{Binding Timestamp, StringFormat='{0:g}'}"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+        </VerticalStackLayout>
+
+        <!-- Details -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="16">
+
+                <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}"
+                        Padding="16"
+                        StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="14">
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Time" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                            <Label Grid.Column="1" Text="{Binding Timestamp, StringFormat='{0:t}'}" TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Lure" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                            <Label Grid.Column="1" Text="{Binding LureDisplayName}" TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Latitude" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                            <Label Grid.Column="1" Text="{Binding Latitude, StringFormat='{0:F4}'}" TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Longitude" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                            <Label Grid.Column="1" Text="{Binding Longitude, StringFormat='{0:F4}'}" TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Line Out" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                            <Label Grid.Column="1" Text="{Binding LineOut, StringFormat='{0} feet'}" TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Diver" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                            <Label Grid.Column="1" Text="{Binding DiverDisplayName}" TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Speed" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                            <Label Grid.Column="1" Text="{Binding SpeedDisplay}" TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Direction" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                            <Label Grid.Column="1" Text="{Binding DirectionDisplay}" TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                        </Grid>
+
+                        <!-- Lure Image -->
+                        <Border IsVisible="{Binding HasLureImage}"
+                                BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#333333}"
+                                Padding="12"
+                                Margin="0,16,0,0"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                                <!--<Label Text="Lure"
+                                       FontAttributes="Bold"
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                                       HorizontalOptions="Center"/>-->
+                                <Image Source="{Binding LureImagePath, Converter={StaticResource LureImageSourceConverter}}"
+                                       Aspect="AspectFit"
+                                       HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Close Button -->
+        <Button Grid.Row="2"
+                Text="Close"
+                Clicked="OnCloseClicked"
+                BackgroundColor="{AppThemeBinding Light=#2E8BC0, Dark=#4A9FD8}"
+                TextColor="#FFFFFF"
+                FontSize="16"
+                FontAttributes="Bold"
+                CornerRadius="10"
+                HeightRequest="50"
+                Margin="0,20,0,0"/>
+    </Grid>
+</ContentPage>

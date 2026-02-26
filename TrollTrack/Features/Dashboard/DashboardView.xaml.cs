@@ -1,18 +1,34 @@
+using TrollTrack.Features.Shared.Models.Entities;
+
 namespace TrollTrack.Features.Dashboard;
 
 public partial class DashboardView : ContentPage
 {
     private readonly DashboardViewModel _viewModel;
+    private CatchesViewModel? _catchesVM;
 
-    public DashboardView(DashboardViewModel viewModel)
+    public DashboardView(DashboardViewModel viewModel, CatchesViewModel? catchesVM)
     {
         InitializeComponent();
 
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         BindingContext = viewModel;
+        _catchesVM = catchesVM;
     }
 
+    private async void OnTripTapped(object sender, TappedEventArgs e)
+    {
+        if (sender is Border border && border.BindingContext is TripDataEntity trip)
+        {
+            // Get the parent's ViewModel
+            if (BindingContext is DashboardViewModel viewModel)
+            {
+                await _catchesVM.ViewTripDetailsCommand.ExecuteAsync(trip);
+
+            }
+        }
+    }
 
     protected override async void OnAppearing()
     {

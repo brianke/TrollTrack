@@ -1,4 +1,4 @@
-﻿namespace TrollTrack.Features.Shared.Models.Entities
+namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("CatchData")]
     public class CatchDataEntity
@@ -35,6 +35,54 @@
 
         [Ignore]
         public string FishName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Display name for the lure (populated when loading from database)
+        /// </summary>
+        [Ignore]
+        public string LureDisplayName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Path to the lure's primary image (populated when loading from database)
+        /// </summary>
+        [Ignore]
+        public string? LureImagePath { get; set; }
+
+        /// <summary>
+        /// Whether the lure has an image to display
+        /// </summary>
+        [Ignore]
+        public bool HasLureImage => !string.IsNullOrWhiteSpace(LureImagePath);
+
+        /// <summary>
+        /// Display name for the diver (populated when loading from database)
+        /// </summary>
+        [Ignore]
+        public string DiverDisplayName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Speed in knots from location at time of catch
+        /// </summary>
+        [Ignore]
+        public double? Speed { get; set; }
+
+        /// <summary>
+        /// Direction/course in degrees (0-360) from location at time of catch
+        /// </summary>
+        [Ignore]
+        public double? Direction { get; set; }
+
+        /// <summary>
+        /// Formatted speed for display (e.g. "2.5 kt" or "N/A")
+        /// </summary>
+        [Ignore]
+        public string SpeedDisplay => Speed.HasValue ? $"{Speed.Value:F1} kt" : "N/A";
+
+        /// <summary>
+        /// Formatted direction for display (e.g. "270°" or "N/A")
+        /// </summary>
+        [Ignore]
+        public string DirectionDisplay => Direction.HasValue ? $"{Direction.Value:F0}°" : "N/A";
 
         public CatchDataEntity()
         {
