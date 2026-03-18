@@ -185,9 +185,9 @@
                                             <Label.FormattedText>
                                                 <FormattedString>
                                                     <Span Text="📍 "/>
-                                                    <Span Text="{Binding Latitude, StringFormat='{0:F4}'}"/>
+                                                    <Span Text="{Binding FormattedLatitude}"/>
                                                     <Span Text=", "/>
-                                                    <Span Text="{Binding Longitude, StringFormat='{0:F4}'}"/>
+                                                    <Span Text="{Binding FormattedLongitude}"/>
                                                 </FormattedString>
                                             </Label.FormattedText>
                                         </Label>

@@ -176,6 +176,7 @@ namespace TrollTrack.Services
                 foreach (var catchEntity in trip.Catches)
                 {
                     await db.GetChildrenAsync(catchEntity, recursive: true);
+                    catchEntity.FishName = FishData.GetFishNameById(catchEntity.FishInfoId);
                 }
 
                 return trip;
@@ -224,6 +225,7 @@ namespace TrollTrack.Services
                     foreach (var catchEntity in activeTrip.Catches)
                     {
                         await db.GetChildrenAsync(catchEntity, recursive: true);
+                        catchEntity.FishName = FishData.GetFishNameById(catchEntity.FishInfoId);
                     }
                 }
 
@@ -273,6 +275,7 @@ namespace TrollTrack.Services
                     foreach (var catchEntity in trip.Catches)
                     {
                         await db.GetChildrenAsync(catchEntity, recursive: true);
+                        catchEntity.FishName = FishData.GetFishNameById(catchEntity.FishInfoId);
                     }
                 }
 
@@ -323,6 +326,7 @@ namespace TrollTrack.Services
                     foreach (var catchEntity in trip.Catches)
                     {
                         await db.GetChildrenAsync(catchEntity, recursive: true);
+                        catchEntity.FishName = FishData.GetFishNameById(catchEntity.FishInfoId);
                     }
                 }
 
@@ -372,6 +376,7 @@ namespace TrollTrack.Services
                     foreach (var catchEntity in trip.Catches)
                     {
                         await db.GetChildrenAsync(catchEntity, recursive: true);
+                        catchEntity.FishName = FishData.GetFishNameById(catchEntity.FishInfoId);
                     }
                 }
 

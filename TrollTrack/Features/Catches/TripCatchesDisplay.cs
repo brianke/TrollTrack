@@ -11,6 +11,16 @@ public class TripCatchesDisplay
     public string TripName { get; }
     public DateTime TripDate { get; }
     public int CatchesCount => Catches.Count;
+    /// <summary>
+    /// Summary of catches by species, e.g. "13 Walleye, 3 Perch, 1 Northern Pike"
+    /// </summary>
+    public string CatchesBySpeciesSummary => Catches == null || Catches.Count == 0
+            ? "0 catches"
+            : string.Join(", ", Catches
+                .GroupBy(c => c.FishName)
+                .OrderByDescending(g => g.Count())
+                .Select(g => $"{g.Count()} {g.Key}"));
+
     public ObservableCollection<CatchDataEntity> Catches { get; }
 
     public TripCatchesDisplay(TripDataEntity trip, List<CatchDataEntity> catches)

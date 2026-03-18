@@ -283,7 +283,7 @@ namespace TrollTrack.Features.Shared
         {
             if (value != 0)
             {
-                FormattedLatitude = ConvertToDegreesMinutesSeconds(value, true);
+                FormattedLatitude = CoordinateFormatter.ToDegreesMinutesSeconds(value, true);
                 RefreshStatus = "Location updated";
             }
         }
@@ -292,47 +292,8 @@ namespace TrollTrack.Features.Shared
         {
             if (value != 0)
             {
-                FormattedLongitude = ConvertToDegreesMinutesSeconds(value, false);
+                FormattedLongitude = CoordinateFormatter.ToDegreesMinutesSeconds(value, false);
             }
-        }
-
-        /// <summary>
-        /// Converts decimal degrees to degrees, minutes, seconds format
-        /// </summary>
-        /// <param name="coordinate">The decimal degree coordinate</param>
-        /// <param name="isLatitude">True for latitude (N/S), false for longitude (E/W)</param>
-        /// <returns>Formatted coordinate string</returns>
-        private static string ConvertToDegreesMinutesSeconds(double coordinate, bool isLatitude)
-        {
-            if (coordinate == 0) return isLatitude ? "0° 0' 0\" N" : "0° 0' 0\" W";
-
-            // Determine direction
-            string direction;
-            if (isLatitude)
-            {
-                direction = coordinate >= 0 ? "N" : "S";
-            }
-            else
-            {
-                direction = coordinate >= 0 ? "E" : "W";
-            }
-
-            // Work with absolute value
-            coordinate = Math.Abs(coordinate);
-
-            // Extract degrees (whole number part)
-            int degrees = (int)coordinate;
-
-            // Extract minutes (whole number part of remainder * 60)
-            double remainderAfterDegrees = coordinate - degrees;
-            int minutes = (int)(remainderAfterDegrees * 60);
-
-            // Extract seconds (remainder after minutes * 60)
-            double remainderAfterMinutes = (remainderAfterDegrees * 60) - minutes;
-            double seconds = remainderAfterMinutes * 60;
-
-            // Format and return
-            return $"{degrees}° {minutes}' {seconds:F1}\" {direction}";
         }
 
         #endregion
