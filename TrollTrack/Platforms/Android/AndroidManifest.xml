@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
 	<queries>
@@ -20,6 +20,9 @@
         android:theme="@style/Maui.SplashTheme"
 		android:icon="@mipmap/trolltrack_app_icon"
 		android:roundIcon="@mipmap/trolltrack_app_icon">
+		<!-- Google Maps API key - replace with your key from Google Cloud Console -->
+		<meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyADc32m20NXIKdxoC25PeHmheJCDlkGExY" />
+		<meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
 	</application>
 
 	<!-- Network permissions -->

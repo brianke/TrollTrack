@@ -151,9 +151,9 @@
                                    Grid.ColumnSpan="2"/>
 
                             <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
-                                <Label Text="{Binding CatchCount}"/>
-                                <Label Text=" catches"/>
-                                <Label Text=" • "/>
+                                <Label Text="{Binding CatchesBySpeciesSummary}"/>
+                                <!--<Label Text=" catches"/>
+                                <Label Text=" • "/>-->
                                 <!--<Label Text="{Binding Location}"/>-->
                             </HorizontalStackLayout>
                         </Grid>

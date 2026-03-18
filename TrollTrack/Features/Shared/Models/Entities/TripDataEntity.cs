@@ -1,4 +1,4 @@
-﻿namespace TrollTrack.Features.Shared.Models.Entities
+namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("Trips")]
 
@@ -37,6 +37,17 @@
         [Ignore]
         public int CatchCount => Catches?.Count ?? 0;
 
+        /// <summary>
+        /// Summary of catches by species, e.g. "13 Walleye, 3 Perch, 1 Northern Pike"
+        /// </summary>
+        [Ignore]
+        public string CatchesBySpeciesSummary => Catches == null || Catches.Count == 0
+            ? "0 catches"
+            : string.Join(", ", Catches
+                .GroupBy(c => c.FishName)
+                .OrderByDescending(g => g.Count())
+                .Select(g => $"{g.Count()} {g.Key}"));
+                
         [Ignore]
         public TimeSpan? Duration
         {
