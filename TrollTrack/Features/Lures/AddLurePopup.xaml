@@ -9,7 +9,7 @@
              x:Class="TrollTrack.Features.Lures.AddLurePopup"
              x:DataType="vm:AddLureViewModel"
              Title="{Binding Title}"
-             BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#1C1C1C}">
+             BackgroundColor="#F8F8F8">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -37,7 +37,7 @@
                    FontSize="28"
                    FontAttributes="Bold"
                    HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                   TextColor="#1A1A1A" />
             </VerticalStackLayout>
 
             <!-- Main Content -->
@@ -45,7 +45,7 @@
                 <VerticalStackLayout Spacing="20">
 
                     <!-- Lure Details -->
-                    <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}"
+                    <Border BackgroundColor="#FFFFFF"
                         Padding="20"
                         Margin="0,0,0,10">
                         <Border.StrokeShape>
@@ -58,27 +58,27 @@
                             <Label Text="Manufacturer"
                                FontSize="18"
                                FontAttributes="Bold"
-                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                               TextColor="#1A1A1A" />
 
                             <Entry Text="{Binding Manufacturer}"
                                Placeholder="Enter manufacturer name"
                                FontSize="16"
-                               BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#3C3C3C}"
-                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
-                               PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
+                               BackgroundColor="#F5F5F5"
+                               TextColor="#1A1A1A"
+                               PlaceholderColor="#999999" />
 
                             <!-- Lure Description -->
                             <Label Text="Description"
                                FontSize="18"
                                FontAttributes="Bold"
-                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                               TextColor="#1A1A1A"/>
 
                             <Entry Text="{Binding LureDescription}"
                                Placeholder="Enter description"
                                FontSize="16"
-                               BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#3C3C3C}"
-                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
-                               PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
+                               BackgroundColor="#F5F5F5"
+                               TextColor="#1A1A1A"
+                               PlaceholderColor="#999999" />
 
                             <!-- Lure Type & Buoyancy -->
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
@@ -86,7 +86,7 @@
                                     <Label Text="Type"
                                        FontSize="18"
                                        FontAttributes="Bold"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                                       TextColor="#1A1A1A"/>
 
                                     <Picker ItemsSource="{Binding LureTypeList}"
                                         SelectedItem="{Binding SelectedLureType}">
@@ -101,7 +101,7 @@
                                     <Label Text="Buoyancy"
                                        FontSize="18"
                                        FontAttributes="Bold"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                                       TextColor="#1A1A1A"/>
 
                                     <Picker ItemsSource="{Binding BuoyancyList}"
                                         SelectedItem="{Binding SelectedBuoyancy}">
@@ -118,28 +118,28 @@
                                     <Label Text="Length (in)"
                                        FontSize="18"
                                        FontAttributes="Bold"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                                       TextColor="#1A1A1A"/>
                                     <Entry Text="{Binding LengthText}"
                                        Placeholder="Enter length"
                                        Keyboard="Numeric"
                                        FontSize="16"
-                                       BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#3C3C3C}"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
-                                       PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="#1A1A1A"
+                                       PlaceholderColor="#999999" />
                                 </VerticalStackLayout>
 
                                 <VerticalStackLayout Grid.Column="1" Spacing="6">
                                     <Label Text="Weight (oz)"
                                        FontSize="18"
                                        FontAttributes="Bold"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                                       TextColor="#1A1A1A"/>
                                     <Entry Text="{Binding WeightText}"
                                        Placeholder="Enter weight"
                                        Keyboard="Numeric"
                                        FontSize="16"
-                                       BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#3C3C3C}"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"
-                                       PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#777777}" />
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="#1A1A1A"
+                                       PlaceholderColor="#999999" />
                                 </VerticalStackLayout>
                             </Grid>
 
@@ -149,13 +149,13 @@
                                     <Label Text="Front:"
                                        VerticalOptions="Center"
                                        FontAttributes="Bold"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                                       TextColor="#1A1A1A" />
 
                                     <Label Grid.Column="1"
                                        Text="{Binding FrontColorsDisplay}"
                                        VerticalOptions="Center"
                                        LineBreakMode="TailTruncation"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                                       TextColor="#1A1A1A" />
 
                                     <Button Grid.Column="2"
                                         Text="Pick"
@@ -173,7 +173,7 @@
                                                 <Border WidthRequest="22"
                                                     HeightRequest="22"
                                                     StrokeThickness="2"
-                                                    Stroke="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"
+                                                    Stroke="#333333"
                                                     BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
                                                     <Border.StrokeShape>
                                                         <RoundRectangle CornerRadius="999" />
@@ -191,13 +191,13 @@
                                     <Label Text="Back:"
                                        VerticalOptions="Center"
                                        FontAttributes="Bold"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                                       TextColor="#1A1A1A" />
 
                                     <Label Grid.Column="1"
                                        Text="{Binding BackColorsDisplay}"
                                        VerticalOptions="Center"
                                        LineBreakMode="TailTruncation"
-                                       TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                                       TextColor="#1A1A1A" />
 
                                     <Button Grid.Column="2"
                                         Text="Pick"
@@ -215,7 +215,7 @@
                                                 <Border WidthRequest="22"
                                                     HeightRequest="22"
                                                     StrokeThickness="2"
-                                                    Stroke="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"
+                                                    Stroke="#333333"
                                                     BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
                                                     <Border.StrokeShape>
                                                         <RoundRectangle CornerRadius="999" />
@@ -230,7 +230,7 @@
                     </Border>
 
                     <!-- Images -->
-                    <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}"
+                    <Border BackgroundColor="#FFFFFF"
                         Padding="20"
                         Margin="0,0,0,10">
                         <Border.StrokeShape>
@@ -242,18 +242,18 @@
                             <Label Text="Photos"
                                FontSize="18"
                                FontAttributes="Bold"
-                               TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                               TextColor="#1A1A1A" />
 
                             <Label Text="Pick multiple photos, or take multiple. Tap a photo to set it as Primary."
                                FontSize="13"
-                               TextColor="{AppThemeBinding Light=#555555, Dark=#CCCCCC}" />
+                               TextColor="#555555" />
 
                             <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
                                 <Button Grid.Column="0"
                                     Text="Pick from Gallery"
                                     Command="{Binding PickLureImagesCommand}"
-                                    BackgroundColor="{AppThemeBinding Light=#E8F2FB, Dark=#2A3A46}"
-                                    TextColor="{AppThemeBinding Light=#0B4F78, Dark=#CFE9FF}"
+                                    BackgroundColor="#E8F2FB"
+                                    TextColor="#0B4F78"
                                     FontAttributes="Bold"
                                     CornerRadius="10"
                                     HeightRequest="44"/>
@@ -261,8 +261,8 @@
                                 <Button Grid.Column="1"
                                     Text="Take Photo(s)"
                                     Command="{Binding TakeLurePhotosCommand}"
-                                    BackgroundColor="{AppThemeBinding Light=#E8FBEF, Dark=#243A2E}"
-                                    TextColor="{AppThemeBinding Light=#0A6A2A, Dark=#CFFFE0}"
+                                    BackgroundColor="#E8FBEF"
+                                    TextColor="#0A6A2A"
                                     FontAttributes="Bold"
                                     CornerRadius="10"
                                     HeightRequest="44"/>
@@ -309,13 +309,13 @@
                                                HorizontalOptions="Start"
                                                VerticalOptions="Start"
                                                BackgroundColor="Transparent"
-                                               TextColor="{AppThemeBinding Light=#E0A800, Dark=#FFD166}"
+                                               TextColor="#E0A800"
                                                InputTransparent="True">
                                                 <Label.IsVisible>
                                                     <MultiBinding Converter="{StaticResource GuidEqualsMultiConverter}">
                                                         <Binding Path="Id" />
                                                         <Binding Source="{x:Reference AddLurePage}" Path="BindingContext.PrimaryImageId" />
-                                                        <!--<Binding Source="{RelativeSource AncestorType={x:Type ContentPage}}"
+                                                        <!--<Binding Source="{RelativeSource AncestorType={x:Type ContentPage}"
                                                                 Path="BindingContext.PrimaryImageId" />-->
                                                     </MultiBinding>
                                                 </Label.IsVisible>
@@ -337,8 +337,8 @@
                 <Button Grid.Column="0"
                     Text="Cancel"
                     Command="{Binding CancelAddLureCommand}"
-                    BackgroundColor="{AppThemeBinding Light=#DDDDDD, Dark=#444444}"
-                    TextColor="{AppThemeBinding Light=#111111, Dark=#FFFFFF}"
+                    BackgroundColor="#DDDDDD"
+                    TextColor="#111111"
                     FontSize="16"
                     FontAttributes="Bold"
                     CornerRadius="10"
@@ -347,18 +347,30 @@
                 <Button Grid.Column="1"
                     Text="{Binding AddButtonText}"
                     Command="{Binding AddLureCommand}"
-                    BackgroundColor="{AppThemeBinding Light=#2E8BC0, Dark=#4A9FD8}"
-                    TextColor="#FFFFFF"
+                    BackgroundColor="#D3D3D3"
+                    TextColor="#555555"
                     FontSize="16"
                     FontAttributes="Bold"
                     CornerRadius="10"
                     HeightRequest="50">
-                    <Button.Triggers>
-                        <Trigger TargetType="Button" Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value="0.5" />
-                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light=#CCCCCC, Dark=#555555}" />
-                        </Trigger>
-                    </Button.Triggers>
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroupList>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="#22C55E" />
+                                        <Setter Property="TextColor" Value="White" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="#D3D3D3" />
+                                        <Setter Property="TextColor" Value="#555555" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateGroupList>
+                    </VisualStateManager.VisualStateGroups>
                 </Button>
 
             </Grid>
@@ -376,7 +388,7 @@
 
             <Border Grid.Row="0" 
                     Grid.Column="0"
-                    BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}"
+                    BackgroundColor="#FFFFFF"
                     HorizontalOptions="Fill"
                     VerticalOptions="Fill"
                     Padding="0">
@@ -393,7 +405,7 @@
                     <Label Text="{Binding ColorPickerTitle}"
                            FontSize="18"
                            FontAttributes="Bold"
-                           TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                           TextColor="#1A1A1A" />
                     <!-- Selected colors list -->
                     <Grid Grid.Row="1" Margin="0,10,0,0">
 
@@ -403,7 +415,7 @@
                             <Label Text="{Binding FrontColorsDisplay}"
                                    VerticalOptions="Center"
                                    LineBreakMode="TailTruncation"
-                                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                                   TextColor="#1A1A1A" />
                             <ScrollView Orientation="Horizontal">
                                 <HorizontalStackLayout Spacing="10"
                                                        BindableLayout.ItemsSource="{Binding SelectedFrontColors}">
@@ -412,7 +424,7 @@
                                             <Border WidthRequest="22"
                                                     HeightRequest="22"
                                                     StrokeThickness="2"
-                                                    Stroke="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"
+                                                    Stroke="#333333"
                                                     BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
                                                 <Border.StrokeShape>
                                                     <RoundRectangle CornerRadius="999" />
@@ -429,7 +441,7 @@
                             <Label Text="{Binding BackColorsDisplay}"
                                    VerticalOptions="Center"
                                    LineBreakMode="TailTruncation"
-                                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}" />
+                                   TextColor="#1A1A1A" />
                             <ScrollView Orientation="Horizontal">
 
 
@@ -440,7 +452,7 @@
                                             <Border WidthRequest="22"
                                                     HeightRequest="22"
                                                     StrokeThickness="2"
-                                                    Stroke="{AppThemeBinding Light=#333333, Dark=#DDDDDD}"
+                                                    Stroke="#333333"
                                                     BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
                                                 <Border.StrokeShape>
                                                     <RoundRectangle CornerRadius="999" />
@@ -495,7 +507,7 @@
                                                          Binding="{Binding IsSelected}"
                                                          Value="True">
                                                 <Setter Property="Stroke"
-                                                        Value="{AppThemeBinding Light=#333333, Dark=#DDDDDD}" />
+                                                        Value="#333333" />
                                             </DataTrigger>
                                         </Border.Triggers>
                                     </Border>

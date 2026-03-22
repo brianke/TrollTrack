@@ -83,7 +83,8 @@
 
                 <Button Text="Start Trip"
                             Command="{Binding StartNewTripCommand}"
-                            BackgroundColor="{StaticResource Primary}"
+                            BackgroundColor="#D3D3D3"
+                            TextColor="#555555"
                             Margin="0,10,0,0"
                             Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2">
                     <VisualStateManager.VisualStateGroups>
@@ -91,12 +92,14 @@
                             <VisualStateGroup x:Name="CommonStates">
                                 <VisualState x:Name="Normal">
                                     <VisualState.Setters>
-                                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource White}}" />
+                                        <Setter Property="BackgroundColor" Value="#22C55E" />
+                                        <Setter Property="TextColor" Value="White" />
                                     </VisualState.Setters>
                                 </VisualState>
                                 <VisualState x:Name="Disabled">
                                     <VisualState.Setters>
-                                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray950}, Dark={StaticResource Gray900}}" />
+                                        <Setter Property="BackgroundColor" Value="#D3D3D3" />
+                                        <Setter Property="TextColor" Value="#555555" />
                                     </VisualState.Setters>
                                 </VisualState>
                             </VisualStateGroup>

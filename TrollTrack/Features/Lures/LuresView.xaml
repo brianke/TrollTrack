@@ -79,7 +79,7 @@
             <!-- Modal card that fills most of the screen -->
             <Border Margin="12"
                     Padding="10"
-                    BackgroundColor="{AppThemeBinding Light=White, Dark=#1E1E1E}"
+                    BackgroundColor="White"
                     StrokeShape="RoundRectangle 16"
                     HorizontalOptions="Fill"
                     VerticalOptions="Fill">

@@ -5,11 +5,14 @@
 		<key>CFBundleDisplayName</key>
 		<string>TrollTrack</string>
 		<key>CFBundleIdentifier</key>
-		<string>com.trolltrack.app</string>
+		<string>com.trolltrack.fishing</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>TrollTrack needs location access to record fishing spots and track trolling routes</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 		<string>TrollTrack uses location to help you track your fishing locations and routes</string>
 		<!-- Other iOS settings -->
+		<key>MapsApiKey</key>
+		<string>YOUR_API_KEY</string>
+
 	</dict>
 </plist>

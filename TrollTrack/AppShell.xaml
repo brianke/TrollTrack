@@ -9,41 +9,34 @@
     xmlns:lures="clr-namespace:TrollTrack.Features.Lures"
     xmlns:analytics="clr-namespace:TrollTrack.Features.Analytics"
     xmlns:settings="clr-namespace:TrollTrack.Features.Settings"
+    xmlns:about="clr-namespace:TrollTrack.Features.About"
     Title="TrollTrack"
     Shell.FlyoutBehavior="Disabled">
 
-    <TabBar>
+    <TabBar x:Name="MainTabBar">
         <ShellContent
             Title="Dashboard"
             ContentTemplate="{DataTemplate dashboard:DashboardView}"
             Route="Dashboard" />
-        <!-- 
-            Icon="dashboard.png"/> -->
-
         <ShellContent
             Title="Trips"
             ContentTemplate="{DataTemplate catches:CatchesView}"
             Route="Trips" />
-        <!-- 
-            Icon="fish.png"/> -->
-
         <ShellContent
             Title="Lures"
             ContentTemplate="{DataTemplate lures:LuresView}"
             Route="Lures"  />
-        <!--
-            Icon="lure.png"/> -->
-
         <ShellContent
             Title="Analytics"
             ContentTemplate="{DataTemplate analytics:AnalyticsView}"
             Route="Analytics" />
-        <!-- Icon="analytics.png" /> -->
-
-        <ShellContent
+        <ShellContent x:Name="SettingsTab"
             Title="Settings"
             ContentTemplate="{DataTemplate settings:SettingsView}"
-            Route="Analytics" />
-        <!-- Icon="analytics.png" /> -->
+            Route="Settings" />
+        <ShellContent x:Name="AboutTab"
+            Title="About"
+            ContentTemplate="{DataTemplate about:AboutView}"
+            Route="About" />
     </TabBar>
 </Shell>

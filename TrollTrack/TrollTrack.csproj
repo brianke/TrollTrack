@@ -50,7 +50,25 @@
 	    <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 		<MauiXamlC>true</MauiXamlC>
 		
+		<!-- Google Maps API key: set GOOGLE_MAPS_API_KEY env var before build -->
+		<GoogleMapsApiKey>$(GOOGLE_MAPS_API_KEY)</GoogleMapsApiKey>
 	</PropertyGroup>
+
+	<!-- Inject Google Maps API key: copy manifest to obj, replace placeholder, use that for build. Source stays clean. -->
+	<Target Name="_InjectGoogleMapsApiKey" BeforeTargets="_ValidateAndroidPackageProperties" Condition="'$(TargetFramework)' == 'net9.0-android'">
+		<PropertyGroup>
+			<_SourceManifest>$(MSBuildProjectDirectory)\Platforms\Android\AndroidManifest.xml</_SourceManifest>
+			<_InjectedManifest>$(IntermediateOutputPath)AndroidManifest.Injected.xml</_InjectedManifest>
+		</PropertyGroup>
+		<MakeDir Directories="$(IntermediateOutputPath)" />
+		<Warning Text="GOOGLE_MAPS_API_KEY not set. Set the environment variable before building Android." Condition="'$(GoogleMapsApiKey)' == ''" />
+		<Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(_SourceManifest)' -Raw) -replace 'GOOGLE_MAPS_API_KEY_PLACEHOLDER', '$(GoogleMapsApiKey)' | Set-Content '$(_InjectedManifest)' -NoNewline&quot;"
+		      Condition="'$(GoogleMapsApiKey)' != ''"
+		      IgnoreExitCode="false" />
+		<PropertyGroup Condition="'$(GoogleMapsApiKey)' != ''">
+			<AndroidManifest>$(_InjectedManifest)</AndroidManifest>
+		</PropertyGroup>
+	</Target>
 
 	<ItemGroup>
 		<!-- App Icon -->

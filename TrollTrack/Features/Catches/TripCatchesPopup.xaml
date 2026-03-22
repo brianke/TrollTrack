@@ -7,7 +7,7 @@
              x:DataType="vm:TripCatchesDisplay"
              xmlns:vm="clr-namespace:TrollTrack.Features.Catches"
              Title="Trip Catches"
-             BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#1C1C1C}">
+             BackgroundColor="#F8F8F8">
 
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Padding="20">
 
@@ -20,28 +20,26 @@
                    FontSize="24"
                    FontAttributes="Bold"
                    HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light=#1A1A1A, Dark=#FFFFFF}"/>
+                   TextColor="#1A1A1A"/>
             <Label Text="{Binding TripDate, StringFormat='{0:D}'}"
                    FontSize="14"
                    HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                   TextColor="#666666"/>
             <Label Text="{Binding CatchesBySpeciesSummary}"
                    FontSize="12"
                    HorizontalOptions="Center"
-                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"/>
+                   TextColor="#666666"/>
         </VerticalStackLayout>
 
         <!-- Map with catch pins (zoom and pan enabled) -->
         <Border Grid.Row="1"
                 HeightRequest="300"
                 Margin="0,0,0,5"
-                StrokeThickness="0">
+                StrokeThickness="0"
+                BackgroundColor="#E8E8E8">
             <Border.StrokeShape>
                 <RoundRectangle CornerRadius="12"/>
             </Border.StrokeShape>
-            <Border.BackgroundColor>
-                <AppThemeBinding Light="#E8E8E8" Dark="#2C2C2C"/>
-            </Border.BackgroundColor>
             <Grid>
                 <maps:Map x:Name="CatchesMap"
                           IsZoomEnabled="True"
@@ -67,7 +65,7 @@
 
         <!-- Catches List -->
         <Border Grid.Row="3"
-                BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#2C2C2C}"
+                BackgroundColor="#FFFFFF"
                 Padding="12"
                 StrokeThickness="0">
             <Border.StrokeShape>
@@ -80,7 +78,7 @@
                     <Label Text="No catches on this trip."
                            HorizontalOptions="Center"
                            VerticalOptions="Center"
-                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                           TextColor="#666666"
                            Margin="0,20" />
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
@@ -90,7 +88,7 @@
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Tapped="OnCatchTapped" />
                             </Border.GestureRecognizers>
-                            <Grid ColumnDefinitions="Auto,Auto,Auto"
+                            <Grid ColumnDefinitions="Auto,Auto,*"
                                   RowDefinitions="Auto,Auto,Auto"
                                   ColumnSpacing="10"
                                   RowSpacing="5">
@@ -106,9 +104,9 @@
                                        Grid.Column="1"
                                        Grid.Row="0"/>
 
-                                <Label Text="{Binding FormattedTime}"
+                                <Label Text="{Binding Timestamp, StringFormat='{0:t}'}"
                                        FontSize="14"
-                                       TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                                       TextColor="#666666"
                                        Grid.Column="2"
                                        Grid.Row="0"/>
 
@@ -117,17 +115,17 @@
                                         <FormattedString>
                                             <Span Text="📍 "/>
                                             <Span Text="{Binding FormattedLatitude}"/>
-                                            <Span Text="   "/>
+                                            <Span Text=", "/>
                                             <Span Text="{Binding FormattedLongitude}"/>
                                         </FormattedString>
                                     </Label.FormattedText>
                                 </Label>
 
-                                <Label Text="{Binding Timestamp, StringFormat='Time {0}'}"
+                                <Label Text="{Binding Timestamp, StringFormat='{0:M/d/yyyy}'}"
                                        Grid.Column="1"
                                        Grid.Row="2"
                                        Grid.ColumnSpan="2"
-                                       TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                                       TextColor="#666666"
                                        FontSize="12"/>
                             </Grid>
                         </Border>
@@ -140,7 +138,7 @@
         <Button Grid.Row="4"
                 Text="Close"
                 Clicked="OnCloseClicked"
-                BackgroundColor="{AppThemeBinding Light=#2E8BC0, Dark=#4A9FD8}"
+                BackgroundColor="#2E8BC0"
                 TextColor="#FFFFFF"
                 FontSize="16"
                 FontAttributes="Bold"

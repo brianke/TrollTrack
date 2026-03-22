@@ -102,18 +102,6 @@ namespace TrollTrack.Features.Shared.Models.Entities
         [Ignore]
         public string DirectionDisplay => Direction.HasValue ? $"{Direction.Value:F0}°" : "N/A";
 
-        /// <summary>
-        /// Time portion of Timestamp for display (e.g. "2:30 PM")
-        /// </summary>
-        [Ignore]
-        public string FormattedTime => Timestamp.ToString("h:mm tt");
-
-        /// <summary>
-        /// Date portion of Timestamp for display (e.g. "2/27/2025")
-        /// </summary>
-        [Ignore]
-        public string FormattedDate => Timestamp.ToString("M/d/yyyy");
-
         public CatchDataEntity()
         {
             Timestamp = DateTime.Now;
