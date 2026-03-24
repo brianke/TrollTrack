@@ -1465,6 +1465,8 @@ namespace TrollTrack.Services
                 Manufacturer = entity.Manufacturer,
                 DiverType = entity.DiverType,
                 Name = entity.Name,
+                Size = entity.Size,
+                Color = entity.Color,
                 Setting = entity.Setting,
             };
 
