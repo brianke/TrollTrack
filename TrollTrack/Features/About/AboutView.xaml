@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TrollTrack.Features.About.AboutView"
+             Title="About"
+             BackgroundColor="White">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20" Margin="0,40,0,0">
+            <Label Text="🎣 TrollTrack"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"/>
+            <Label x:Name="VersionLabel"
+                   FontSize="16"
+                   TextColor="#666666"
+                   HorizontalOptions="Center"/>
+            <Label Text="Fishing trip and catch tracking"
+                   FontSize="14"
+                   TextColor="#888888"
+                   HorizontalOptions="Center"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

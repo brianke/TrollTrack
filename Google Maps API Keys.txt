@@ -1,0 +1,269 @@
+================================================================================
+GOOGLE MAPS API KEYS - TROLLTRACK
+Complete Guide: Debug & Production for Android and iOS
+================================================================================
+
+TABLE OF CONTENTS
+-----------------
+1. Create API Key in Google Cloud Console
+2. Enable Required APIs
+3. Get SHA-1 Fingerprints (Android)
+4. Restrict Key for Android (Debug + Production)
+5. Restrict Key for iOS
+6. Where to Run Commands
+7. Keystore Locations & Troubleshooting
+8. Add Key to Your App
+8a. Updating the Manifest with the Key When Doing the Build
+9. Checklist
+
+================================================================================
+1. CREATE API KEY IN GOOGLE CLOUD CONSOLE
+================================================================================
+
+1. Go to https://console.cloud.google.com/
+2. Sign in and select project: TrollTrack (id: trolltrack-488619)
+   - Or create a new project if needed
+3. Navigate to: APIs & Services → Credentials
+4. Click: + CREATE CREDENTIALS → API key
+5. Copy the new key and store it securely
+6. Click the key name (or pencil icon) to configure restrictions
+
+================================================================================
+2. ENABLE REQUIRED APIs
+================================================================================
+
+1. Go to: APIs & Services → Library
+2. Search for and ENABLE:
+   - Maps SDK for Android
+   - Maps SDK for iOS
+
+================================================================================
+3. GET SHA-1 FINGERPRINTS (ANDROID)
+================================================================================
+
+WHERE TO RUN COMMANDS
+--------------------
+Run all keytool commands in PowerShell or Command Prompt (any directory).
+
+DEBUG KEYSTORE (Development builds)
+-----------------------------------
+Location: C:\Users\brian\AppData\Local\Xamarin\Mono for Android\debug.keystore
+
+Command to get SHA-1:
+  keytool -list -v -keystore "C:\Users\brian\AppData\Local\Xamarin\Mono for Android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+
+Copy the SHA1 line from the output (e.g., AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD)
+
+
+PRODUCTION/RELEASE KEYSTORE (Store/Play Store builds)
+------------------------------------------------------
+Location: Your release keystore (e.g., in android-signing/ or Keys/ folder)
+
+Command to get SHA-1:
+  keytool -list -v -keystore "C:\path\to\your\release.keystore" -alias your_alias_name
+
+You will be prompted for the keystore password.
+
+
+IF KEYTOOL IS NOT FOUND
+-----------------------
+keytool comes with the Java JDK. If the command fails:
+
+1. Check if Java is installed: java -version
+2. If not installed: Install Microsoft Build of OpenJDK from
+   https://learn.microsoft.com/en-us/java/openjdk/download
+3. Use full path to keytool, e.g.:
+   "C:\Program Files\Microsoft\jdk-17.0.x\bin\keytool.exe" -list -v -keystore "C:\Users\brian\AppData\Local\Xamarin\Mono for Android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+
+
+IF DEBUG KEYSTORE DOESN'T EXIST
+-------------------------------
+Create it manually:
+
+1. Create folder:
+   New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\.android"
+
+2. Generate keystore (standard Android debug credentials):
+   keytool -genkey -v -keystore "$env:USERPROFILE\.android\debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
+3. Then use the Xamarin path if your builds use that location - or copy the
+   generated file to: C:\Users\brian\AppData\Local\Xamarin\Mono for Android\
+
+================================================================================
+4. RESTRICT KEY FOR ANDROID (DEBUG + PRODUCTION)
+================================================================================
+
+OPTION A: One key for both (RECOMMENDED)
+----------------------------------------
+Add BOTH SHA-1 fingerprints to the same key:
+
+1. In API key settings → Application restrictions → Select "Android apps"
+2. Click + ADD AN ITEM
+   - Package name: com.trolltrack.fishing
+   - SHA-1: [paste DEBUG SHA-1 from step 3]
+3. Click + ADD AN ITEM again
+   - Package name: com.trolltrack.fishing
+   - SHA-1: [paste RELEASE SHA-1 from step 3]
+4. Under API restrictions: Restrict key → Enable "Maps SDK for Android"
+5. Click SAVE
+
+
+OPTION B: Separate keys for debug and production
+-------------------------------------------------
+Create two API keys:
+- Key 1: Restrict to debug SHA-1 only (for development)
+- Key 2: Restrict to release SHA-1 only (for store builds)
+
+Configure your build to use the correct key based on Debug vs Release configuration.
+
+================================================================================
+5. RESTRICT KEY FOR iOS
+================================================================================
+
+1. In API key settings → Application restrictions → Select "iOS apps"
+2. Click + ADD AN ITEM
+   - Bundle ID: com.trolltrack.fishing (or your iOS bundle identifier)
+   - Team ID: From https://developer.apple.com/account → Membership → Team ID
+3. Under API restrictions: Restrict key → Enable "Maps SDK for iOS"
+4. Click SAVE
+
+
+COMBINING ANDROID + iOS ON ONE KEY
+----------------------------------
+You can use ONE key for all platforms:
+- Add both Android entries (debug + release SHA-1)
+- Add the iOS entry (bundle ID + Team ID)
+- Enable both "Maps SDK for Android" and "Maps SDK for iOS" in API restrictions
+
+================================================================================
+6. WHERE TO RUN COMMANDS
+================================================================================
+
+- PowerShell: Open from Start menu or right-click in folder → "Open in Terminal"
+- Command Prompt: cmd.exe
+- VS Code / Cursor: Built-in terminal (Ctrl+` or View → Terminal)
+
+Run from any directory; keytool uses the full path you provide for the keystore.
+
+================================================================================
+7. KEYSTORE LOCATIONS & TROUBLESHOOTING
+================================================================================
+
+DEBUG KEYSTORE (Xamarin / .NET MAUI on Windows):
+  C:\Users\brian\AppData\Local\Xamarin\Mono for Android\debug.keystore
+
+STANDARD ANDROID DEBUG KEYSTORE (if different):
+  C:\Users\brian\.android\debug.keystore
+
+RELEASE KEYSTORE:
+  Your project's android-signing/ or Keys/ folder (create when publishing)
+
+To search for debug.keystore on your system:
+  Get-ChildItem -Path $env:USERPROFILE -Filter "debug.keystore" -Recurse -ErrorAction SilentlyContinue -Force | Select-Object FullName
+
+================================================================================
+8. ADD KEY TO YOUR APP
+================================================================================
+
+ANDROID
+-------
+File: TrollTrack/Platforms/Android/AndroidManifest.xml
+
+Add inside the <application> element:
+  <meta-data android:name="com.google.android.geo.API_KEY" android:value="YOUR_API_KEY" />
+
+
+iOS
+---
+File: TrollTrack/Platforms/iOS/Info.plist
+
+Add:
+  <key>MapsApiKey</key>
+  <string>YOUR_API_KEY</string>
+
+Or configure in MauiProgram.cs for iOS if required by the Maps package.
+
+================================================================================
+8a. UPDATING THE MANIFEST WITH THE KEY WHEN DOING THE BUILD
+================================================================================
+
+ENVIRONMENT VARIABLE AT BUILD TIME
+----------------------------------
+Store your API key in the GOOGLE_MAPS_API_KEY environment variable. The key
+is never stored in the project files. This is ALREADY CONFIGURED in the project.
+
+STEP 1: Placeholder in AndroidManifest.xml
+------------------------------------------
+The manifest at TrollTrack/Platforms/Android/AndroidManifest.xml contains:
+
+  <meta-data android:name="com.google.android.geo.API_KEY" android:value="GOOGLE_MAPS_API_KEY_PLACEHOLDER" />
+
+The literal text GOOGLE_MAPS_API_KEY_PLACEHOLDER is replaced at build time
+with the value of GOOGLE_MAPS_API_KEY. Do NOT put your real key here.
+
+
+STEP 2: MSBuild Target (already in TrollTrack.csproj)
+-----------------------------------------------------
+The target _InjectGoogleMapsApiKey runs before the Android build. It reads
+GOOGLE_MAPS_API_KEY from the environment, replaces the placeholder in the
+manifest, and uses the result for the build. The source manifest stays unchanged.
+
+
+STEP 3: Set the environment variable before building
+----------------------------------------------------
+Set GOOGLE_MAPS_API_KEY before each build:
+
+PowerShell (current session only):
+  $env:GOOGLE_MAPS_API_KEY = "AIzaSy_your_key_here"
+
+User-level (persists across sessions):
+  System Properties → Environment Variables → User variables
+  Add NEW: GOOGLE_MAPS_API_KEY = your_key
+
+
+STEP 4: If key is not set
+--------------------------
+If GOOGLE_MAPS_API_KEY is not set, the build succeeds but shows a warning.
+The built app will have the placeholder in the manifest, so Maps will not work.
+
+
+BUILD COMMANDS
+--------------
+Debug build:
+  cd C:\GitHub\TrollTrack
+  $env:GOOGLE_MAPS_API_KEY = "AIzaSy_your_key_here"
+  dotnet build TrollTrack\TrollTrack.csproj -f net9.0-android -c Debug
+
+Release build:
+  $env:GOOGLE_MAPS_API_KEY = "AIzaSy_your_key_here"
+  dotnet build TrollTrack\TrollTrack.csproj -f net9.0-android -c Release
+
+
+CI/CD (GitHub Actions, Azure DevOps)
+------------------------------------
+Store GOOGLE_MAPS_API_KEY as a secret in your CI system. Set it as an environment
+variable before the build step; the MSBuild target will inject it automatically.
+- GitHub Actions: env: GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+- Azure DevOps: Use a variable marked "Keep this value secret", map to env var
+- Never log or echo the key.
+
+================================================================================
+9. CHECKLIST
+================================================================================
+
+[ ] Enable Maps SDK for Android in Google Cloud Console
+[ ] Enable Maps SDK for iOS in Google Cloud Console
+[ ] Create new API key (regenerate if old one was exposed)
+[ ] Get debug SHA-1: keytool with Xamarin path
+[ ] Get release SHA-1: keytool with release keystore (when ready for production)
+[ ] Add Android restrictions (package + both SHA-1s)
+[ ] Add iOS restrictions (bundle ID + Team ID)
+[ ] Restrict APIs to only Maps SDK for Android and Maps SDK for iOS
+[ ] Add key to AndroidManifest.xml (or configure build-time injection)
+[ ] Add key to iOS Info.plist
+[ ] Configure manifest update for builds (see section 8a)
+[ ] Delete or disable the old exposed API key
+
+================================================================================
+END OF DOCUMENT
+================================================================================

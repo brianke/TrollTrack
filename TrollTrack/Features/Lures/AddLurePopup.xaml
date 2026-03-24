@@ -1,0 +1,545 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Name="AddLurePage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:TrollTrack.Features.Lures"
+             xmlns:views="clr-namespace:TrollTrack.Features.Lures"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             xmlns:converters="clr-namespace:TrollTrack.Converters"
+             x:Class="TrollTrack.Features.Lures.AddLurePopup"
+             x:DataType="vm:AddLureViewModel"
+             Title="{Binding Title}"
+             BackgroundColor="#F8F8F8">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <converters:EnumToDisplayStringConverter x:Key="EnumToDisplayStringConverter" />
+            <converters:GuidEqualsMultiConverter x:Key="GuidEqualsMultiConverter" />
+            <converters:LureImageSourceConverter x:Key="LureImageSourceConverter" />
+            <converters:LureColorToMauiColorConverter x:Key="LureColorToMauiColorConverter" />
+
+            <!-- This is key, makes the page VM accessible inside DataTemplates -->
+            <converters:BindingProxy x:Key="VmProxy" Data="{Binding}" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
+
+        <!-- Main Content - Disabled when modal is visible -->
+        <Grid Grid.RowSpan="3" 
+          InputTransparent="{Binding IsColorPickerVisible}"
+          RowDefinitions="Auto,*,Auto">
+
+            <!-- Header -->
+            <VerticalStackLayout Grid.Row="0" Spacing="10" Margin="0,10,0,20">
+                <Label Text="{Binding Title}"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="#1A1A1A" />
+            </VerticalStackLayout>
+
+            <!-- Main Content -->
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Spacing="20">
+
+                    <!-- Lure Details -->
+                    <Border BackgroundColor="#FFFFFF"
+                        Padding="20"
+                        Margin="0,0,0,10">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="15"/>
+                        </Border.StrokeShape>
+
+                        <VerticalStackLayout Spacing="12">
+
+                            <!-- Lure Manufacturer -->
+                            <Label Text="Manufacturer"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#1A1A1A" />
+
+                            <Entry Text="{Binding Manufacturer}"
+                               Placeholder="Enter manufacturer name"
+                               FontSize="16"
+                               BackgroundColor="#F5F5F5"
+                               TextColor="#1A1A1A"
+                               PlaceholderColor="#999999" />
+
+                            <!-- Lure Description -->
+                            <Label Text="Description"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#1A1A1A"/>
+
+                            <Entry Text="{Binding LureDescription}"
+                               Placeholder="Enter description"
+                               FontSize="16"
+                               BackgroundColor="#F5F5F5"
+                               TextColor="#1A1A1A"
+                               PlaceholderColor="#999999" />
+
+                            <!-- Lure Type & Buoyancy -->
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <VerticalStackLayout Grid.Column="0" Spacing="6">
+                                    <Label Text="Type"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="#1A1A1A"/>
+
+                                    <Picker ItemsSource="{Binding LureTypeList}"
+                                        SelectedItem="{Binding SelectedLureType}">
+                                        <Picker.ItemDisplayBinding>
+                                            <Binding Path="." Converter="{StaticResource EnumToDisplayStringConverter}" />
+                                        </Picker.ItemDisplayBinding>
+                                    </Picker>
+
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                    <Label Text="Buoyancy"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="#1A1A1A"/>
+
+                                    <Picker ItemsSource="{Binding BuoyancyList}"
+                                        SelectedItem="{Binding SelectedBuoyancy}">
+                                        <Picker.ItemDisplayBinding>
+                                            <Binding Path="." Converter="{StaticResource EnumToDisplayStringConverter}" />
+                                        </Picker.ItemDisplayBinding>
+                                    </Picker>
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <!-- Length & Weight -->
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <VerticalStackLayout Grid.Column="0" Spacing="6">
+                                    <Label Text="Length (in)"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="#1A1A1A"/>
+                                    <Entry Text="{Binding LengthText}"
+                                       Placeholder="Enter length"
+                                       Keyboard="Numeric"
+                                       FontSize="16"
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="#1A1A1A"
+                                       PlaceholderColor="#999999" />
+                                </VerticalStackLayout>
+
+                                <VerticalStackLayout Grid.Column="1" Spacing="6">
+                                    <Label Text="Weight (oz)"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="#1A1A1A"/>
+                                    <Entry Text="{Binding WeightText}"
+                                       Placeholder="Enter weight"
+                                       Keyboard="Numeric"
+                                       FontSize="16"
+                                       BackgroundColor="#F5F5F5"
+                                       TextColor="#1A1A1A"
+                                       PlaceholderColor="#999999" />
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <!-- Front Colors (selected circles + comma string) -->
+                            <VerticalStackLayout Spacing="6">
+                                <Grid ColumnDefinitions="Auto,* ,Auto" ColumnSpacing="12">
+                                    <Label Text="Front:"
+                                       VerticalOptions="Center"
+                                       FontAttributes="Bold"
+                                       TextColor="#1A1A1A" />
+
+                                    <Label Grid.Column="1"
+                                       Text="{Binding FrontColorsDisplay}"
+                                       VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="#1A1A1A" />
+
+                                    <Button Grid.Column="2"
+                                        Text="Pick"
+                                        Command="{Binding OpenFrontColorsCommand}"
+                                        CornerRadius="10"
+                                        HeightRequest="40" />
+                                </Grid>
+
+                                <!-- Row of circles -->
+                                <ScrollView Orientation="Horizontal">
+                                    <HorizontalStackLayout Spacing="8"
+                                                       BindableLayout.ItemsSource="{Binding SelectedFrontColors}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="e:LureColor">
+                                                <Border WidthRequest="22"
+                                                    HeightRequest="22"
+                                                    StrokeThickness="2"
+                                                    Stroke="#333333"
+                                                    BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="999" />
+                                                    </Border.StrokeShape>
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </HorizontalStackLayout>
+                                </ScrollView>
+                            </VerticalStackLayout>
+
+                            <!-- Back Colors (selected circles + comma string) -->
+                            <VerticalStackLayout Spacing="6">
+                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                    <Label Text="Back:"
+                                       VerticalOptions="Center"
+                                       FontAttributes="Bold"
+                                       TextColor="#1A1A1A" />
+
+                                    <Label Grid.Column="1"
+                                       Text="{Binding BackColorsDisplay}"
+                                       VerticalOptions="Center"
+                                       LineBreakMode="TailTruncation"
+                                       TextColor="#1A1A1A" />
+
+                                    <Button Grid.Column="2"
+                                        Text="Pick"
+                                        Command="{Binding OpenBackColorsCommand}"
+                                        CornerRadius="10"
+                                        HeightRequest="40" />
+                                </Grid>
+
+                                <!-- Row of circles -->
+                                <ScrollView Orientation="Horizontal">
+                                    <HorizontalStackLayout Spacing="8"
+                                                       BindableLayout.ItemsSource="{Binding SelectedBackColors}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="e:LureColor">
+                                                <Border WidthRequest="22"
+                                                    HeightRequest="22"
+                                                    StrokeThickness="2"
+                                                    Stroke="#333333"
+                                                    BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
+                                                    <Border.StrokeShape>
+                                                        <RoundRectangle CornerRadius="999" />
+                                                    </Border.StrokeShape>
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </HorizontalStackLayout>
+                                </ScrollView>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Images -->
+                    <Border BackgroundColor="#FFFFFF"
+                        Padding="20"
+                        Margin="0,0,0,10">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="15"/>
+                        </Border.StrokeShape>
+
+                        <VerticalStackLayout Spacing="12">
+
+                            <Label Text="Photos"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#1A1A1A" />
+
+                            <Label Text="Pick multiple photos, or take multiple. Tap a photo to set it as Primary."
+                               FontSize="13"
+                               TextColor="#555555" />
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                                <Button Grid.Column="0"
+                                    Text="Pick from Gallery"
+                                    Command="{Binding PickLureImagesCommand}"
+                                    BackgroundColor="#E8F2FB"
+                                    TextColor="#0B4F78"
+                                    FontAttributes="Bold"
+                                    CornerRadius="10"
+                                    HeightRequest="44"/>
+
+                                <Button Grid.Column="1"
+                                    Text="Take Photo(s)"
+                                    Command="{Binding TakeLurePhotosCommand}"
+                                    BackgroundColor="#E8FBEF"
+                                    TextColor="#0A6A2A"
+                                    FontAttributes="Bold"
+                                    CornerRadius="10"
+                                    HeightRequest="44"/>
+                            </Grid>
+
+                            <CollectionView ItemsSource="{Binding LureImages}"
+                                        SelectionMode="None"
+                                        HeightRequest="150"
+                                        ItemsLayout="HorizontalList"
+                                        Margin="0,5,0,0">
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate x:DataType="e:LureImageEntity">
+                                        <Grid WidthRequest="140" HeightRequest="140" Margin="2">
+
+                                            <Image Source="{Binding Path}"
+                                                WidthRequest="130"
+                                                HeightRequest="130"
+                                                Aspect="AspectFill"
+                                                InputTransparent="True" />
+
+                                            <Button Text="✕"
+                                                ZIndex="10"
+                                                WidthRequest="32"
+                                                HeightRequest="32"
+                                                HorizontalOptions="End"
+                                                VerticalOptions="Start"
+                                                Margin="6"
+                                                Padding="0"
+                                                Clicked="OnRemoveImageClicked" />
+
+                                            <Button BackgroundColor="Transparent"
+                                                BorderWidth="0"
+                                                Padding="0"
+                                                Margin="0"
+                                                HorizontalOptions="Fill"
+                                                VerticalOptions="Fill"
+                                                ZIndex="1"
+                                                Clicked="OnSetPrimaryClicked" />
+
+                                            <Label ZIndex="20"
+                                               Text="★"
+                                               FontSize="18"
+                                               Margin="6"
+                                               HorizontalOptions="Start"
+                                               VerticalOptions="Start"
+                                               BackgroundColor="Transparent"
+                                               TextColor="#E0A800"
+                                               InputTransparent="True">
+                                                <Label.IsVisible>
+                                                    <MultiBinding Converter="{StaticResource GuidEqualsMultiConverter}">
+                                                        <Binding Path="Id" />
+                                                        <Binding Source="{x:Reference AddLurePage}" Path="BindingContext.PrimaryImageId" />
+                                                        <!--<Binding Source="{RelativeSource AncestorType={x:Type ContentPage}"
+                                                                Path="BindingContext.PrimaryImageId" />-->
+                                                    </MultiBinding>
+                                                </Label.IsVisible>
+                                            </Label>
+                                        </Grid>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+
+                        </VerticalStackLayout>
+                    </Border>
+
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Footer Buttons -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12" Margin="0,15,0,0">
+
+                <Button Grid.Column="0"
+                    Text="Cancel"
+                    Command="{Binding CancelAddLureCommand}"
+                    BackgroundColor="#DDDDDD"
+                    TextColor="#111111"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    HeightRequest="50"/>
+
+                <Button Grid.Column="1"
+                    Text="{Binding AddButtonText}"
+                    Command="{Binding AddLureCommand}"
+                    BackgroundColor="#D3D3D3"
+                    TextColor="#555555"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    HeightRequest="50">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroupList>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="#22C55E" />
+                                        <Setter Property="TextColor" Value="White" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="#D3D3D3" />
+                                        <Setter Property="TextColor" Value="#555555" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateGroupList>
+                    </VisualStateManager.VisualStateGroups>
+                </Button>
+
+            </Grid>
+        </Grid>
+
+        <!-- Color Picker Modal Overlay - Full Screen -->
+        <Grid IsVisible="{Binding IsColorPickerVisible}"
+              BackgroundColor="#80000000"
+              ZIndex="999"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill"
+              InputTransparent="False"
+              RowDefinitions="*"
+              ColumnDefinitions="*">
+
+            <Border Grid.Row="0" 
+                    Grid.Column="0"
+                    BackgroundColor="#FFFFFF"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill"
+                    Padding="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="0" />
+                </Border.StrokeShape>
+
+                <Grid RowDefinitions="Auto,Auto,*,Auto" 
+                      RowSpacing="12"
+                      Padding="16"
+                      HorizontalOptions="Fill"
+                      VerticalOptions="Fill">
+
+                    <Label Text="{Binding ColorPickerTitle}"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#1A1A1A" />
+                    <!-- Selected colors list -->
+                    <Grid Grid.Row="1" Margin="0,10,0,0">
+
+                        <!-- Selected Front Colors -->
+                        <VerticalStackLayout IsVisible="{Binding IsPickingFront}"
+                                             Spacing="5">
+                            <Label Text="{Binding FrontColorsDisplay}"
+                                   VerticalOptions="Center"
+                                   LineBreakMode="TailTruncation"
+                                   TextColor="#1A1A1A" />
+                            <ScrollView Orientation="Horizontal">
+                                <HorizontalStackLayout Spacing="10"
+                                                       BindableLayout.ItemsSource="{Binding SelectedFrontColors}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="e:LureColor">
+                                            <Border WidthRequest="22"
+                                                    HeightRequest="22"
+                                                    StrokeThickness="2"
+                                                    Stroke="#333333"
+                                                    BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="999" />
+                                                </Border.StrokeShape>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </HorizontalStackLayout>
+                            </ScrollView>
+                        </VerticalStackLayout>
+
+                        <!-- Selected Back Colors -->
+                        <VerticalStackLayout IsVisible="{Binding IsPickingFront, Converter={StaticResource InvertedBoolConverter}}">
+                            <Label Text="{Binding BackColorsDisplay}"
+                                   VerticalOptions="Center"
+                                   LineBreakMode="TailTruncation"
+                                   TextColor="#1A1A1A" />
+                            <ScrollView Orientation="Horizontal">
+
+
+                                <HorizontalStackLayout Spacing="8"
+                                                       BindableLayout.ItemsSource="{Binding SelectedBackColors}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="e:LureColor">
+                                            <Border WidthRequest="22"
+                                                    HeightRequest="22"
+                                                    StrokeThickness="2"
+                                                    Stroke="#333333"
+                                                    BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}">
+                                                <Border.StrokeShape>
+                                                    <RoundRectangle CornerRadius="999" />
+                                                </Border.StrokeShape>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </HorizontalStackLayout>
+                            </ScrollView>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <!-- Colors grid -->
+                    <CollectionView Grid.Row="2"
+                                    ItemsSource="{Binding GroupedColorOptions}"
+                                    SelectionMode="None"
+                                    IsGrouped="True"
+                                    >
+                        <CollectionView.ItemsLayout>
+                            <GridItemsLayout Span="8" Orientation="Vertical" VerticalItemSpacing="5" />
+                        </CollectionView.ItemsLayout>
+
+                        <CollectionView.GroupHeaderTemplate>
+                            <DataTemplate x:DataType="vm:AddLureViewModel+ColorGroup">
+                                <Label Text="{Binding Name}"
+                                       HorizontalTextAlignment="Center"
+                                       FontAttributes="Bold"
+                                       FontSize="16"
+                                       Padding="0,20,0,0" />
+                            </DataTemplate>
+                        </CollectionView.GroupHeaderTemplate>
+                        
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:AddLureViewModel+LureColorOption">
+                                <Grid WidthRequest="45" HeightRequest="45">
+
+                                    <!-- color circle -->
+                                    <Border BackgroundColor="{Binding ., Converter={StaticResource LureColorToMauiColorConverter}}"
+                                            StrokeThickness="3"
+                                            Stroke="Transparent"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center"
+                                            WidthRequest="40"
+                                            HeightRequest="40">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="999" />
+                                        </Border.StrokeShape>
+
+                                        <!-- Dark ring when selected -->
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border"
+                                                         Binding="{Binding IsSelected}"
+                                                         Value="True">
+                                                <Setter Property="Stroke"
+                                                        Value="#333333" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                    </Border>
+
+                                    <!-- clickable overlay (Button is more reliable than GestureRecognizer) -->
+                                    <Button BackgroundColor="Transparent"
+                                            BorderWidth="0"
+                                            Padding="0"
+                                            Clicked="OnColorClicked" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+
+                    <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Button Grid.Column="0"
+                                Text="Close"
+                                Command="{Binding CloseColorPickerCommand}"
+                                CornerRadius="10"
+                                HeightRequest="44" />
+
+                        <Button Grid.Column="1"
+                                Text="Done"
+                                Command="{Binding CloseColorPickerCommand}"
+                                CornerRadius="10"
+                                HeightRequest="44" />
+                    </Grid>
+
+                </Grid>
+            </Border>
+        </Grid>
+
+    </Grid>
+</ContentPage>

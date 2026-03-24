@@ -1,12 +1,10 @@
-﻿using SQLiteNetExtensions.Attributes;
-
-namespace TrollTrack.Features.Shared.Models.Entities
+﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("Locations")]
     public class LocationDataEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         public double Latitude { get; set; }
         public double Longitude { get; set; }
@@ -16,7 +14,8 @@ namespace TrollTrack.Features.Shared.Models.Entities
         public double? Speed { get; set; }
         public DateTimeOffset Timestamp { get; set; }
 
-        [OneToMany(CascadeOperations = CascadeOperation.All)]
-        public List<CatchDataEntity> Catches { get; set; }
+        //[OneToMany(CascadeOperations = CascadeOperation.All)]
+        //public List<CatchDataEntity>? Catches { get; set; }
+
     }
 }

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TrollTrack.Features.Catches.ActiveTripView"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             xmlns:vm="clr-namespace:TrollTrack.Features.Catches"
+             x:DataType="vm:CatchesViewModel">
+
+    <VerticalStackLayout>
+
+        <!-- Active Trip Info Banner -->
+        <Border Style="{StaticResource InfoCard}"
+                BackgroundColor="{StaticResource Primary}">
+            <HorizontalStackLayout HorizontalOptions="Center">
+                <Label Text="🎣" FontSize="24"/>
+                <Label Text="{Binding ActiveTrip.TripName}"
+                       TextColor="White"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+        </Border>
+
+        <!-- End Trip Button -->
+        <Button Text="End Trip"
+                Command="{Binding EndActiveTripCommand}"
+                BackgroundColor="{StaticResource Primary}"
+                Margin="0,0,0,10"/>
+
+        <!-- Add New Rod Section -->
+        <Border Style="{StaticResource InfoCard}">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Add Rod"
+                       Style="{StaticResource CardTitle}"
+                       HorizontalOptions="Center"/>
+                <Button Text="+ Add Rod"
+                        Style="{StaticResource CircularButton}"
+                        WidthRequest="120"
+                        HeightRequest="40"
+                        CornerRadius="20"
+                        Command="{Binding AddRodCommand}"/>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Add Catch Section -->
+        <Border Style="{StaticResource InfoCard}">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Log New Catch"
+                       Style="{StaticResource CardTitle}"
+                       HorizontalOptions="Center"/>
+
+                <Label Text="Tap to add catch • Hold to edit"
+                       HorizontalOptions="Center"
+                       FontSize="12"
+                       TextColor="{StaticResource Gray400}"
+                       Margin="0,5"/>
+
+                <Label Text="No rods configured. Add a rod first!"
+                       HorizontalOptions="Center"
+                       TextColor="{StaticResource Gray500}"
+                       Margin="0,10"
+                       IsVisible="{Binding HasNoRods}"/>
+
+                <FlexLayout BindableLayout.ItemsSource="{Binding Rods}"
+                            Wrap="Wrap"
+                            JustifyContent="Center"
+                            AlignItems="Start"
+                            AlignContent="Start">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="e:RodSetupEntity">
+                            <!-- 
+                                SOLUTION: Use a Grid with Border for visuals and transparent Button for events
+                                Button supports Pressed/Released which we can use for long press detection
+                            -->
+                            <Grid Margin="5" 
+                                  WidthRequest="90" 
+                                  HeightRequest="60">
+
+                                <!-- Visual Border (background) -->
+                                <Border BackgroundColor="{StaticResource BorderAccent}"
+                                        StrokeThickness="3"
+                                        HorizontalOptions="Fill"
+                                        VerticalOptions="Fill">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="20"/>
+                                    </Border.StrokeShape>
+
+                                    <!-- Rod Info Label -->
+                                    <Label Style="{StaticResource RodInfo}"
+                                           HorizontalTextAlignment="Center"
+                                           VerticalTextAlignment="Center"
+                                           InputTransparent="True">
+                                        <Label.FormattedText>
+                                            <FormattedString>
+                                                <!-- Rod Name -->
+                                                <Span Text="{Binding Name}" 
+                                                      FontSize="16" 
+                                                      FontAttributes="Bold"/>
+
+                                                <!-- Line Break -->
+                                                <Span Text="&#10;"/>
+
+                                                <!-- Line Out -->
+                                                <Span Text="{Binding LineOut}" 
+                                                      FontSize="12" 
+                                                      TextColor="White"/>
+                                                <Span Text=" feet" 
+                                                      FontSize="12" 
+                                                      TextColor="White"/>
+                                            </FormattedString>
+                                        </Label.FormattedText>
+                                    </Label>
+                                </Border>
+
+                                <!-- Invisible Button overlay for touch detection -->
+                                <Button BackgroundColor="Transparent"
+                                        BorderColor="Transparent"
+                                        BorderWidth="0"
+                                        CornerRadius="20"
+                                        CommandParameter="{Binding .}"
+                                        Clicked="OnAddCatchClicked"
+                                        Pressed="OnButtonPressed"
+                                        Released="OnButtonReleased"
+                                        HorizontalOptions="Fill"
+                                        VerticalOptions="Fill"/>
+                            </Grid>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </FlexLayout>
+
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- Catches List -->
+        <Border Style="{StaticResource InfoCard}">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Catch History"
+                       Style="{StaticResource CardTitle}"
+                       HorizontalOptions="Center"/>
+
+                <CollectionView ItemsSource="{Binding Catches}"
+                                SelectionMode="None">
+                    <CollectionView.EmptyView>
+                        <Label Text="No catches yet. Log your first catch!"
+                               HorizontalOptions="Center"
+                               TextColor="{StaticResource Gray500}"
+                               Margin="0,20"/>
+                    </CollectionView.EmptyView>
+
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="e:CatchDataEntity">
+                            <SwipeView>
+                                <Border Style="{StaticResource InfoCard}"
+                                        Margin="0,5">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Tapped="OnCatchTapped" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" 
+                                          RowDefinitions="Auto,Auto,Auto"
+                                          ColumnSpacing="10"
+                                          RowSpacing="5">
+
+                                        <!-- Fish Icon/Emoji -->
+                                        <Label Text="🐟"
+                                               FontSize="32"
+                                               Grid.RowSpan="3"
+                                               VerticalOptions="Center"/>
+
+                                        <!-- Species Name -->
+                                        <Label Text="{Binding FishName}"
+                                               FontSize="18"
+                                               FontAttributes="Bold"
+                                               Grid.Column="1"
+                                               Grid.Row="0"/>
+
+                                        <!-- Time -->
+                                        <Label Text="{Binding Timestamp, StringFormat='{0:t}'}"
+                                               FontSize="14"
+                                               TextColor="{StaticResource Gray500}"
+                                               Grid.Column="2"
+                                               Grid.Row="0"/>
+
+                                        <!-- Location -->
+                                        <Label Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="📍 "/>
+                                                    <Span Text="{Binding FormattedLatitude}"/>
+                                                    <Span Text=", "/>
+                                                    <Span Text="{Binding FormattedLongitude}"/>
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+
+                                        <!-- Date -->
+                                        <Label Text="{Binding Timestamp, StringFormat='{0:M/d/yyyy}'}"
+                                               Grid.Column="1"
+                                               Grid.Row="2"
+                                               Grid.ColumnSpan="2"
+                                               TextColor="{StaticResource Gray500}"
+                                               FontSize="12"/>
+                                    </Grid>
+                                </Border>
+                            </SwipeView>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </Border>
+
+    </VerticalStackLayout>
+</ContentView>

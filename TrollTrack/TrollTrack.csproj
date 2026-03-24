@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
@@ -48,13 +48,72 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	    <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
-
+		<MauiXamlC>true</MauiXamlC>
+		
+		<!-- Google Maps API key: set GOOGLE_MAPS_API_KEY env var before build -->
+		<GoogleMapsApiKey>$(GOOGLE_MAPS_API_KEY)</GoogleMapsApiKey>
 	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	  <AndroidUseAapt2>True</AndroidUseAapt2>
+	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+	  <AndroidPackageFormat>aab</AndroidPackageFormat>
+	  <AndroidKeyStore>True</AndroidKeyStore>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-maccatalyst|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	  <AndroidUseAapt2>True</AndroidUseAapt2>
+	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+	  <AndroidPackageFormat>aab</AndroidPackageFormat>
+	  <AndroidKeyStore>True</AndroidKeyStore>
+	  <!-- Signing: set TROLLTRACK_ANDROID_KEY_ALIAS, TROLLTRACK_ANDROID_KEY_PASS, TROLLTRACK_ANDROID_STORE_PASS in your environment (do not commit secrets). Keystore lives next to repo root in android-signing/. -->
+	  <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)..\android-signing\release.keystore</AndroidSigningKeyStore>
+	  <AndroidSigningKeyAlias>$(TROLLTRACK_ANDROID_KEY_ALIAS)</AndroidSigningKeyAlias>
+	  <AndroidSigningKeyPass>$(TROLLTRACK_ANDROID_KEY_PASS)</AndroidSigningKeyPass>
+	  <AndroidSigningStorePass>$(TROLLTRACK_ANDROID_STORE_PASS)</AndroidSigningStorePass>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-maccatalyst|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	</PropertyGroup>
+
+	<!-- Inject Google Maps API key: copy manifest to obj, replace placeholder, use that for build. Source stays clean. -->
+	<Target Name="_InjectGoogleMapsApiKey" BeforeTargets="_ValidateAndroidPackageProperties" Condition="'$(TargetFramework)' == 'net9.0-android'">
+		<PropertyGroup>
+			<_SourceManifest>$(MSBuildProjectDirectory)\Platforms\Android\AndroidManifest.xml</_SourceManifest>
+			<_InjectedManifest>$(IntermediateOutputPath)AndroidManifest.Injected.xml</_InjectedManifest>
+		</PropertyGroup>
+		<MakeDir Directories="$(IntermediateOutputPath)" />
+		<Warning Text="GOOGLE_MAPS_API_KEY not set. Set the environment variable before building Android." Condition="'$(GoogleMapsApiKey)' == ''" />
+		<Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(_SourceManifest)' -Raw) -replace 'GOOGLE_MAPS_API_KEY_PLACEHOLDER', '$(GoogleMapsApiKey)' | Set-Content '$(_InjectedManifest)' -NoNewline&quot;" Condition="'$(GoogleMapsApiKey)' != ''" IgnoreExitCode="false" />
+		<PropertyGroup Condition="'$(GoogleMapsApiKey)' != ''">
+			<AndroidManifest>$(_InjectedManifest)</AndroidManifest>
+		</PropertyGroup>
+	</Target>
 
 	<ItemGroup>
 		<!-- App Icon -->
-		<MauiIcon Include="Resources\AppIcon\trolltrack_icon.svg" Color="#2E8BC0" />
+		<MauiIcon Include="Resources\AppIcon\trolltrack_app_icon.png" BaseSize="1024,1024" Color="#FFFFFFFF" />
 
+		<!-- Styles -->
+		<MauiXaml Update="Resources\Styles\*.xaml">
+			<SubType>Designer</SubType>
+		</MauiXaml>
+		
 		<!-- Splash Screen -->
 		<MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
 
@@ -67,48 +126,107 @@
 
 		<!-- Raw Assets -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		<Compile Remove="Services\IRodSetupService.cs" />
+		<Compile Remove="Services\RodSetupService.cs" />
+		<None Remove="Resources\Images\Lures\Bandit_BlueShiner.png" />
+		<None Remove="Resources\Images\Lures\Bandit_ChromeBlackBack.png" />
+		<None Remove="Resources\Images\Lures\Bandit_ChromeBlueBack.png" />
+		<None Remove="Resources\Images\Lures\Bandit_CoconutCandy.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_blueshiner.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_chromeblackback.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_chromeblueback.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_coconutcandy.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_humblebee.png" />
+		<None Remove="Resources\Images\Lures\bandit_deepcrank_purplemist.png" />
+		<None Remove="Resources\Images\Lures\Bandit_HumbleBee.png" />
+		<None Remove="Resources\Images\Lures\Bandit_PurpleMist.png" />
+		<None Remove="Resources\Images\Lures\eye_slammer_weapon_rig_atomic_blueberry.png" />
+		<None Remove="Resources\Images\Lures\eye_slammer_weapon_rig_mtn_dew.png" />
+		<None Remove="Resources\Images\Lures\inline_trolling_keel_weight.png" />
+		<None Remove="Resources\Images\Lures\inline_trolling_weight.png" />
+		<None Remove="Resources\Images\Lures\moonshine_lures_agent_orange.png" />
+		<None Remove="Resources\Images\Lures\moonshine_lures_jj_mac_muffin.png" />
+		<None Remove="Resources\Images\Lures\walleye_sport_fruit_loopz_walleye_weapon.png" />
+		<EmbeddedResource Include="Configuration\appsettings.json" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Features\Catches\CatchData.cs" />
-	  <Compile Remove="Features\Lures\LureData.cs" />
-	  <Compile Remove="Features\Programs\ProgramData.cs" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_blueshiner.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_chromeblackback.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_chromeblueback.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_coconutcandy.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_humblebee.png" />
+	  <MauiImage Include="Resources\Images\Lures\bandit_deepcrank_purplemist.png" />
+	  <MauiImage Include="Resources\Images\Lures\eye_slammer_weapon_rig_atomic_blueberry.png" />
+	  <MauiImage Include="Resources\Images\Lures\eye_slammer_weapon_rig_mtn_dew.png" />
+	  <MauiImage Include="Resources\Images\Lures\inline_trolling_keel_weight.png" />
+	  <MauiImage Include="Resources\Images\Lures\inline_trolling_weight.png" />
+	  <MauiImage Include="Resources\Images\Lures\moonshine_lures_agent_orange.png" />
+	  <MauiImage Include="Resources\Images\Lures\moonshine_lures_jj_mac_muffin.png" />
+	  <MauiImage Include="Resources\Images\Lures\walleye_sport_fruit_loopz_walleye_weapon.png" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.100" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="9.0.110" />
+		<PackageReference Include="Microsoft.Maui.Controls.Maps" Version="9.0.110" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.9" />
 		
 		<!-- Essential packages for your fishing app -->
-		<PackageReference Include="CommunityToolkit.Maui" Version="9.1.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="12.2.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+		<PackageReference Include="SQLiteNetExtensions" Version="2.1.0" />
 		<PackageReference Include="SQLiteNetExtensions.Async" Version="2.1.0" />
+		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
 	</ItemGroup>
 
 	<!-- Platform specific configurations -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.100" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.110" />
 	</ItemGroup>
-
 	<ItemGroup>
-		<MauiXaml Update="Views\Catches.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\Dashboard.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\Lures.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\Analytics.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
-		<MauiXaml Update="Views\Programs.xaml">
-			<Generator>MSBuild:Compile</Generator>
-		</MauiXaml>
+	  <Compile Update="Features\Catches\ActiveTripView.xaml.cs">
+	    <DependentUpon>NewTripView.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Features\Catches\CatchDetailPopup.xaml.cs">
+	    <DependentUpon>CatchDetailPopup.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Features\Catches\TripCatchesPopup.xaml.cs">
+	    <DependentUpon>TripCatchesPopup.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Features\Lures\AddLurePopup.xaml.cs">
+	    <DependentUpon>AddLurePopup.xaml</DependentUpon>
+	  </Compile>
 	</ItemGroup>
-
+	<ItemGroup>
+	  <MauiXaml Update="Features\Catches\CatchesView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\Catches\ActiveTripView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\Catches\CatchDetailPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\Catches\TripCatchesPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\Lures\AddLurePopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\RodSetup\LureFilterPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\RodSetup\LureSelectionPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\RodSetup\RodSetupPopup.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Features\Settings\SettingsView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
 
 </Project>

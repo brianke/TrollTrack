@@ -1,24 +1,17 @@
-﻿using SQLite;
-using SQLiteNetExtensions.Attributes;
-using System;
-using System.ComponentModel.DataAnnotations;
-using TrollTrack.Features.Shared.Models.Entities;
-
-namespace TrollTrack.Features.Shared.Models.Entities
+﻿namespace TrollTrack.Features.Shared.Models.Entities
 {
     [Table("LureImages")]
     public class LureImageEntity
     {
         [PrimaryKey]
-        public Guid Id { get; set; }
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         [Required]
-        public string ImagePath { get; set; }
+        public string Path { get; set; } = string.Empty;
 
+        // Add this foreign key property
         [ForeignKey(typeof(LureDataEntity))]
-        public Guid LureId { get; set; }
+        public Guid LureDataEntityId { get; set; }
 
-        [ManyToOne]
-        public LureDataEntity Lure { get; set; }
     }
 }

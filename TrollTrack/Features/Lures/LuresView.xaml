@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+<ContentPage x:Name="LuresPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
              xmlns:vm="clr-namespace:TrollTrack.Features.Lures"
@@ -7,33 +8,51 @@
              x:DataType="vm:LuresViewModel"
              Title="{Binding Title}">
     <Grid>
-        <CollectionView ItemsSource="{Binding Lures}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Button Text="+ Add Lure"
+                Style="{StaticResource CircularButton}"
+                WidthRequest="120"
+                HeightRequest="40"
+                CornerRadius="20"
+                Command="{Binding AddLureCommand}" />
+
+
+        <CollectionView ItemsSource="{Binding Lures}"
+                        Grid.Row="1">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="e:LureDataEntity">
-                    <Border Padding="10" Margin="10">
+                    <Border Style="{StaticResource LureCard}">
+                        <!--<Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnImageTapped" />
+                        </Border.GestureRecognizers>-->
                         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
-                            <Image Grid.RowSpan="2" Source="{Binding PrimaryImagePath}" WidthRequest="100" HeightRequest="100">
-                                <Image.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:LuresViewModel}}, Path=OpenImageCommand}"
-                                                              CommandParameter="{Binding PrimaryImagePath}" />
+                            <Image Grid.RowSpan="2" 
+                                   Source="{Binding PrimaryImage.Path}" 
+                                   Style="{StaticResource LureImage}">
+                                <Image.GestureRecognizers>                                    
+                                    <!-- Using the code behind here as I could not get RelayCommand to work directly from here --> 
+                                    <TapGestureRecognizer Tapped="OnImageTapped" />
                                 </Image.GestureRecognizers>
                             </Image>
-                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center">
-                                <Label Text="{Binding Manufacturer}" FontSize="Large" />
-                                <Label Text="{Binding Color}" FontSize="Medium" />
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Padding="10,0,0,0">
+                                <Label Text="{Binding Manufacturer}" Style="{StaticResource LureTitle}" />
+                                <Label Text="{Binding Description}" Style="{StaticResource LureSubtitle}" />
                             </VerticalStackLayout>
-                            <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,*,*" Margin="0,10,0,0">
+                            <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,*,*" Margin="0,10,0,0" Padding="10,0,0,0">
                                 <VerticalStackLayout>
-                                    <Label Text="Buoyancy" FontSize="Small" />
-                                    <Label Text="{Binding Buoyancy}" FontSize="Small" />
+                                    <Label Text="Buoyancy" Style="{StaticResource LureDetailLabel}" />
+                                    <Label Text="{Binding Buoyancy}" Style="{StaticResource LureDetailLabel}" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="1">
-                                    <Label Text="Length" FontSize="Small" />
-                                    <Label Text="{Binding Length}" FontSize="Small" />
+                                    <Label Text="Length" Style="{StaticResource LureDetailLabel}" />
+                                    <Label Text="{Binding Length, StringFormat='{0:F2} '}" Style="{StaticResource LureDetailLabel}" />
                                 </VerticalStackLayout>
                                 <VerticalStackLayout Grid.Column="2">
-                                    <Label Text="Weight" FontSize="Small" />
-                                    <Label Text="{Binding Weight}" FontSize="Small" x:DataType="e:LureDataEntity" />
+                                    <Label Text="Weight" Style="{StaticResource LureDetailLabel}" />
+                                    <Label Text="{Binding Weight, StringFormat='{0:F3} oz'}" Style="{StaticResource LureDetailLabel}" />
                                 </VerticalStackLayout>
                             </Grid>
                         </Grid>
@@ -41,44 +60,47 @@
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
-    
+
         <!-- Image Modal Overlay -->
+        <!-- Put this as the LAST child of your root Grid on the Lures page -->
         <Grid IsVisible="{Binding IsImageModalVisible}"
               BackgroundColor="#80000000"
-              x:DataType="vm:LuresViewModel">
+              ZIndex="999"
+              RowDefinitions="*"
+              ColumnDefinitions="*"
+              x:DataType="vm:LuresViewModel"
+              Grid.RowSpan="2">
 
-            <!-- Semi-transparent background that closes modal when tapped -->
-            <BoxView Color="Transparent">
-                <BoxView.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding CloseImageCommand}" />
-                </BoxView.GestureRecognizers>
-            </BoxView>
+            <!-- Optional: tap outside to close -->
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding CloseImageCommand}" />
+            </Grid.GestureRecognizers>
 
-            <!-- Modal content -->
-            <Border BackgroundColor="White" 
-                    Margin="20"
-                    VerticalOptions="Center">
-                <Grid>
-                    <!-- Full-size image -->
-                    <Image Source="{Binding SelectedImagePath}"
-                           Aspect="AspectFit"
-                           VerticalOptions="FillAndExpand"
-                           HorizontalOptions="FillAndExpand" />
+            <!-- Modal card that fills most of the screen -->
+            <Border Margin="12"
+                    Padding="10"
+                    BackgroundColor="White"
+                    StrokeShape="RoundRectangle 16"
+                    HorizontalOptions="Fill"
+                    VerticalOptions="Fill">
+
+                <Grid RowDefinitions="Auto,*">
 
                     <!-- Close button -->
                     <Button Text="✕"
-                            BackgroundColor="Black"
-                            TextColor="White"
-                            WidthRequest="40"
-                            HeightRequest="40"
-                            CornerRadius="20"
-                            FontSize="18"
                             HorizontalOptions="End"
                             VerticalOptions="Start"
-                            Margin="10"
                             Command="{Binding CloseImageCommand}" />
+
+                    <!-- BIG image -->
+                    <Image Grid.Row="1"
+                           Source="{Binding SelectedImagePath}"
+                           Aspect="AspectFit"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill" />
                 </Grid>
             </Border>
         </Grid>
+
     </Grid>
 </ContentPage>

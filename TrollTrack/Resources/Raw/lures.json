@@ -1,56 +1,201 @@
-[
-  {
-    "Id": "0725A2BF-2310-4DF2-9BE9-5AACC6ABD655",
-    "Manufacturer": "Bandit",
-    "Color": "Blue Shiner",
-    "Buoyancy": "Floating",
-    "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_blueshiner.png" ]
-  },
-  {
-    "Id": "964ED109-E28B-4BC1-801A-F5A98FDDC2E2",
-    "Manufacturer": "Bandit",
-    "Color": "Chrome Black Back",
-    "Buoyancy": "Floating",
-    "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_chromeblackback.png" ]
-  },
-  {
-    "Id": "C8A81BFB-1EED-42FF-A43E-2CFDB9CA39F4",
-    "Manufacturer": "Bandit",
-    "Color": "Chrome Blue Back",
-    "Buoyancy": "Floating",
-    "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_chromeblueback.png" ]
-  },
-  {
-    "Id": "1F2EA346-4CDF-4556-BEFB-7A7455C7EC5C",
-    "Manufacturer": "Bandit",
-    "Color": "Coconut Candy",
-    "Buoyancy": "Floating",
-    "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_coconutcandy.png" ]
-  },
-  {
-    "Id": "E934B851-DA2B-482F-ABBB-FBB9F1C0A13A",
-    "Manufacturer": "Bandit",
-    "Color": "Humble Bee",
-    "Buoyancy": "Floating",
-    "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_humblebee.png" ]
-  },
-  {
-    "Id": "E934B851-DA2B-482F-ABBB-FBB9F1C0A13A",
-    "Manufacturer": "Bandit",
-    "Color": "Purple Mist",
-    "Buoyancy": "Floating",
-    "Length": 4.75,
-    "Weight": ".625",
-    "ImagePaths": [ "bandit_purplemist.png" ]
-  }
-]
+[  
+    {
+      "Id": "0725A2BF-2310-4DF2-9BE9-5AACC6ABD655",
+      "Manufacturer": "Bandit",
+      "LureType": "DeepCrankbait",
+      "Description": "Blue Shiner",
+      "Buoyancy": "Floating",
+      "Length": 4.75,
+      "Weight": 0.625,
+      "PrimaryImageId": "50F3FC9A-7F6A-481E-9C51-8A1B14BB0A67",
+      "Images": [
+        {
+          "Id": "50F3FC9A-7F6A-481E-9C51-8A1B14BB0A67",
+          "Path": "bandit_deepcrank_blueshiner.png"
+        }
+      ],
+      "FrontColors": [ "Purple" ],
+      "BackColors": [ "YellowGreen" ]
+    },
+    {
+      "Id": "964ED109-E28B-4BC1-801A-F5A98FDDC2E2",
+      "Manufacturer": "Bandit",
+      "LureType": "DeepCrankbait",
+      "Description": "Chrome Black Back",
+      "Buoyancy": "Floating",
+      "Length": 4.75,
+      "Weight": 0.625,
+      "PrimaryImageId": "F18FDCA8-ED55-4DCF-996F-29DAC1A638E6",
+      "Images": [
+        {
+          "Id": "F18FDCA8-ED55-4DCF-996F-29DAC1A638E6",
+          "Path": "bandit_deepcrank_chromeblackback.png"
+        }
+      ],
+      "FrontColors": [ "Black", "DarkSlateGrey" ],
+      "BackColors": [ "White" ]
+    },
+    {
+      "Id": "C8A81BFB-1EED-42FF-A43E-2CFDB9CA39F4",
+      "Manufacturer": "Bandit",
+      "LureType": "DeepCrankbait",
+      "Description": "Chrome Blue Back",
+      "Buoyancy": "Floating",
+      "Length": 4.75,
+      "Weight": 0.625,
+      "PrimaryImageId": "78DCDB86-E511-43F3-BD9F-B6F44467C015",
+      "Images": [
+        {
+          "Id": "78DCDB86-E511-43F3-BD9F-B6F44467C015",
+          "Path": "bandit_deepcrank_chromeblueback.png"
+        }
+      ],
+      "FrontColors": [ "Teal" ],
+      "BackColors": [ "Orange" ]
+    },
+    {
+      "Id": "1F2EA346-4CDF-4556-BEFB-7A7455C7EC5C",
+      "Manufacturer": "Bandit",
+      "LureType": "DeepCrankbait",
+      "Description": "Coconut Candy",
+      "Buoyancy": "Floating",
+      "Length": 4.75,
+      "Weight": 0.625,
+      "PrimaryImageId": "49EDAEB5-D1FD-4831-A7E7-3A7B19980596",
+      "Images": [
+        {
+          "Id": "49EDAEB5-D1FD-4831-A7E7-3A7B19980596",
+          "Path": "bandit_deepcrank_coconutcandy.png"
+        }
+      ],
+      "FrontColors": [ "Yellow", "Red" ],
+      "BackColors": [ "Orange" ]
+    },
+    {
+      "Id": "E934B851-DA2B-482F-ABBB-FBB9F1C0A13A",
+      "Manufacturer": "Bandit",
+      "LureType": "DeepCrankbait",
+      "Description": "Humble Bee",
+      "Buoyancy": "Floating",
+      "Length": 4.75,
+      "Weight": 0.625,
+      "PrimaryImageId": "E55C6F59-3A9F-4E16-A1E2-D714814A3854",
+      "Images": [
+        {
+          "Id": "E55C6F59-3A9F-4E16-A1E2-D714814A3854",
+          "Path": "bandit_deepcrank_humblebee.png"
+        }
+      ],
+      "FrontColors": [ "Black", "GoldenRod" ],
+      "BackColors": [ "White", "Clear" ]
+    },
+    {
+      "Id": "731C5C81-9045-4BD9-92DA-2F8381900FA0",
+      "Manufacturer": "Bandit",
+      "LureType": "DeepCrankbait",
+      "Description": "Purple Mist",
+      "Buoyancy": "Floating",
+      "Length": 4.75,
+      "Weight": 0.625,
+      "PrimaryImageId": "323FA851-D3EB-4500-91DE-D47261887239",
+      "Images": [
+        {
+          "Id": "323FA851-D3EB-4500-91DE-D47261887239",
+          "Path": "bandit_deepcrank_purplemist.png"
+        }
+      ],
+      "FrontColors": [ "Purple" ],
+      "BackColors": [ "White", "Clear" ]
+    },
+    {
+      "Id": "E5EF9C03-B587-4BFC-A199-570D3EE77A40",
+      "Manufacturer": "Moonshine Lures",
+      "LureType": "Spoon",
+      "Description": "Agent Orange",
+      "Buoyancy": "NA",
+      "Length": 2.75,
+      "Weight": 0.0625,
+      "PrimaryImageId": "CC01902C-DC20-4737-B039-9E5F5DD90BC7",
+      "Images": [
+        {
+          "Id": "CC01902C-DC20-4737-B039-9E5F5DD90BC7",
+          "Path": "moonshine_lures_agent_orange.png"
+        }
+      ],
+      "FrontColors": [ "Orange", "Bronze" ],
+      "BackColors": [ "Bronze" ]
+    },
+    {
+      "Id": "58F64A58-6AAE-423A-BA70-8C1006EC1FEE",
+      "Manufacturer": "Moonshine Lures",
+      "LureType": "Spoon",
+      "Description": "JJ Mac Muffin",
+      "Buoyancy": "NA",
+      "Length": 2.75,
+      "Weight": 0.0625,
+      "PrimaryImageId": "D4B039B4-2978-4CA8-9478-6B993201872E",
+      "Images": [
+        {
+          "Id": "D4B039B4-2978-4CA8-9478-6B993201872E",
+          "Path": "moonshine_lures_jj_mac_muffin.png"
+        }
+      ],
+      "FrontColors": [ "Orange", "Chartreuse", "Purple", "White" ],
+      "BackColors": [ "Bronze" ]
+    },
+    {
+      "Id": "B6797393-9A6F-44A4-87F8-DC5B45D77F5F",
+      "Manufacturer": "Eye-Slammer",
+      "LureType": "WalleyeRig",
+      "Description": "Atomic Blueberry",
+      "Buoyancy": "NA",
+      "Length": 3.25,
+      "Weight": 0.0625,
+      "PrimaryImageId": "E5115039-3213-4D6D-A183-6565A019683A",
+      "Images": [
+        {
+          "Id": "E5115039-3213-4D6D-A183-6565A019683A",
+          "Path": "eye_slammer_weapon_rig_atomic_blueberry.png"
+        }
+      ],
+      "FrontColors": [ "Purple", "Lime", "Silver" ],
+      "BackColors": [ "Silver" ]
+    },
+    {
+      "Id": "B232428A-B0DD-4EA3-AFBF-8D93AD0BBC99",
+      "Manufacturer": "Eye-Slammer",
+      "LureType": "WalleyeRig",
+      "Description": "Mountain Dew",
+      "Buoyancy": "NA",
+      "Length": 3.25,
+      "Weight": 0.0625,
+      "PrimaryImageId": "2612476A-1733-4454-8902-9B8872727362",
+      "Images": [
+        {
+          "Id": "2612476A-1733-4454-8902-9B8872727362",
+          "Path": "eye_slammer_weapon_rig_mtn_dew.png"
+        }
+      ],
+      "FrontColors": [ "Green", "Lime" ],
+      "BackColors": [ "Silver" ]
+    },
+    {
+      "Id": "C8080B52-6520-4DDE-BABE-F7D04F4FA183",
+      "Manufacturer": "Walleye Sport",
+      "LureType": "WalleyeRig",
+      "Description": "Fruit Loopz",
+      "Buoyancy": "NA",
+      "Length": 3.25,
+      "Weight": 0.0625,
+      "PrimaryImageId": "D6A1CB3D-21FE-4EFD-9AC0-415DFB4C0822",
+      "Images": [
+        {
+          "Id": "D6A1CB3D-21FE-4EFD-9AC0-415DFB4C0822",
+          "Path": "walleye_sport_fruit_loopz_walleye_weapon.png"
+        }
+      ],
+      "FrontColors": [ "Orange", "Purple", "Lime", "Silver" ],
+      "BackColors": [ "Silver" ]
+    }
+  ]
+

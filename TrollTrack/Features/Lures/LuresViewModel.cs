@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using System.Windows.Input;
+﻿using CommunityToolkit.Maui.Core.Extensions;
+using System.Text.Json;
 using TrollTrack.Features.Shared;
 using TrollTrack.Features.Shared.Models.Entities;
 
@@ -7,10 +7,20 @@ namespace TrollTrack.Features.Lures
 {
     public partial class LuresViewModel : BaseViewModel
     {
+        private AddLureViewModel _addLureVM;
+
         #region Observable Properties
 
         [ObservableProperty]
-        public ObservableCollection<LureDataEntity> lures = new ();
+        public ObservableCollection<LureDataEntity> lures = new();
+
+        [ObservableProperty]
+        public ObservableCollection<DiverDataEntity> divers = new();
+
+        [ObservableProperty]
+        public ObservableCollection<string> buoyancyList = Enum.GetValues<LureBuoyancys>()
+            .Select(x => x.ToDisplayString())
+            .ToObservableCollection();
 
         // Modal properties
         [ObservableProperty]
@@ -21,16 +31,32 @@ namespace TrollTrack.Features.Lures
 
         #endregion
 
+        #region Events
+
+        /// <summary>
+        /// Event raised when add lure is confirmed 
+        /// </summary>
+        //public event EventHandler<LureDataEntity>? AddLureConfirmed;
+
+        #endregion
+
+
 
         #region Constructor
 
         public LuresViewModel(ILocationService locationService, IDatabaseService databaseService) : base(locationService, databaseService)
         {
-            OpenImageCommand = new RelayCommand<string>(OpenImage);
-            CloseImageCommand = new RelayCommand(CloseImage);
+            //OpenImageCommand = new RelayCommand<string>(OpenImage);
+            //CloseImageCommand = new RelayCommand(CloseImage);
+
+            // Create the add lure view model
+            _addLureVM = new AddLureViewModel(BaseLocationService, BaseDatabaseService);
 
             // Load data when ViewModel is created
             _ = InitializeAsync();
+
+            // Add this to verify the command exists
+            //Debug.WriteLine($"OpenImageCommand is null: {OpenImageCommand == null}");
 
         }
 
@@ -44,57 +70,91 @@ namespace TrollTrack.Features.Lures
         /// <returns></returns>
         public async Task InitializeAsync()
         {
-            //await ExecuteSafelyAsync(async () =>
-            //{
-                Debug.WriteLine("Starting lures initialization...");
-                IsInitializing = true;
+            try
+            {
+                await ExecuteSafelyAsync(async () =>
+                {
+                    Debug.WriteLine("Starting lures initialization...");
+                    IsInitializing = true;
 
-                // Load lures when ViewModel is created
-                await LoadLuresAsync();
+                    // Load lures when ViewModel is created
+                    await LoadLuresAsync();
 
-                // Update Title
-                Title = "Lures";
-            //}, "Initializing lures...", showErrorAlert: false);
+                    // Load divers when ViewModel is created
+                    await LoadDiversAsync();
+
+                    // Update Title
+                    Title = "Lures";
+                }, "Initializing lures...", showErrorAlert: false);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"LuresViewModel InitializeAsync() failed: {ex.Message}");
+            }
+            finally
+            {
+                IsBusy = false;
+            }
+
         }
 
         #endregion
 
         #region Commands
 
-        public ICommand OpenImageCommand { get; }
-        public ICommand CloseImageCommand { get; }
 
-        private async Task LoadLuresAsync()
+        public async Task LoadLuresAsync()
         {
-            await ExecuteSafelyAsync(async () =>
+            var lureList = await BaseDatabaseService.GetAllLureDataAsync();
+
+            if (lureList == null || !lureList.Any())
             {
-                IsLoading = true;
+                Debug.WriteLine("No lures found in database");
+                await ShowAlertAsync("No Lures", "No lures found. Please add lures first from the Lures tab.");
+                IsLoading = false;
+                return;
+            }
 
-                using var stream = await FileSystem.OpenAppPackageFileAsync("lures.json");
-                using var reader = new StreamReader(stream);
-                var json = await reader.ReadToEndAsync();
-                var lureList = JsonSerializer.Deserialize<List<LureDataEntity>>(json);
-
-                if (lureList == null)
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Lures.Clear();
+                foreach (var lure in lureList)
                 {
-                    System.Diagnostics.Debug.WriteLine("No lures found in JSON.");
-                    return;
+                    Lures.Add(lure);
                 }
+            });
 
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                {
-                    Lures.Clear();
-                    foreach (var lure in lureList)
-                    {
-                        Lures.Add(lure);
-                    }
-
-                });
-
-                System.Diagnostics.Debug.WriteLine($"Loaded {lureList.Count} lures");
-            }, "Loading lures...", showErrorAlert: false);
+            Debug.WriteLine($"Loaded {lureList.Count} lures for selection");
+            IsLoading = false;
         }
 
+
+        public async Task LoadDiversAsync()
+        {
+            var diverList = await BaseDatabaseService.GetAllDiversAsync();
+
+            if (diverList == null || !diverList.Any())
+            {
+                Debug.WriteLine("No divers found in database");
+                await ShowAlertAsync("No Divers", "No divers found. Please add divers first from the Lures tab.");
+                IsLoading = false;
+                return;
+            }
+
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                Divers.Clear();
+                foreach (var lure in diverList)
+                {
+                    Divers.Add(lure);
+                }
+            });
+
+            Debug.WriteLine($"Loaded {diverList.Count} divers for selection");
+            IsLoading = false;
+        }
+
+        [RelayCommand]
         private void OpenImage(string imagePath)
         {
             if (string.IsNullOrEmpty(imagePath)) return;
@@ -103,11 +163,121 @@ namespace TrollTrack.Features.Lures
             IsImageModalVisible = true;
         }
 
+        [RelayCommand]
         private void CloseImage()
         {
             IsImageModalVisible = false;
             SelectedImagePath = "";
         }
+
+        [RelayCommand]
+        private async Task AddLure()
+        {
+            try
+            {
+                Debug.WriteLine("=== AddLure Command Started ===");
+
+                _addLureVM.ResetForNewLure();
+
+                // Subscribe to the ad lure confirmed event
+                _addLureVM.AddLureConfirmed += OnAddLureConfirmed;
+                Debug.WriteLine("Subscribed to OnAddLureConfirmed event");
+
+                // Create and show the popup
+                var popup = new AddLurePopup(_addLureVM);
+                Debug.WriteLine("Pushing modal popup");
+
+                var page = Application.Current?.Windows[0]?.Page;
+                if (page?.Navigation == null) return;
+
+                await page?.Navigation.PushModalAsync(popup)!;
+                Debug.WriteLine("Modal popup displayed");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"!!! ERROR in AddRod: {ex.Message}");
+                await ShowAlertAsync("Error", "Failed to open rod setup. Please try again.");
+            }
+        }
+
+        /// <summary>
+        /// Handle add lure confirmation from the popup
+        /// </summary>
+        private async void OnAddLureConfirmed(object? sender, LureDataEntity lureEntity)
+        {
+            try
+            {
+                // Unsubscribe from the event
+                if (_addLureVM != null)
+                {
+                    _addLureVM.AddLureConfirmed -= OnAddLureConfirmed;
+                }
+
+                Debug.WriteLine($"=== Add Lure Confirmed ===");
+                //Debug.WriteLine($"Lure: {rodSetupEntity.Lure!.Manufacturer} - {rodSetupEntity.Lure.Color}");   // Lure cannot be null here so added (!) ignore
+                //Debug.WriteLine($"Line Out: {rodSetupEntity.LineOut} feet");
+
+                LureDataEntity newLure;
+
+                if (lureEntity.Id == Guid.Empty)
+                {
+                    // Create a new rod with the selected lure and line out
+                    newLure = new LureDataEntity
+                    {
+                        Manufacturer = lureEntity.Manufacturer,
+                        LureType = lureEntity.LureType,
+                        Description = lureEntity.Description,
+                        Buoyancy = lureEntity.Buoyancy,
+                        Length = lureEntity.Length,
+                        Weight = lureEntity.Weight,
+                        FrontColors = lureEntity.FrontColors,
+                        BackColors = lureEntity.BackColors,
+                        Images = lureEntity.Images,
+                        PrimaryImageId = lureEntity.PrimaryImageId,
+                    };
+                }
+                else
+                {
+                    newLure = new LureDataEntity
+                    {
+                        Id = lureEntity.Id,
+                        Manufacturer = lureEntity.Manufacturer,
+                        LureType = lureEntity.LureType,
+                        Description = lureEntity.Description,
+                        Buoyancy = lureEntity.Buoyancy,
+                        Length = lureEntity.Length,
+                        Weight = lureEntity.Weight,
+                        FrontColors = lureEntity.FrontColors,
+                        BackColors = lureEntity.BackColors,
+                        Images = lureEntity.Images,
+                        PrimaryImageId = lureEntity.PrimaryImageId,
+                    };
+                }
+
+                //Debug.WriteLine($"Creating rod with Name: {newRod.Name}, LureId: {newRod.LureId}, LineOut: {newRod.LineOut}");
+
+                // Save the rod to the database
+                var result = await BaseDatabaseService.SaveLureAsync(newLure);
+                Debug.WriteLine($"Database save returned: {result}");
+
+                // Reload rods to show the new one
+                await LoadLuresAsync();
+
+                // Verify the rod was added
+                Debug.WriteLine($"Total lures after reload: {Lures.Count}");
+
+                await ShowAlertAsync("Success",
+                    $"Lure added:\n" +
+                    $"{newLure.DisplayName}");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"!!! ERROR in OnAddLureConfirmed: {ex.Message}");
+                Debug.WriteLine($"Stack trace: {ex.StackTrace}");
+                await ShowAlertAsync("Error", $"Failed to add lure: {ex.Message}");
+            }
+        }
+
         #endregion
 
     }

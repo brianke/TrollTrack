@@ -1,166 +1,193 @@
-﻿using TrollTrack.Configuration;
+using System.Diagnostics;
+using TrollTrack.Configuration;
 using TrollTrack.Features.Shared;
-using TrollTrack.Features.Shared.Models;
+using TrollTrack.Features.Shared.Models.Entities;
 
-namespace TrollTrack.Features.Dashboard
+namespace TrollTrack.Features.Dashboard;
+
+public partial class DashboardViewModel : BaseViewModel
 {
-    public partial class DashboardViewModel : BaseViewModel
+    private readonly IWeatherService _weatherService;
+    private bool _hasRequestedLocationOnStart;
+
+    #region Observable Properties
+
+    [ObservableProperty]
+    private WeatherDataEntity? _weatherEntity;
+
+    [ObservableProperty]
+    private string _weatherSummary = "Loading weather...";
+
+    [ObservableProperty]
+    private ObservableCollection<TripDataEntity> _recentTrips = new();
+
+
+    #endregion
+
+    #region Constructor
+
+    public DashboardViewModel(ILocationService locationService, IDatabaseService databaseService, IWeatherService weatherService)
+        : base(locationService, databaseService)
     {
-        private readonly IWeatherService _weatherService;
+        _weatherService = weatherService;
 
-        #region Observable Properties
+        Title = "Dashboard";
+        _ = InitializeAsync();
+    }
 
-        [ObservableProperty]
-        private WeatherData weatherData = new();
+    #endregion
 
-        [ObservableProperty]
-        private string weatherSummary = "Loading weather...";
+    #region Initialization and Data Loading
 
-        [ObservableProperty]
-        private string fishingConditions = "Loading fishing conditions...";
+    public async Task InitializeAsync()
+    {
+        IsInitializing = true;
+        await LoadDataAsync(isRefresh: false);
 
-        [ObservableProperty]
-        private bool isWeatherApiConfigured;
+        IsInitializing = false;
+    }
 
-        [ObservableProperty]
-        private string weatherApiStatusMessage = "";
+    [RelayCommand]
+    private async Task RefreshDashboard()
+    {
+        await LoadDataAsync(isRefresh: true);
+    }
 
-        #endregion
-
-        #region Constructor
-
-        public DashboardViewModel(ILocationService locationService, IDatabaseService databaseService, IWeatherService weatherService) : base(locationService, databaseService)
+    private async Task LoadDataAsync(bool isRefresh)
+    {
+        try
         {
-            _weatherService = weatherService;
+            // Only request location on: (1) first app/dashboard load, (2) explicit refresh
+            var shouldRequestLocation = isRefresh || !_hasRequestedLocationOnStart;
 
-            CheckApiConfiguration();
-
-            Title = "Dashboard";
-            _ = InitializeAsync();
-        }
-
-        private void CheckApiConfiguration()
-        {
-            IsWeatherApiConfigured = ConfigurationService.IsWeatherApiConfigured();
-            var (isValid, message) = ConfigurationService.GetWeatherApiKeyStatus();
-            WeatherApiStatusMessage = message;
-        }
-
-        #endregion
-
-        #region Initialization
-
-        public async Task InitializeAsync()
-        {
-            await ExecuteSafelyAsync(async () =>
+            if (shouldRequestLocation)
             {
-                Debug.WriteLine("Starting dashboard initialization...");
-                IsInitializing = true;
-
-                CurrentLatitude = AppConfig.Constants.DefaultLatitude;
-                CurrentLongitude = AppConfig.Constants.DefaultLongitude;
-                LocationName = "Default Location (Great Lakes)";
-
-                await GetAndSetLocationAsync(showAlerts: false);
-                await LoadWeatherDataAsyncCore();
-
-            }, "Initializing dashboard...", showErrorAlert: false);
-            IsInitializing = false;
-        }
-
-        #endregion
-
-        #region Data Loading and Refreshing
-
-        [RelayCommand]
-        private async Task RefreshDashboard()
-        {
-            await ExecuteSafelyAsync(async () =>
-            {
-                if (await GetAndSetLocationAsync(showAlerts: true))
+                var statusMessage = isRefresh ? "Refreshing dashboard..." : "Initializing dashboard...";
+                await ExecuteSafelyAsync(async () =>
                 {
-                    await LoadWeatherDataAsyncCore();
-                    RefreshStatus = "Dashboard updated";
-                }
-            }, "Refreshing dashboard...", showErrorAlert: true);
-        }
+                    WeatherSummary = "Fetching location and weather...";
 
-        [RelayCommand]
-        private async Task RefreshWeatherAsync()
-        {
-            await ExecuteSafelyAsync(async () =>
-            {
-                if (CurrentLatitude == 0 || CurrentLongitude == 0)
-                {
-                    await ShowAlertAsync("Location Required", "Please update your location first.");
-                    return;
-                }
-                await LoadWeatherDataAsyncCore();
-            }, "Refreshing weather...", showErrorAlert: true);
-        }
+                    if (!await GetAndSetLocationAsync(showAlerts: isRefresh))
+                    {
+                        if (!isRefresh)
+                        {
+                            CurrentLatitude = AppConfig.Constants.DefaultLatitude;
+                            CurrentLongitude = AppConfig.Constants.DefaultLongitude;
+                            LocationName = "Default Location (Great Lakes)";
+                        }
+                        else
+                        {
+                            WeatherSummary = "Could not update location.";
+                            return;
+                        }
+                    }
 
-        private async Task LoadWeatherDataAsyncCore()
-        {
-            WeatherSummary = "Loading weather...";
+                    _hasRequestedLocationOnStart = true;
 
-            if (!IsWeatherApiConfigured)
-            {
-                WeatherSummary = "API not configured.";
-                return;
-            }
+                    var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
 
-            if (CurrentLatitude == 0 && CurrentLongitude == 0)
-            {
-                WeatherSummary = "Current location not available.";
-                return;
-            }
-
-            var weather = await _weatherService.GetCurrentWeatherAsync(CurrentLatitude, CurrentLongitude);
-
-            if (weather != null)
-            {
-                WeatherData.WeatherEntity = weather;
-                LocationName = weather.LocationName ?? "Location Unavailable";
-                WeatherSummary = "Weather updated";
-                Debug.WriteLine($"Weather loaded: {weather.Temperature}°F, {weather.WeatherCondition}");
+                    if (weather != null)
+                    {
+                        WeatherEntity = weather[0];
+                        LocationName = weather[0].LocationName ?? "Location Unavailable";
+                        WeatherSummary = $"Weather updated at {DateTime.Now:T}";
+                        if (isRefresh)
+                        {
+                            RefreshStatus = "Dashboard updated";
+                        }
+                    }
+                    else
+                    {
+                        WeatherSummary = "Weather data unavailable.";
+                    }
+                }, statusMessage, showErrorAlert: isRefresh);
             }
             else
             {
-                WeatherSummary = "Weather data unavailable";
-                LocationName = "Unknown location";
+                // Subsequent tab switch - no location request, keep cached data
+                if (WeatherEntity == null && (CurrentLatitude != 0 || CurrentLongitude != 0))
+                {
+                    var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
+                    if (weather != null)
+                        WeatherEntity = weather[0];
+                }
+                else if (WeatherEntity == null)
+                {
+                    CurrentLatitude = AppConfig.Constants.DefaultLatitude;
+                    CurrentLongitude = AppConfig.Constants.DefaultLongitude;
+                    var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
+                    if (weather != null)
+                        WeatherEntity = weather[0];
+                }
             }
+
+            // Load past trips
+            await LoadRecentTripsAsync();
         }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"DashboardViewModel LoadDataASync() failed: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 
-        #endregion
+    #endregion
 
-        #region Navigation Commands
+    #region Navigation Commands
 
-        private async Task NavigateToAsync(string route)
+    private async Task NavigateToAsync(string route)
+    {
+        try
         {
             await ExecuteSafelyAsync(() => Shell.Current.GoToAsync(route), "Navigating...");
         }
-
-        [RelayCommand]
-        private async Task LogCatchAsync() => await NavigateToAsync(RouteConstants.Catch);
-
-        [RelayCommand]
-        private async Task ChangeTrollingMethodAsync() => await NavigateToAsync(RouteConstants.Trolling);
-
-        [RelayCommand]
-        private async Task ViewCatchHistoryAsync() => await NavigateToAsync(RouteConstants.History);
-
-        [RelayCommand]
-        private async Task ManageLuresAsync() => await NavigateToAsync(RouteConstants.Lures);
-
-        #endregion
-
-        #region IDisposable
-
-        protected override void Dispose(bool disposing)
+        catch (Exception ex)
         {
-            base.Dispose(disposing);
+            Debug.WriteLine($"DashboardViewModel NavigateToAsync() failed: {ex.Message}");
         }
-
-        #endregion
+        finally
+        {
+            IsBusy = false;
+        }
     }
+
+    [RelayCommand]
+    private async Task LogCatchAsync() => await NavigateToAsync(RouteConstants.Catches);
+
+    //[RelayCommand]
+    //private async Task ChangeTrollingMethodAsync() => await NavigateToAsync(RouteConstants.Programs);
+
+    [RelayCommand]
+    private async Task ViewCatchHistoryAsync() => await NavigateToAsync(RouteConstants.Catches);
+
+    [RelayCommand]
+    private async Task ManageLuresAsync() => await NavigateToAsync(RouteConstants.Lures);
+
+    #endregion
+
+    private async Task LoadRecentTripsAsync()
+    {
+        var trips = await BaseDatabaseService.GetRecentTripsAsync(10);
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            RecentTrips.Clear();
+            foreach (var trip in trips)
+            {
+                RecentTrips.Add(trip);
+            }
+        });
+    }
+
+    #region IDisposable
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+    }
+
+    #endregion
 }

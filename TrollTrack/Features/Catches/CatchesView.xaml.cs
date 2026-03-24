@@ -1,3 +1,5 @@
+using TrollTrack.Features.Shared.Models.Entities;
+
 namespace TrollTrack.Features.Catches;
 
 public partial class CatchesView : ContentPage
@@ -11,10 +13,13 @@ public partial class CatchesView : ContentPage
         // Get the ViewModel from dependency injection when the page is created
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         BindingContext = viewModel;
-        _viewModel = viewModel;
+
+        // Add this for debugging
+        Debug.WriteLine($"BindingContext set to: {BindingContext?.GetType().Name}");
+
     }
 
-
+    
     protected override async void OnAppearing()
     {
         base.OnAppearing();
@@ -26,9 +31,9 @@ public partial class CatchesView : ContentPage
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error initializing Dashboard ViewModel: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Error initializing Catches ViewModel: {ex.Message}");
             // Optionally show error message to user
-            await DisplayAlert("Error", "Failed to load dashboard data. Please try again.", "OK");
+            await DisplayAlert("Error", "Failed to load catch data. Please try again.", "OK");
         }
     }
 
@@ -39,4 +44,5 @@ public partial class CatchesView : ContentPage
         // The ViewModel will handle its own cleanup through BaseViewModel's Dispose
         // No additional cleanup needed here
     }
+
 }

@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace TrollTrack.Features.Shared.Models.Entities
 {
+
     /// <summary>
     /// Weather data model for fishing conditions
     /// </summary>
+    [Table("Weather")]
     public class WeatherDataEntity
     {
-        [Key]
-        public Guid Id { get; set; }
+        [PrimaryKey]
+        public Guid Id { get; set; } = Guid.NewGuid();
 
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
@@ -24,9 +19,9 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         // Temperature
         public double Temperature { get; set; } = 70;
-        public double FeelsLike { get; set; }
-        public double TemperatureMin { get; set; }
-        public double TemperatureMax { get; set; }
+        //public double FeelsLike { get; set; }
+        //public double TemperatureMin { get; set; }
+        //public double TemperatureMax { get; set; }
         public string TemperatureUnit { get; set; } = "F"; // F or C
 
         // Humidity and Pressure
@@ -36,10 +31,10 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         // Wind
         public double WindSpeed { get; set; } = 0;
-        public double WindGust { get; set; }
+        //public double WindGust { get; set; }
         public double WindDirection { get; set; } // Degrees 0-360
-        public string WindDirectionCardinal { get; set; } = string.Empty; // N, NE, E, etc.
-        public string WindSpeedUnit { get; set; } = "mph"; // mph or kph
+        //public string WindDirectionCardinal { get; set; } = string.Empty; // N, NE, E, etc.
+        public string WindSpeedUnit { get; set; } = "kt"; // knots
 
         // Visibility and Cloud Cover
         public double Visibility { get; set; } // Miles or kilometers
@@ -70,8 +65,8 @@ namespace TrollTrack.Features.Shared.Models.Entities
         public double UvIndex { get; set; }
 
         // Air Quality (if available)
-        public double? AirQualityIndex { get; set; }
-        public string? AirQualityDescription { get; set; }
+        //public double? AirQualityIndex { get; set; }
+        //public string? AirQualityDescription { get; set; }
 
         // Derived properties for fishing
         public bool IsFishingWeatherGood => CalculateFishingConditions();
@@ -84,7 +79,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
         private bool CalculateFishingConditions()
         {
             // Basic fishing weather logic
-            bool goodWind = WindSpeed <= 15; // Less than 15 mph wind
+            bool goodWind = WindSpeed <= 13; // Less than 13 kt (~15 mph) wind
             bool goodVisibility = Visibility >= 1; // At least 1 mile visibility
             bool noStorms = !WeatherCondition.ToLower().Contains("storm") &&
                            !WeatherCondition.ToLower().Contains("thunder");
@@ -103,9 +98,9 @@ namespace TrollTrack.Features.Shared.Models.Entities
                 return "Rising pressure - Fish may be less active";
             else if (PressureTrend < -1)
                 return "Falling pressure - Great for fishing!";
-            else if (WindSpeed < 5)
+            else if (WindSpeed < 4)
                 return "Calm conditions - Good for surface fishing";
-            else if (WindSpeed > 20)
+            else if (WindSpeed > 17)
                 return "Too windy for most fishing";
             else if (WeatherCondition.ToLower().Contains("overcast"))
                 return "Overcast skies - Excellent fishing conditions";
@@ -147,7 +142,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
         public string GetFishingConditionColor()
         {
             if (IsFishingWeatherGood) return "Green";
-            if (WindSpeed > 20 || PrecipitationChance > 80) return "Red";
+            if (WindSpeed > 17 || PrecipitationChance > 80) return "Red";
             return "Orange";
         }
 

@@ -1,6 +1,9 @@
-﻿using System.Globalization;
+using Microsoft.Extensions.Logging;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using TrollTrack.Features.Shared;
+using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Converters
 {
@@ -100,6 +103,28 @@ namespace TrollTrack.Converters
     }
 
     /// <summary>
+    /// Converts an Enum value to use the [Description] property for display
+    /// </summary>
+
+    public class EnumToDisplayStringConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is Enum enumValue)
+            {
+                return enumValue.ToDisplayString();
+            }
+            return value?.ToString() ?? string.Empty;
+        }
+
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            // Not needed for display binding
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
     /// Convert string value to double
     /// </summary>
     public class StringToDoubleConverter : JsonConverter<double>
@@ -132,6 +157,169 @@ namespace TrollTrack.Converters
         public override void Write(Utf8JsonWriter writer, double value, JsonSerializerOptions options)
         {
             writer.WriteNumberValue(value);
+        }
+    }
+
+
+    /// <summary>
+    /// Converts a string comparison to a boolean value
+    /// </summary>
+    public class StringComparisonToBooleanConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            // if either value is null then return the false value
+            if (value == null || parameter == null) return false;
+
+            return ((String)value).Equals((String)parameter, StringComparison.CurrentCulture) ? true : false;
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Converts a string comparison to a visibility value
+    /// </summary>
+    public class StringComparisonToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            // if either value is null then return the false value
+            if (value == null || parameter == null) return Visibility.Hidden;
+
+            return ((String)value).Equals((String)parameter, StringComparison.CurrentCulture) ? Visibility.Hidden : Visibility.Visible;
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class GuidEqualsMultiConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            // Must have exactly 2 values: itemGuid, primaryGuid
+            if (values == null || values.Length < 2)
+                return false;
+
+            if (!TryGetGuid(values[0], out var itemGuid))
+                return false;
+
+            if (!TryGetGuid(values[1], out var primaryGuid))
+                return false;
+
+            // Optional: treat empty as "no primary"
+            if (itemGuid == Guid.Empty || primaryGuid == Guid.Empty)
+                return false;
+
+            return itemGuid == primaryGuid;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+            => throw new NotSupportedException();
+
+        private static bool TryGetGuid(object? input, out Guid guid)
+        {
+            guid = Guid.Empty;
+
+            if (input is null)
+                return false;
+
+            if (input is Guid g)
+            {
+                guid = g;
+                return true;
+            }
+
+            if (input is string s && Guid.TryParse(s, out var parsed))
+            {
+                guid = parsed;
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+
+    public class LureImageSourceConverter : IValueConverter
+    {
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is not string path || string.IsNullOrWhiteSpace(path))
+                return null;
+
+            // Handle res:foo.png
+            if (path.StartsWith("res:", StringComparison.OrdinalIgnoreCase))
+                return ImageSource.FromFile(path.Substring(4));
+
+            // Handle file:/some/path or file:relative/path
+            if (path.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+                path = path.Substring(5);
+
+            // If relative, assume it lives under AppDataDirectory
+            if (!Path.IsPathRooted(path))
+                path = Path.Combine(FileSystem.AppDataDirectory, path);
+
+            return ImageSource.FromFile(path);
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => throw new NotSupportedException();
+    }
+
+
+    public class BindingProxy : BindableObject
+    {
+        public static readonly BindableProperty DataProperty =
+            BindableProperty.Create(nameof(Data), typeof(object), typeof(BindingProxy), default(object));
+
+        public object? Data
+        {
+            get => GetValue(DataProperty);
+            set => SetValue(DataProperty, value);
+        }
+    }
+
+
+    public class LureColorToMauiColorConverter : IValueConverter
+    {
+        public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+        {
+            if (value is AddLureViewModel.LureColorOption opt)
+                return ColorPalette.GetColor(opt.Color);
+
+            if (value is LureColor lc)
+                return ColorPalette.GetColor(lc);
+
+            if (value is string s && TryParseLureColorString(s, out var parsedFromString))
+                return ColorPalette.GetColor(parsedFromString);
+
+            return Colors.Transparent;
+        }
+
+        public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+            => throw new NotSupportedException();
+
+
+        internal static bool TryParseLureColorString(string? value, out LureColor color)
+        {
+            color = LureColor.NA;
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            // Normalize common formatting differences (e.g., "Fluorescent Pink", "fluorescent-pink")
+            var normalized = value.Trim()
+                                  .Replace(" ", string.Empty)
+                                  .Replace("-", string.Empty)
+                                  .Replace("_", string.Empty);
+
+            return Enum.TryParse(normalized, ignoreCase: true, out color);
         }
     }
 }

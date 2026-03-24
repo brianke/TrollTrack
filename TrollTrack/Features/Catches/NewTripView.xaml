@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TrollTrack.Features.Catches.NewTripView"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             xmlns:vm="clr-namespace:TrollTrack.Features.Catches"
+             x:DataType="vm:CatchesViewModel">
+
+    <VerticalStackLayout>
+
+        <!-- Start New Trip Section -->
+        <Border Style="{StaticResource InfoCard}">
+            <Grid>
+
+                <!-- Define Rows -->
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width=".35*" />
+                    <ColumnDefinition Width=".65*" />
+                </Grid.ColumnDefinitions>
+
+                <Label Text="Start New Trip" 
+                            Style="{StaticResource CardTitle}"
+                            HorizontalOptions="Center" 
+                            Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" />
+
+                <Label Text="Trip Name"
+                            VerticalOptions="Center"
+                            Grid.Row="1" Grid.Column="0" />
+                <Entry Text="{Binding NewTripName}"
+                            Placeholder="e.g., Lake Erie Morning Run"
+                            PlaceholderColor="White"
+                            Keyboard="{x:Static Keyboard.Chat}"
+                            Grid.Row="1" Grid.Column="1" />
+
+                <Label Text="Trip Date"
+                            VerticalOptions="Center"
+                            Grid.Row="2" Grid.Column="0" />
+                <DatePicker Date="{Binding NewTripDate}"
+                                Format="D"
+                                Grid.Row="2" Grid.Column="1" />
+
+                <Label Text="Water Temp (F)"
+                            VerticalOptions="Center"
+                            Grid.Row="3" Grid.Column="0" />
+                <Picker Title="Water Temp (F)"
+                            ItemsSource="{Binding WaterTemps}"
+                            SelectedItem="{Binding WaterTemp, Mode=TwoWay}"
+                            Grid.Row="3" Grid.Column="1" />
+
+                <Label Text="Secchi Depth (ft)"
+                            VerticalOptions="Center"
+                            Grid.Row="4" Grid.Column="0" />
+                <Picker ItemsSource="{Binding SecchiNumberList}"
+                            SelectedItem="{Binding SecchiDepth, Mode=TwoWay}"
+                            Grid.Row="4" Grid.Column="1" />
+
+                <Label Text="Water Clarity"
+                            VerticalOptions="Center"
+                            Grid.Row="5" Grid.Column="0" />
+                <Picker ItemsSource="{Binding ClarityOptions}"
+                            SelectedItem="{Binding Clarity, Mode=TwoWay}"
+                            Grid.Row="5" Grid.Column="1" />
+
+                <Label Text="Trip Notes"
+                            VerticalOptions="Center"
+                            Grid.Row="6" Grid.Column="0" />
+                <Entry Text="{Binding TripNotes}"
+                            Placeholder="e.g., Taking friends out for walleye"
+                            PlaceholderColor="White"
+                            Keyboard="{x:Static Keyboard.Chat}"
+                            Grid.Row="6" Grid.Column="1" />
+
+                <Button Text="Start Trip"
+                            Command="{Binding StartNewTripCommand}"
+                            BackgroundColor="#D3D3D3"
+                            TextColor="#555555"
+                            Margin="0,10,0,0"
+                            Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2">
+                    <VisualStateManager.VisualStateGroups>
+                        <VisualStateGroupList>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="#22C55E" />
+                                        <Setter Property="TextColor" Value="White" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Property="BackgroundColor" Value="#D3D3D3" />
+                                        <Setter Property="TextColor" Value="#555555" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateGroupList>
+                    </VisualStateManager.VisualStateGroups>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- View Past Trips Section -->
+        <CollectionView ItemsSource="{Binding RecentTrips}"
+                        SelectionMode="Single">
+            <!--SelectionChanged="OnTripSelectionChanged">-->
+            <CollectionView.EmptyView>
+                <Label Text="No trips yet. Start your first trip!"
+                       HorizontalOptions="Center"
+                       TextColor="{StaticResource Gray500}"
+                       Margin="0,20"/>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="e:TripDataEntity">
+                    <Border Style="{StaticResource InfoCard}"
+                            Margin="0,5">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnTripTapped" />
+                            <!--<TapGestureRecognizer 
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CatchesViewModel}}, Path=ViewTripDetailsCommand}"
+                                            CommandParameter="{Binding .}" />-->
+                        </Border.GestureRecognizers>
+
+                        <!--<Button Text="{Binding TripName}"
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:CatchesViewModel}}, Path=ViewTripDetailsCommand}"
+                                    CommandParameter="{Binding .}" 
+                                    BackgroundColor="{StaticResource Primary}"
+                                    Margin="0,10,0,0">
+                                </Button>-->
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+                            <Label Text="{Binding TripName}"
+                                   FontSize="18"
+                                   FontAttributes="Bold"
+                                   Grid.Row="0" Grid.Column="0"/>
+
+                            <Label Text="🎣 ACTIVE"
+                                   TextColor="Green"
+                                   FontAttributes="Bold"
+                                   Grid.Row="0" Grid.Column="1"
+                                   IsVisible="{Binding IsActive}"/>
+
+                            <Label Text="{Binding TripDate, StringFormat='{0:D}'}"
+                                   Grid.Row="1" Grid.Column="0"
+                                   Grid.ColumnSpan="2"/>
+
+                            <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+                                <Label Text="{Binding CatchesBySpeciesSummary}"/>
+                                <!--<Label Text=" catches"/>
+                                <Label Text=" • "/>-->
+                                <!--<Label Text="{Binding Location}"/>-->
+                            </HorizontalStackLayout>
+                        </Grid>
+
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </VerticalStackLayout>
+</ContentView>

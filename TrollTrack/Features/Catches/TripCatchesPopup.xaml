@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             xmlns:maps="http://schemas.microsoft.com/dotnet/2021/maui/maps"
+             x:Class="TrollTrack.Features.Catches.TripCatchesPopup"
+             x:DataType="vm:TripCatchesDisplay"
+             xmlns:vm="clr-namespace:TrollTrack.Features.Catches"
+             Title="Trip Catches"
+             BackgroundColor="#F8F8F8">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Padding="20">
+
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="8" Margin="0,10,0,20">
+            <!--<Label Text="🎣"
+                   FontSize="48"
+                   HorizontalOptions="Center"/>-->
+            <Label Text="{Binding TripName}"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="#1A1A1A"/>
+            <Label Text="{Binding TripDate, StringFormat='{0:D}'}"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   TextColor="#666666"/>
+            <Label Text="{Binding CatchesBySpeciesSummary}"
+                   FontSize="12"
+                   HorizontalOptions="Center"
+                   TextColor="#666666"/>
+        </VerticalStackLayout>
+
+        <!-- Map with catch pins (zoom and pan enabled) -->
+        <Border Grid.Row="1"
+                HeightRequest="300"
+                Margin="0,0,0,5"
+                StrokeThickness="0"
+                BackgroundColor="#E8E8E8">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="12"/>
+            </Border.StrokeShape>
+            <Grid>
+                <maps:Map x:Name="CatchesMap"
+                          IsZoomEnabled="True"
+                          IsScrollEnabled="True"
+                          MapType="Street"/>
+                <!-- Debug: remove when map works -->
+                <Label x:Name="MapDebugLabel"
+                       Text="Map loading..."
+                       FontSize="10"
+                       TextColor="#666666"
+                       BackgroundColor="#E0FFFFFF"
+                       Padding="6,2"
+                       HorizontalOptions="Start"
+                       VerticalOptions="End"
+                       Margin="4"/>
+            </Grid>
+        </Border>
+
+        <Label Text="Map not to be used for navigation" 
+               FontSize="10"
+               HorizontalTextAlignment="Center"
+               Grid.Row="2"/>
+
+        <!-- Catches List -->
+        <Border Grid.Row="3"
+                BackgroundColor="#FFFFFF"
+                Padding="12"
+                StrokeThickness="0">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="12"/>
+            </Border.StrokeShape>
+            <CollectionView x:Name="CatchesCollectionView"
+                            ItemsSource="{Binding Catches}"
+                            SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <Label Text="No catches on this trip."
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           TextColor="#666666"
+                           Margin="0,20" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="e:CatchDataEntity">
+                        <Border Style="{StaticResource InfoCard}"
+                                Margin="0,5,10,0">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnCatchTapped" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,Auto,*"
+                                  RowDefinitions="Auto,Auto,Auto"
+                                  ColumnSpacing="10"
+                                  RowSpacing="5">
+
+                                <Label Text="🐟"
+                                       FontSize="32"
+                                       Grid.RowSpan="3"
+                                       VerticalOptions="Center"/>
+
+                                <Label Text="{Binding FishName}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       Grid.Column="1"
+                                       Grid.Row="0"/>
+
+                                <Label Text="{Binding Timestamp, StringFormat='{0:t}'}"
+                                       FontSize="14"
+                                       TextColor="#666666"
+                                       Grid.Column="2"
+                                       Grid.Row="0"/>
+
+                                <Label Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="📍 "/>
+                                            <Span Text="{Binding FormattedLatitude}"/>
+                                            <Span Text=", "/>
+                                            <Span Text="{Binding FormattedLongitude}"/>
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+
+                                <Label Text="{Binding Timestamp, StringFormat='{0:M/d/yyyy}'}"
+                                       Grid.Column="1"
+                                       Grid.Row="2"
+                                       Grid.ColumnSpan="2"
+                                       TextColor="#666666"
+                                       FontSize="12"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </Border>
+
+        <!-- Close Button -->
+        <Button Grid.Row="4"
+                Text="Close"
+                Clicked="OnCloseClicked"
+                BackgroundColor="#2E8BC0"
+                TextColor="#FFFFFF"
+                FontSize="16"
+                FontAttributes="Bold"
+                CornerRadius="10"
+                HeightRequest="50"
+                Margin="0,20,0,0"/>
+    </Grid>
+</ContentPage>

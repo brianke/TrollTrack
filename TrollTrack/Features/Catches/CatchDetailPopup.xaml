@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             xmlns:converters="clr-namespace:TrollTrack.Converters"
+             x:Class="TrollTrack.Features.Catches.CatchDetailPopup"
+             x:DataType="e:CatchDataEntity"
+             Title="Catch Details"
+             BackgroundColor="#F8F8F8">
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:LureImageSourceConverter x:Key="LureImageSourceConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="20">
+
+        <!-- Header -->
+        <VerticalStackLayout Grid.Row="0" Spacing="8" Margin="0,10,0,20">
+            <!--<Label Text="{Binding FishName, StringFormat='{🐟:g}'}"
+                   FontSize="48"
+                   HorizontalOptions="Center"/>-->
+            <Label Text="{Binding FishName, StringFormat='🐟  {0}'}"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   TextColor="#1A1A1A"/>
+            <Label Text="{Binding Timestamp, StringFormat='{0:g}'}"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   TextColor="#666666"/>
+        </VerticalStackLayout>
+
+        <!-- Details -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="16">
+
+                <Border BackgroundColor="#FFFFFF"
+                        Padding="16"
+                        StrokeThickness="0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    <VerticalStackLayout Spacing="14">
+                        <!--<Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Time" FontAttributes="Bold" TextColor="#666666"/>
+                            <Label Grid.Column="1" Text="{Binding Timestamp, StringFormat='{0:t}'}" TextColor="#1A1A1A"/>
+                        </Grid>-->
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Lure" FontAttributes="Bold" TextColor="#666666"/>
+                            <Label Grid.Column="1" Text="{Binding LureDisplayName}" TextColor="#1A1A1A"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,Auto,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Lat \ Long" FontAttributes="Bold" TextColor="#666666"/>
+                            <Label Grid.Column="1" Padding="0,0,10,0" Text="{Binding FormattedLatitude}" TextColor="#1A1A1A"/>
+                            <Label Grid.Column="2" Text="{Binding FormattedLongitude}" TextColor="#1A1A1A"/>
+                        </Grid>
+                        <!--<Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Longitude" FontAttributes="Bold" TextColor="#666666"/>
+                            <Label Grid.Column="1" Text="{Binding FormattedLongitude}" TextColor="#1A1A1A"/>
+                        </Grid>-->
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Line Out" FontAttributes="Bold" TextColor="#666666"/>
+                            <Label Grid.Column="1" Text="{Binding LineOut, StringFormat='{0} feet'}" TextColor="#1A1A1A"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Diver" FontAttributes="Bold" TextColor="#666666"/>
+                            <Label Grid.Column="1" Text="{Binding DiverDisplayName}" TextColor="#1A1A1A"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Speed" FontAttributes="Bold" TextColor="#666666"/>
+                            <Label Grid.Column="1" Text="{Binding SpeedDisplay}" TextColor="#1A1A1A"/>
+                        </Grid>
+                        <Grid ColumnDefinitions="120,*" ColumnSpacing="10">
+                            <Label Grid.Column="0" Text="Direction" FontAttributes="Bold" TextColor="#666666"/>
+                            <Label Grid.Column="1" Text="{Binding DirectionDisplay}" TextColor="#1A1A1A"/>
+                        </Grid>
+
+                        <!-- Lure Image -->
+                        <Border IsVisible="{Binding HasLureImage}"
+                                BackgroundColor="#F5F5F5"
+                                Padding="12"
+                                Margin="0,16,0,0"
+                                StrokeThickness="0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="6" HorizontalOptions="Center">
+                                <!--<Label Text="Lure"
+                                       FontAttributes="Bold"
+                                       FontSize="12"
+                                       TextColor="#666666"
+                                       HorizontalOptions="Center"/>-->
+                                <Image Source="{Binding LureImagePath, Converter={StaticResource LureImageSourceConverter}}"
+                                       Aspect="AspectFit"
+                                       HorizontalOptions="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Close Button -->
+        <Button Grid.Row="2"
+                Text="Close"
+                Clicked="OnCloseClicked"
+                BackgroundColor="#2E8BC0"
+                TextColor="#FFFFFF"
+                FontSize="16"
+                FontAttributes="Bold"
+                CornerRadius="10"
+                HeightRequest="50"
+                Margin="0,20,0,0"/>
+    </Grid>
+</ContentPage>

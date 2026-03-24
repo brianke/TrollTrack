@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:TrollTrack.Features.RodSetup"
+             xmlns:e="clr-namespace:TrollTrack.Features.Shared.Models.Entities"
+             x:Class="TrollTrack.Features.RodSetup.LureSelectionPopup"
+             x:DataType="vm:RodSetupViewModel"
+             Title="Select Lure"
+             BackgroundColor="#F8F8F8">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="20">
+        <Label Grid.Row="0"
+               Text="Choose a lure for this rod"
+               FontSize="20" FontAttributes="Bold" HorizontalOptions="Center"
+               Margin="0,10,0,20"
+               TextColor="#1A1A1A"/>
+
+        <!-- Filter & Search Bar -->
+        <Grid Grid.Row="1" ColumnDefinitions="Auto,*" ColumnSpacing="10" Margin="0,0,0,10">
+            
+            <Button Grid.Column="0"
+                    ImageSource="filter.png"
+                    Command="{Binding OpenFilterPopupCommand}"
+                    WidthRequest="50" HeightRequest="50"
+                    BackgroundColor="#2E8BC0"
+                    TextColor="#FFFFFF"
+                    FontSize="20"
+                    CornerRadius="10"/>
+            
+            <SearchBar Grid.Column="1"
+                       Placeholder="Search by manufacturer or description..."
+                       Text="{Binding LureSearchText, Mode=TwoWay}"
+                       BackgroundColor="#F5F5F5"
+                       TextColor="#1A1A1A"
+                       PlaceholderColor="#999999"/>
+        </Grid>
+        
+        <!-- Filtered Lures -->
+        <CollectionView Grid.Row="2"
+                       ItemsSource="{Binding FilteredLures}"
+                       SelectionMode="Single"
+                       SelectionChanged="OnLureSelected"
+                       MaximumHeightRequest="500">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="e:LureDataEntity">
+                    <Border BackgroundColor="#FFFFFF"
+                            Padding="15" Margin="0,5">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="12"/>
+                        </Border.StrokeShape>
+                        <Grid ColumnDefinitions="80,*" ColumnSpacing="15">
+                            <Border Grid.Column="0" HeightRequest="70" WidthRequest="70"
+                                    BackgroundColor="#F5F5F5">
+                                <Border.StrokeShape>
+                                    <RoundRectangle CornerRadius="10"/>
+                                </Border.StrokeShape>
+                                <Image Source="{Binding PrimaryImage.Path}" Aspect="AspectFit"
+                                       VerticalOptions="Center" HorizontalOptions="Center"/>
+                            </Border>
+                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="8">
+                                <Label Text="{Binding Manufacturer}"
+                                       FontSize="18" FontAttributes="Bold"
+                                       TextColor="#1A1A1A"/>
+                                <Label Text="{Binding Description}"
+                                       FontSize="15"
+                                       TextColor="#2E8BC0"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center"
+                                     Spacing="15" Padding="40">
+                    <Label Text="📦" FontSize="60" HorizontalOptions="Center"/>
+                    <Label Text="No Lures Available" FontSize="20" FontAttributes="Bold"
+                           HorizontalOptions="Center"
+                           TextColor="#666666"/>
+                    <Label Text="Add lures from the Lures tab first" FontSize="14"
+                           HorizontalOptions="Center"
+                           TextColor="#888888"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- Cancel Button -->
+        <Button Grid.Row="3" Text="Cancel"
+                Command="{Binding CancelLureSelectionCommand}"
+                BackgroundColor="#E0E0E0"
+                TextColor="#333333"
+                FontSize="16" FontAttributes="Bold" CornerRadius="10"
+                HeightRequest="50" Margin="0,20,0,0"/>
+    </Grid>
+</ContentPage>
