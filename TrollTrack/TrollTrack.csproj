@@ -54,6 +54,43 @@
 		<GoogleMapsApiKey>$(GOOGLE_MAPS_API_KEY)</GoogleMapsApiKey>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	  <AndroidUseAapt2>True</AndroidUseAapt2>
+	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+	  <AndroidPackageFormat>aab</AndroidPackageFormat>
+	  <AndroidKeyStore>True</AndroidKeyStore>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-maccatalyst|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	  <AndroidUseAapt2>True</AndroidUseAapt2>
+	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+	  <AndroidPackageFormat>aab</AndroidPackageFormat>
+	  <AndroidKeyStore>True</AndroidKeyStore>
+	  <!-- Signing: set TROLLTRACK_ANDROID_KEY_ALIAS, TROLLTRACK_ANDROID_KEY_PASS, TROLLTRACK_ANDROID_STORE_PASS in your environment (do not commit secrets). Keystore lives next to repo root in android-signing/. -->
+	  <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)..\android-signing\release.keystore</AndroidSigningKeyStore>
+	  <AndroidSigningKeyAlias>$(TROLLTRACK_ANDROID_KEY_ALIAS)</AndroidSigningKeyAlias>
+	  <AndroidSigningKeyPass>$(TROLLTRACK_ANDROID_KEY_PASS)</AndroidSigningKeyPass>
+	  <AndroidSigningStorePass>$(TROLLTRACK_ANDROID_STORE_PASS)</AndroidSigningStorePass>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-maccatalyst|AnyCPU'">
+	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+	</PropertyGroup>
+
 	<!-- Inject Google Maps API key: copy manifest to obj, replace placeholder, use that for build. Source stays clean. -->
 	<Target Name="_InjectGoogleMapsApiKey" BeforeTargets="_ValidateAndroidPackageProperties" Condition="'$(TargetFramework)' == 'net9.0-android'">
 		<PropertyGroup>
@@ -62,9 +99,7 @@
 		</PropertyGroup>
 		<MakeDir Directories="$(IntermediateOutputPath)" />
 		<Warning Text="GOOGLE_MAPS_API_KEY not set. Set the environment variable before building Android." Condition="'$(GoogleMapsApiKey)' == ''" />
-		<Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(_SourceManifest)' -Raw) -replace 'GOOGLE_MAPS_API_KEY_PLACEHOLDER', '$(GoogleMapsApiKey)' | Set-Content '$(_InjectedManifest)' -NoNewline&quot;"
-		      Condition="'$(GoogleMapsApiKey)' != ''"
-		      IgnoreExitCode="false" />
+		<Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(_SourceManifest)' -Raw) -replace 'GOOGLE_MAPS_API_KEY_PLACEHOLDER', '$(GoogleMapsApiKey)' | Set-Content '$(_InjectedManifest)' -NoNewline&quot;" Condition="'$(GoogleMapsApiKey)' != ''" IgnoreExitCode="false" />
 		<PropertyGroup Condition="'$(GoogleMapsApiKey)' != ''">
 			<AndroidManifest>$(_InjectedManifest)</AndroidManifest>
 		</PropertyGroup>

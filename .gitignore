@@ -85,3 +85,4 @@ android-signing/
 
 # Don't commit keystore passwords
 keystore.properties
+*.user
