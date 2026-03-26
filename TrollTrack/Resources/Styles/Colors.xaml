@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <?xaml-comp compile="true" ?>
 <ResourceDictionary 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -23,6 +23,8 @@
     <Color x:Key="CardBackground">#ACACAC</Color>
     <Color x:Key="BorderAccent">#1E90FF</Color>
     <Color x:Key="InfoText">#00008B</Color>
+    <!-- Destructive actions (delete, remove) — orange-red -->
+    <Color x:Key="Danger">#E4572E</Color>
 
     <Color x:Key="Gray100">#E1E1E1</Color>
     <Color x:Key="Gray200">#C8C8C8</Color>

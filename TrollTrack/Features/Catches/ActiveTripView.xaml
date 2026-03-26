@@ -11,14 +11,18 @@
         <!-- Active Trip Info Banner -->
         <Border Style="{StaticResource InfoCard}"
                 BackgroundColor="{StaticResource Primary}">
-            <HorizontalStackLayout HorizontalOptions="Center">
-                <Label Text="🎣" FontSize="24"/>
-                <Label Text="{Binding ActiveTrip.TripName}"
-                       TextColor="White"
-                       FontSize="18"
-                       FontAttributes="Bold"
-                       VerticalOptions="Center"/>
-            </HorizontalStackLayout>
+            <StackLayout Spacing="5">
+                <HorizontalStackLayout HorizontalOptions="Center">
+                    <Label Text="{Binding ActiveTrip.TripName}"
+                           TextColor="White"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+                <Label Text="{Binding CatchesBySpeciesSummary}"
+                       TextColor="{StaticResource Gray100}"
+                       HorizontalOptions="Center" />
+            </StackLayout>
         </Border>
 
         <!-- End Trip Button -->
@@ -44,7 +48,7 @@
 
         <!-- Add Catch Section -->
         <Border Style="{StaticResource InfoCard}">
-            <VerticalStackLayout Spacing="10">
+            <VerticalStackLayout Spacing="0">
                 <Label Text="Log New Catch"
                        Style="{StaticResource CardTitle}"
                        HorizontalOptions="Center"/>
@@ -52,7 +56,7 @@
                 <Label Text="Tap to add catch • Hold to edit"
                        HorizontalOptions="Center"
                        FontSize="12"
-                       TextColor="{StaticResource Gray400}"
+                       TextColor="{StaticResource Gray900}"
                        Margin="0,5"/>
 
                 <Label Text="No rods configured. Add a rod first!"

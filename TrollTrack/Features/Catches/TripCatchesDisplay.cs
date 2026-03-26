@@ -8,8 +8,13 @@ namespace TrollTrack.Features.Catches;
 /// </summary>
 public class TripCatchesDisplay
 {
+    public Guid TripId { get; }
     public string TripName { get; }
     public DateTime TripDate { get; }
+    /// <summary>True while the trip is still active (not ended).</summary>
+    public bool IsActiveTrip { get; }
+    /// <summary>Past (ended) trips can be deleted from this popup.</summary>
+    public bool CanDeleteTrip => !IsActiveTrip;
     public int CatchesCount => Catches.Count;
     /// <summary>
     /// Summary of catches by species, e.g. "13 Walleye, 3 Perch, 1 Northern Pike"
@@ -25,8 +30,10 @@ public class TripCatchesDisplay
 
     public TripCatchesDisplay(TripDataEntity trip, List<CatchDataEntity> catches)
     {
+        TripId = trip.Id;
         TripName = trip.TripName;
         TripDate = trip.TripDate;
+        IsActiveTrip = trip.IsActive;
         Catches = new ObservableCollection<CatchDataEntity>(
             catches.OrderByDescending(c => c.Timestamp));
     }

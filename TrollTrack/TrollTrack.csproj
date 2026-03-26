@@ -59,7 +59,8 @@
 	  <AndroidUseAapt2>True</AndroidUseAapt2>
 	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
 	  <AndroidPackageFormat>aab</AndroidPackageFormat>
-	  <AndroidKeyStore>True</AndroidKeyStore>
+	  <!-- Must be false unless AndroidSigningKeyStore + alias/passwords are set; true with no path causes MSB4044 KeyStore. -->
+	  <AndroidKeyStore>False</AndroidKeyStore>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
@@ -70,13 +71,17 @@
 	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
 	</PropertyGroup>
 
+	<!-- Release Android: use android-signing/release.keystore only when that file exists; otherwise use default debug signing (avoids MSB4044 KeyStore empty). -->
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
 	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
 	  <AndroidUseAapt2>True</AndroidUseAapt2>
 	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
 	  <AndroidPackageFormat>aab</AndroidPackageFormat>
-	  <AndroidKeyStore>True</AndroidKeyStore>
-	  <!-- Signing: set TROLLTRACK_ANDROID_KEY_ALIAS, TROLLTRACK_ANDROID_KEY_PASS, TROLLTRACK_ANDROID_STORE_PASS in your environment (do not commit secrets). Keystore lives next to repo root in android-signing/. -->
+	  <AndroidKeyStore Condition="Exists('$(MSBuildThisFileDirectory)..\android-signing\release.keystore')">True</AndroidKeyStore>
+	  <AndroidKeyStore Condition="!Exists('$(MSBuildThisFileDirectory)..\android-signing\release.keystore')">False</AndroidKeyStore>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU' And Exists('$(MSBuildThisFileDirectory)..\android-signing\release.keystore')">
+	  <!-- Set TROLLTRACK_ANDROID_KEY_ALIAS, TROLLTRACK_ANDROID_KEY_PASS, TROLLTRACK_ANDROID_STORE_PASS in your environment (do not commit secrets). -->
 	  <AndroidSigningKeyStore>$(MSBuildThisFileDirectory)..\android-signing\release.keystore</AndroidSigningKeyStore>
 	  <AndroidSigningKeyAlias>$(TROLLTRACK_ANDROID_KEY_ALIAS)</AndroidSigningKeyAlias>
 	  <AndroidSigningKeyPass>$(TROLLTRACK_ANDROID_KEY_PASS)</AndroidSigningKeyPass>
@@ -98,7 +103,9 @@
 			<_InjectedManifest>$(IntermediateOutputPath)AndroidManifest.Injected.xml</_InjectedManifest>
 		</PropertyGroup>
 		<MakeDir Directories="$(IntermediateOutputPath)" />
-		<Warning Text="GOOGLE_MAPS_API_KEY not set. Set the environment variable before building Android." Condition="'$(GoogleMapsApiKey)' == ''" />
+		<!-- Without a real key the app embeds GOOGLE_MAPS_API_KEY_PLACEHOLDER and Maps SDK fails at runtime. -->
+		<Error Text="GOOGLE_MAPS_API_KEY is not set. Set the user or process environment variable to your Google Cloud API key (Maps SDK for Android enabled; Android app restriction: SHA-1 + com.trolltrack.fishing), then rebuild. Or pass /p:AllowAndroidMapsWithoutApiKey=true only if you intentionally build without maps." Condition="'$(GoogleMapsApiKey)' == '' And '$(AllowAndroidMapsWithoutApiKey)' != 'true' And '$(DesignTimeBuild)' != 'true'" />
+		<Warning Text="GOOGLE_MAPS_API_KEY not set; manifest still contains the placeholder. Maps will not work until you set the key and rebuild." Condition="'$(GoogleMapsApiKey)' == '' And '$(AllowAndroidMapsWithoutApiKey)' == 'true'" />
 		<Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(_SourceManifest)' -Raw) -replace 'GOOGLE_MAPS_API_KEY_PLACEHOLDER', '$(GoogleMapsApiKey)' | Set-Content '$(_InjectedManifest)' -NoNewline&quot;" Condition="'$(GoogleMapsApiKey)' != ''" IgnoreExitCode="false" />
 		<PropertyGroup Condition="'$(GoogleMapsApiKey)' != ''">
 			<AndroidManifest>$(_InjectedManifest)</AndroidManifest>

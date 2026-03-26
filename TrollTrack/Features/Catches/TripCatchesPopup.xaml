@@ -134,16 +134,35 @@
             </CollectionView>
         </Border>
 
-        <!-- Close Button -->
-        <Button Grid.Row="4"
-                Text="Close"
-                Clicked="OnCloseClicked"
-                BackgroundColor="#2E8BC0"
-                TextColor="#FFFFFF"
-                FontSize="16"
-                FontAttributes="Bold"
-                CornerRadius="10"
-                HeightRequest="50"
-                Margin="0,20,0,0"/>
+        <!-- Delete trip (past trips only) / Close -->
+        <!--<HorizontalStackLayout Grid.Row="4"
+                               HorizontalOptions="Center"
+                               Spacing="12"
+                               Margin="0,10,0,0">-->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,*"
+              ColumnSpacing="12"
+              Margin="0,20,0,0">
+            <Button Text="Delete Trip"
+                    Clicked="OnDeleteTripClicked"
+                    IsVisible="{Binding CanDeleteTrip}"
+                    BackgroundColor="{StaticResource Danger}"
+                    TextColor="#FFFFFF"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    HeightRequest="50"
+                    Grid.Column="0" />
+            <Button Text="Close"
+                    Clicked="OnCloseClicked"
+                    BackgroundColor="#2E8BC0"
+                    TextColor="#FFFFFF"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    HeightRequest="50"
+                    Grid.Column="1" />
+        </Grid>
+        <!--</HorizontalStackLayout>-->
     </Grid>
 </ContentPage>

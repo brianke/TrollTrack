@@ -102,16 +102,29 @@
             </VerticalStackLayout>
         </ScrollView>
 
-        <!-- Close Button -->
-        <Button Grid.Row="2"
-                Text="Close"
-                Clicked="OnCloseClicked"
-                BackgroundColor="#2E8BC0"
-                TextColor="#FFFFFF"
-                FontSize="16"
-                FontAttributes="Bold"
-                CornerRadius="10"
-                HeightRequest="50"
-                Margin="0,20,0,0"/>
+        <!-- Delete / Close -->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="*,*"
+              ColumnSpacing="12"
+              Margin="0,20,0,0">
+            <Button Grid.Column="0"
+                    Text="Delete"
+                    Clicked="OnDeleteClicked"
+                    BackgroundColor="{StaticResource Danger}"
+                    TextColor="#FFFFFF"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    HeightRequest="50"/>
+            <Button Grid.Column="1"
+                    Text="Close"
+                    Clicked="OnCloseClicked"
+                    BackgroundColor="#2E8BC0"
+                    TextColor="#FFFFFF"
+                    FontSize="16"
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    HeightRequest="50"/>
+        </Grid>
     </Grid>
 </ContentPage>

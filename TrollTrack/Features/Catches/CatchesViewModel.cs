@@ -89,6 +89,16 @@ public partial class CatchesViewModel : BaseViewModel
     [ObservableProperty]
     private int _todaysCatches;
 
+    /// <summary>
+    /// Summary of catches by species for the active trip, e.g. "13 Walleye, 3 Perch"
+    /// </summary>
+    public string CatchesBySpeciesSummary => Catches == null || Catches.Count == 0
+        ? "0 catches"
+        : string.Join(", ", Catches
+            .GroupBy(c => c.FishName)
+            .OrderByDescending(g => g.Count())
+            .Select(g => $"{g.Count()} {g.Key}"));
+
     #endregion Catch Properties
 
     #region Constructor
@@ -127,6 +137,7 @@ public partial class CatchesViewModel : BaseViewModel
 
         // Subscribe to collection changes
         Rods.CollectionChanged += (s, e) => OnPropertyChanged(nameof(HasNoRods));
+        Catches.CollectionChanged += (s, e) => OnPropertyChanged(nameof(CatchesBySpeciesSummary));
     }
 
     #endregion
@@ -406,7 +417,7 @@ public partial class CatchesViewModel : BaseViewModel
         {
             var catches = await BaseDatabaseService.GetCatchesForTripAsync(trip.Id);
             var display = new TripCatchesDisplay(trip, catches);
-            var popup = new TripCatchesPopup(display);
+            var popup = new TripCatchesPopup(display, BaseDatabaseService, OnPastTripDeletedFromPopupAsync);
 
             var page = Application.Current?.Windows[0]?.Page;
             if (page?.Navigation != null)
@@ -514,6 +525,7 @@ public partial class CatchesViewModel : BaseViewModel
 
             // Create the rod setup view model
             _rodSetupVM = new RodSetupViewModel(BaseLocationService, BaseDatabaseService, _luresVM);
+            _rodSetupVM.Name = $"Rod {Rods.Count + 1}";
 
             // Subscribe to the rod setup confirmed event (not just lure selected)
             _rodSetupVM.RodSetupConfirmed += OnRodSetupConfirmed;
@@ -557,10 +569,11 @@ public partial class CatchesViewModel : BaseViewModel
 
             if (rodSetupEntity.Id == 0)
             {
-                // Create a new rod with the selected lure and line out
+                // Create a new rod with the selected lure and line out (Name comes from popup; fallback if empty)
+                var defaultName = $"Rod {Rods.Count + 1}";
                 newRod = new RodSetupEntity
                 {
-                    Name = $"Rod {Rods.Count + 1}",
+                    Name = string.IsNullOrWhiteSpace(rodSetupEntity.Name) ? defaultName : rodSetupEntity.Name.Trim(),
                     LineOut = rodSetupEntity.LineOut,
                     Diver = rodSetupEntity.Diver,
                     DiverId = rodSetupEntity.Diver?.Id,
@@ -786,7 +799,7 @@ public partial class CatchesViewModel : BaseViewModel
 
         try
         {
-            var popup = new CatchDetailPopup(catchData);
+            var popup = new CatchDetailPopup(catchData, BaseDatabaseService, OnCatchDeletedFromDetailAsync);
             var page = Application.Current?.Windows[0]?.Page;
             if (page?.Navigation != null)
             {
@@ -798,6 +811,36 @@ public partial class CatchesViewModel : BaseViewModel
             Debug.WriteLine($"CatchesViewModel ViewCatchDetailAsync failed: {ex.Message}");
             await ShowAlertAsync("Error", "Failed to display catch details.");
         }
+    }
+
+    private async Task OnPastTripDeletedFromPopupAsync(Guid tripId)
+    {
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            var match = RecentTrips.FirstOrDefault(t => t.Id == tripId);
+            if (match != null)
+                RecentTrips.Remove(match);
+        });
+    }
+
+    private async Task OnCatchDeletedFromDetailAsync(CatchDataEntity deleted)
+    {
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            var match = Catches.FirstOrDefault(c => c.Id == deleted.Id);
+            if (match != null)
+                Catches.Remove(match);
+
+            if (ActiveTrip?.Catches != null)
+            {
+                var inTrip = ActiveTrip.Catches.FirstOrDefault(c => c.Id == deleted.Id);
+                if (inTrip != null)
+                    ActiveTrip.Catches.Remove(inTrip);
+            }
+
+            TotalCatches = Catches.Count;
+            TodaysCatches = Catches.Count(c => c.Timestamp.Date == DateTime.Today);
+        });
     }
 
     [RelayCommand]
