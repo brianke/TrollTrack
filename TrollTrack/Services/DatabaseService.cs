@@ -1,3 +1,4 @@
+using Microsoft.Maui.Storage;
 using SQLiteNetExtensionsAsync.Extensions;
 using System.Collections.Generic;
 using System.Text.Json;
@@ -72,11 +73,25 @@ namespace TrollTrack.Services
             return _database!;
         }
 
-        // Add a public method for initial data setup
+        private const string CatalogSeedVersionKey = "TrollTrack.CatalogSeedVersion";
+
+        /// <summary>
+        /// Loads bundled lure/diver catalog once per installed catalog version.
+        /// Trips and catches live in the same SQLite file and are kept across in-place app updates;
+        /// they are removed only if the app is uninstalled or its data is cleared.
+        /// </summary>
         public async Task SeedInitialDataAsync()
         {
+            var needed = AppConfig.Constants.CatalogSeedVersion;
+            var last = Preferences.Default.Get(CatalogSeedVersionKey, 0);
+            if (last >= needed)
+            {
+                return;
+            }
+
             await LoadLuresJsonAsync();
             await LoadDiversJsonAsync();
+            Preferences.Default.Set(CatalogSeedVersionKey, needed);
         }
 
         #region Trip Data Operations

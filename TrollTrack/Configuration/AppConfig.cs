@@ -42,6 +42,12 @@ namespace TrollTrack.Configuration
             public const string DatabaseName = "trolltrack.db";
             public const int DatabaseVersion = 1;
 
+            /// <summary>
+            /// Bump when bundled lures.json / divers.json defaults change so seeding runs again.
+            /// Does not affect trips/catches; avoids re-importing JSON on every app launch.
+            /// </summary>
+            public const int CatalogSeedVersion = 1;
+
             // UI and display constants
             public const int RefreshIntervalMinutes = 5;
             public const int MaxRecentCatches = 10;
