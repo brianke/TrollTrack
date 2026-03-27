@@ -19,6 +19,16 @@
                    FontSize="14"
                    TextColor="#888888"
                    HorizontalOptions="Center"/>
+
+            <Button Text="📤 Export Database"
+                    Clicked="OnExportDatabaseClicked"
+                    BackgroundColor="#2E8BC0"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    HeightRequest="50"
+                    HorizontalOptions="Fill"
+                    Margin="0,20,0,0"/>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

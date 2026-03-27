@@ -1,4 +1,4 @@
-﻿using TrollTrack.Features.Shared.Models.Entities;
+using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Features.Shared.Models
 {
@@ -48,7 +48,7 @@ namespace TrollTrack.Features.Shared.Models
 
         public static List<string> GetAllFishNames()
         {
-            return FishList.Select(f => f.CommonName).ToList();
+            return FishList.Where(f => f.CommonName != "Unknown").Select(f => f.CommonName).ToList();
         }
 
         public static string GetFishNameById(Guid fishInfoId)

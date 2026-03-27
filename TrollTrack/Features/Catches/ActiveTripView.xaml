@@ -28,7 +28,7 @@
         <!-- End Trip Button -->
         <Button Text="End Trip"
                 Command="{Binding EndActiveTripCommand}"
-                BackgroundColor="{StaticResource Primary}"
+                BackgroundColor="{StaticResource Danger}"
                 Margin="0,0,0,10"/>
 
         <!-- Add New Rod Section -->

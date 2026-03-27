@@ -49,9 +49,14 @@
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	    <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 		<MauiXamlC>true</MauiXamlC>
-		
-		<!-- Google Maps API key: set GOOGLE_MAPS_API_KEY env var before build -->
-		<GoogleMapsApiKey>$(GOOGLE_MAPS_API_KEY)</GoogleMapsApiKey>
+	</PropertyGroup>
+
+	<!-- Optional: copy TrollTrack.Local.props.example to TrollTrack.Local.props and fill in your secrets (gitignored). Environment variables override the file when set. -->
+	<Import Project="$(MSBuildThisFileDirectory)TrollTrack.Local.props" Condition="Exists('$(MSBuildThisFileDirectory)TrollTrack.Local.props')" />
+
+	<!-- Env var overrides Local.props for the Maps key when present -->
+	<PropertyGroup>
+		<GoogleMapsApiKey Condition="'$(GOOGLE_MAPS_API_KEY)' != ''">$(GOOGLE_MAPS_API_KEY)</GoogleMapsApiKey>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
@@ -96,20 +101,16 @@
 	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
 	</PropertyGroup>
 
-	<!-- Inject Google Maps API key: copy manifest to obj, replace placeholder, use that for build. Source stays clean. -->
-	<Target Name="_InjectGoogleMapsApiKey" BeforeTargets="_ValidateAndroidPackageProperties" Condition="'$(TargetFramework)' == 'net9.0-android'">
-		<PropertyGroup>
-			<_SourceManifest>$(MSBuildProjectDirectory)\Platforms\Android\AndroidManifest.xml</_SourceManifest>
-			<_InjectedManifest>$(IntermediateOutputPath)AndroidManifest.Injected.xml</_InjectedManifest>
-		</PropertyGroup>
-		<MakeDir Directories="$(IntermediateOutputPath)" />
-		<!-- Without a real key the app embeds GOOGLE_MAPS_API_KEY_PLACEHOLDER and Maps SDK fails at runtime. -->
-		<Error Text="GOOGLE_MAPS_API_KEY is not set. Set the user or process environment variable to your Google Cloud API key (Maps SDK for Android enabled; Android app restriction: SHA-1 + com.trolltrack.fishing), then rebuild. Or pass /p:AllowAndroidMapsWithoutApiKey=true only if you intentionally build without maps." Condition="'$(GoogleMapsApiKey)' == '' And '$(AllowAndroidMapsWithoutApiKey)' != 'true' And '$(DesignTimeBuild)' != 'true'" />
-		<Warning Text="GOOGLE_MAPS_API_KEY not set; manifest still contains the placeholder. Maps will not work until you set the key and rebuild." Condition="'$(GoogleMapsApiKey)' == '' And '$(AllowAndroidMapsWithoutApiKey)' == 'true'" />
-		<Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(_SourceManifest)' -Raw) -replace 'GOOGLE_MAPS_API_KEY_PLACEHOLDER', '$(GoogleMapsApiKey)' | Set-Content '$(_InjectedManifest)' -NoNewline&quot;" Condition="'$(GoogleMapsApiKey)' != ''" IgnoreExitCode="false" />
-		<PropertyGroup Condition="'$(GoogleMapsApiKey)' != ''">
-			<AndroidManifest>$(_InjectedManifest)</AndroidManifest>
-		</PropertyGroup>
+	<!-- Fail early if no Google Maps API key is configured -->
+	<Target Name="_CheckGoogleMapsApiKey" BeforeTargets="PrepareForBuild" Condition="'$(TargetFramework)' == 'net9.0-android'">
+		<Error Text="GoogleMapsApiKey is not set. Set GOOGLE_MAPS_API_KEY env var (restart VS after adding it), or copy TrollTrack.Local.props.example to TrollTrack.Local.props and paste your key. Or pass /p:AllowAndroidMapsWithoutApiKey=true to skip." Condition="'$(GoogleMapsApiKey)' == '' And '$(AllowAndroidMapsWithoutApiKey)' != 'true' And '$(DesignTimeBuild)' != 'true'" />
+		<Warning Text="GoogleMapsApiKey not set; Maps will not work until you set the key and rebuild." Condition="'$(GoogleMapsApiKey)' == '' And '$(AllowAndroidMapsWithoutApiKey)' == 'true'" />
+	</Target>
+
+	<!-- Replace GOOGLE_MAPS_API_KEY_PLACEHOLDER in merged manifest files after the Android toolchain generates them but before APK packaging. The SDK overrides the AndroidManifest property so we patch the merged output directly. -->
+	<Target Name="_InjectGoogleMapsApiKey" AfterTargets="_CompileToDalvik" Condition="'$(TargetFramework)' == 'net9.0-android' And '$(GoogleMapsApiKey)' != ''">
+		<Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(IntermediateOutputPath)android\AndroidManifest.xml' -Raw) -replace 'GOOGLE_MAPS_API_KEY_PLACEHOLDER','$(GoogleMapsApiKey)' | Set-Content '$(IntermediateOutputPath)android\AndroidManifest.xml' -NoNewline&quot;" />
+		<Exec Command="powershell -NoProfile -Command &quot;(Get-Content '$(IntermediateOutputPath)android\manifest\AndroidManifest.xml' -Raw) -replace 'GOOGLE_MAPS_API_KEY_PLACEHOLDER','$(GoogleMapsApiKey)' | Set-Content '$(IntermediateOutputPath)android\manifest\AndroidManifest.xml' -NoNewline&quot;" />
 	</Target>
 
 	<ItemGroup>

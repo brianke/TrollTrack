@@ -51,9 +51,13 @@ namespace TrollTrack.Services
         {
             try
             {
-                // Try last known location first for faster response (avoids ANR on slow emulators)
+                // Try last known location first for faster response (avoids ANR on slow emulators).
+                // Skip if it lacks Course/Speed — those require an active GPS fix.
                 var lastKnown = await Geolocation.GetLastKnownLocationAsync();
-                if (lastKnown != null && lastKnown.Timestamp > DateTimeOffset.UtcNow.AddMinutes(-5))
+                if (lastKnown != null
+                    && lastKnown.Timestamp > DateTimeOffset.UtcNow.AddMinutes(-5)
+                    && lastKnown.Course.HasValue
+                    && lastKnown.Speed.HasValue)
                 {
                     IsLocationEnabled = true;
                     var locationEntity = CreateLocationEntity(lastKnown);
@@ -121,9 +125,9 @@ namespace TrollTrack.Services
                     return locationEntity;
                 }
 
-                // Fallback to last-known if fresh request fails (e.g. indoors)
+                // Fallback to last-known only if very recent (< 30s) and fresh fix failed
                 var lastKnown = await Geolocation.GetLastKnownLocationAsync();
-                if (lastKnown != null)
+                if (lastKnown != null && lastKnown.Timestamp > DateTimeOffset.UtcNow.AddSeconds(-30))
                 {
                     IsLocationEnabled = true;
                     var locationEntity = CreateLocationEntity(lastKnown);

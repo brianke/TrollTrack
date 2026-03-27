@@ -5,6 +5,9 @@ obj/
 [Bb]uild/
 [Bb]uild[Ll]og.*
 
+# Local MSBuild overrides (e.g. Google Maps API key for Android manifest injection)
+TrollTrack/TrollTrack.Local.props
+
 # User-specific files
 *.user
 *.suo

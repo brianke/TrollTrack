@@ -1,0 +1,14 @@
+<Project>
+	<!-- Copy this file to TrollTrack.Local.props (same folder) and fill in your values.
+	     TrollTrack.Local.props is gitignored. Environment variables of the same name
+	     override these values when set. -->
+	<PropertyGroup>
+		<!-- Required for all Android builds (Maps SDK) -->
+		<GoogleMapsApiKey>PASTE_YOUR_GOOGLE_MAPS_API_KEY_HERE</GoogleMapsApiKey>
+
+		<!-- Required for Release Android builds (keystore signing) -->
+		<TROLLTRACK_ANDROID_KEY_ALIAS>PASTE_YOUR_KEY_ALIAS_HERE</TROLLTRACK_ANDROID_KEY_ALIAS>
+		<TROLLTRACK_ANDROID_KEY_PASS>PASTE_YOUR_KEY_PASSWORD_HERE</TROLLTRACK_ANDROID_KEY_PASS>
+		<TROLLTRACK_ANDROID_STORE_PASS>PASTE_YOUR_STORE_PASSWORD_HERE</TROLLTRACK_ANDROID_STORE_PASS>
+	</PropertyGroup>
+</Project>

@@ -167,16 +167,13 @@ public partial class ActiveTripView : ContentView
 
             Debug.WriteLine($"? Fish options available: {viewModel.FishOptions.Count}");
 
-            // Show picker for fish species
-            string selectedFish = await Shell.Current.DisplayActionSheet(
-                "Select Fish Species",
-                "Cancel",
-                null,
-                viewModel.FishOptions.ToArray());
+            var fishPopup = new FishSelectionPopup(viewModel.FishOptions);
+            await Shell.Current.Navigation.PushModalAsync(fishPopup);
+            string? selectedFish = await fishPopup.ResultTask;
 
             Debug.WriteLine($"User selected: {selectedFish}");
 
-            if (string.IsNullOrWhiteSpace(selectedFish) || selectedFish == "Cancel")
+            if (string.IsNullOrWhiteSpace(selectedFish))
             {
                 Debug.WriteLine("User cancelled fish selection");
                 return;
