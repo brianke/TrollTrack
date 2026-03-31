@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="TrollTrack.Features.Catches.LocationDisclosurePopup"
+             Title="Precise location"
+             BackgroundColor="#F8F8F8">
+
+    <Grid RowDefinitions="*,Auto" Padding="20" RowSpacing="16">
+
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="12">
+                <Label Text="Precise location required"
+                       FontSize="20"
+                       FontAttributes="Bold"
+                       TextColor="#1A1A1A" />
+                <Label Text="TrollTrack collects location data to accurately record catch coordinates, boat speed, and heading, even when the app is closed or not in use. This data is used to help you analyze fishing patterns and is never shared with third parties."
+                       FontSize="15"
+                       LineBreakMode="WordWrap"
+                       TextColor="#333333" />
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <VerticalStackLayout Grid.Row="1" Spacing="10">
+            <Button Text="Continue"
+                    Clicked="OnContinueClicked"
+                    BackgroundColor="#22C55E"
+                    TextColor="White"
+                    CornerRadius="10"
+                    HeightRequest="48" />
+            <Button Text="Cancel"
+                    Clicked="OnCancelClicked"
+                    BackgroundColor="#E8E8E8"
+                    TextColor="#333333"
+                    CornerRadius="10"
+                    HeightRequest="44" />
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>
