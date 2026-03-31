@@ -192,6 +192,40 @@ public partial class CatchesViewModel : BaseViewModel
                 return;
             }
 
+            var hostPage = Application.Current?.Windows[0]?.Page;
+            if (hostPage?.Navigation == null)
+            {
+                return;
+            }
+
+            bool accepted;
+            try
+            {
+                var disclosure = new LocationDisclosurePopup();
+                await hostPage.Navigation.PushModalAsync(disclosure);
+                accepted = await disclosure.WaitForResultAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Location disclosure failed: {ex.Message}");
+                await ShowAlertAsync("Error", "Could not open the location notice. Please try again.");
+                return;
+            }
+
+            if (!accepted)
+            {
+                return;
+            }
+
+            await RequestLocationPermissionAsync();
+            if (!HasLocationPermission)
+            {
+                await ShowAlertAsync(
+                    "Location required",
+                    "TrollTrack needs location permission to record catch coordinates, speed, and heading. You can enable it in your device Settings.");
+                return;
+            }
+
             await ExecuteSafelyAsync(async () =>
             {
                 // Use last known location (from Dashboard/catch) or default - no GPS request when starting trip
