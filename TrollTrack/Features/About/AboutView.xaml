@@ -29,6 +29,12 @@
                     HeightRequest="50"
                     HorizontalOptions="Fill"
                     Margin="0,20,0,0"/>
+
+            <Label x:Name="CopyrightLabel"
+                   FontSize="12"
+                   TextColor="#AAAAAA"
+                   HorizontalOptions="Center"
+                   Margin="0,40,0,20"/>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

@@ -6,6 +6,7 @@ public partial class AboutView : ContentPage
     {
         InitializeComponent();
         VersionLabel.Text = $"Version {AppInfo.VersionString}";
+        CopyrightLabel.Text = $"\u00a9 {DateTime.Now.Year} TrollTrack. All rights reserved.";
     }
 
     private async void OnExportDatabaseClicked(object? sender, EventArgs e)
