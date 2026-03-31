@@ -27,8 +27,9 @@ public class TripCatchesDisplay
                 .Select(g => $"{g.Count()} {g.Key}"));
 
     public ObservableCollection<CatchDataEntity> Catches { get; }
+    public List<RoutePointEntity> RoutePoints { get; }
 
-    public TripCatchesDisplay(TripDataEntity trip, List<CatchDataEntity> catches)
+    public TripCatchesDisplay(TripDataEntity trip, List<CatchDataEntity> catches, List<RoutePointEntity>? routePoints = null)
     {
         TripId = trip.Id;
         TripName = trip.TripName;
@@ -36,5 +37,6 @@ public class TripCatchesDisplay
         IsActiveTrip = trip.IsActive;
         Catches = new ObservableCollection<CatchDataEntity>(
             catches.OrderByDescending(c => c.Timestamp));
+        RoutePoints = routePoints ?? new List<RoutePointEntity>();
     }
 }

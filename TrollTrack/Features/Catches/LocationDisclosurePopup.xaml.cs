@@ -35,9 +35,16 @@ public partial class LocationDisclosurePopup : ContentPage
         }
 
         _closed = true;
-
-        await Navigation.PopModalAsync();
         _result.TrySetResult(accepted);
+
+        try
+        {
+            await Navigation.PopModalAsync();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"PopModalAsync failed: {ex.Message}");
+        }
     }
 
     protected override bool OnBackButtonPressed()

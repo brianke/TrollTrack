@@ -11,7 +11,6 @@ namespace TrollTrack.Services
     {
         private readonly IDatabaseService _databaseService;
 
-        // set default locaiton which will be used as a return value if actual position cannot be obtained
         private static LocationDataEntity defaultLocation = new LocationDataEntity
         {
             Latitude = 0.00,
@@ -19,24 +18,16 @@ namespace TrollTrack.Services
             Timestamp = DateTime.Now
         };
 
-        // Required properties and events from interface
-
-        /// <summary>
-        /// Indicates if location is enabled on the device
-        /// </summary>
         public bool IsLocationEnabled { get; private set; }
+        public bool IsListening { get; private set; }
 
-        /// <summary>
-        /// Event that is fired whenever the locaiton is updated
-        /// This event can be subscribed to by other classes/models when needing to do something when location is updated
-        /// </summary>
         public event EventHandler<LocationDataEntity>? LocationUpdated;
 
-
-        // List for tracking location history
         private readonly List<LocationDataEntity> _locationHistory = new();
-
         private LocationDataEntity? _lastKnownLocation;
+
+        private LocationDataEntity? _latestListeningLocation;
+        private Guid _listeningTripId;
 
         public LocationService(IDatabaseService databaseService)
         {
@@ -100,8 +91,10 @@ namespace TrollTrack.Services
         }
 
         /// <summary>
-        /// Requests a fresh GPS fix. Use when recording a catch so each catch gets its own exact location.
-        /// Does not reuse last-known location.
+        /// Requests a fresh GPS fix for the catch position, then fills in speed/course
+        /// from the continuously-tracked location when available (one-shot fixes on Android
+        /// rarely include speed/course). This gives the most accurate lat/lon for the catch
+        /// while still recording trolling speed and heading.
         /// </summary>
         public async Task<LocationDataEntity> GetExactLocationAsync()
         {
@@ -119,13 +112,48 @@ namespace TrollTrack.Services
                 {
                     IsLocationEnabled = true;
                     var locationEntity = CreateLocationEntity(location);
+
+                    // One-shot fixes on Android often return null for speed/course.
+                    // If we have a recent tracked location from foreground listening,
+                    // use its speed and course — they're far more reliable.
+                    if (IsListening && _latestListeningLocation != null
+                        && _latestListeningLocation.Timestamp > DateTimeOffset.UtcNow.AddSeconds(-60))
+                    {
+                        locationEntity.Speed ??= _latestListeningLocation.Speed;
+                        locationEntity.Course ??= _latestListeningLocation.Course;
+                    }
+
                     _lastKnownLocation = locationEntity;
                     await SaveLocationAsync(locationEntity);
                     LocationUpdated?.Invoke(this, locationEntity);
+                    System.Diagnostics.Debug.WriteLine(
+                        $"GetExactLocationAsync fresh fix: lat={locationEntity.Latitude:F4}, lon={locationEntity.Longitude:F4}, " +
+                        $"speed={locationEntity.Speed}, course={locationEntity.Course}");
                     return locationEntity;
                 }
 
-                // Fallback to last-known only if very recent (< 30s) and fresh fix failed
+                // Fresh fix failed — fall back to tracked location if listening
+                if (IsListening && _latestListeningLocation != null
+                    && _latestListeningLocation.Timestamp > DateTimeOffset.UtcNow.AddSeconds(-60))
+                {
+                    var tracked = new LocationDataEntity
+                    {
+                        Id = Guid.NewGuid(),
+                        Latitude = _latestListeningLocation.Latitude,
+                        Longitude = _latestListeningLocation.Longitude,
+                        Timestamp = DateTimeOffset.Now,
+                        Course = _latestListeningLocation.Course,
+                        Speed = _latestListeningLocation.Speed
+                    };
+                    _lastKnownLocation = tracked;
+                    await SaveLocationAsync(tracked);
+                    LocationUpdated?.Invoke(this, tracked);
+                    System.Diagnostics.Debug.WriteLine(
+                        $"GetExactLocationAsync fallback to tracked: speed={tracked.Speed}, course={tracked.Course}");
+                    return tracked;
+                }
+
+                // Last resort — platform last-known
                 var lastKnown = await Geolocation.GetLastKnownLocationAsync();
                 if (lastKnown != null && lastKnown.Timestamp > DateTimeOffset.UtcNow.AddSeconds(-30))
                 {
@@ -145,6 +173,82 @@ namespace TrollTrack.Services
                 IsLocationEnabled = false;
                 return defaultLocation;
             }
+        }
+
+        public async Task StartListeningAsync(Guid tripId)
+        {
+            if (IsListening)
+                return;
+
+            _listeningTripId = tripId;
+
+            try
+            {
+                var request = new GeolocationListeningRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(30));
+
+                Geolocation.LocationChanged += OnLocationChanged;
+
+                var success = await Geolocation.StartListeningForegroundAsync(request);
+                IsListening = success;
+                System.Diagnostics.Debug.WriteLine($"Foreground location listening started: {success} (tripId={tripId})");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"StartListeningAsync error: {ex.Message}");
+                IsListening = false;
+            }
+        }
+
+        public Task StopListeningAsync()
+        {
+            if (!IsListening)
+                return Task.CompletedTask;
+
+            try
+            {
+                Geolocation.LocationChanged -= OnLocationChanged;
+                Geolocation.StopListeningForeground();
+                IsListening = false;
+                _latestListeningLocation = null;
+                System.Diagnostics.Debug.WriteLine("Foreground location listening stopped");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"StopListeningAsync error: {ex.Message}");
+            }
+
+            return Task.CompletedTask;
+        }
+
+        private async void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
+        {
+            var entity = CreateLocationEntity(e.Location);
+            _latestListeningLocation = entity;
+            _lastKnownLocation = entity;
+            IsLocationEnabled = true;
+            LocationUpdated?.Invoke(this, entity);
+
+            try
+            {
+                var routePoint = new RoutePointEntity
+                {
+                    TripId = _listeningTripId,
+                    Latitude = entity.Latitude,
+                    Longitude = entity.Longitude,
+                    Speed = entity.Speed,
+                    Course = entity.Course,
+                    Timestamp = entity.Timestamp
+                };
+                await _databaseService.SaveRoutePointAsync(routePoint);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving route point: {ex.Message}");
+            }
+
+            System.Diagnostics.Debug.WriteLine(
+                $"Listening update: lat={entity.Latitude:F4}, lon={entity.Longitude:F4}, " +
+                $"speed={entity.Speed?.ToString("F1") ?? "null"} kt, course={entity.Course?.ToString("F0") ?? "null"}°");
         }
 
         public Task<LocationDataEntity?> GetLastKnownLocationAsync()

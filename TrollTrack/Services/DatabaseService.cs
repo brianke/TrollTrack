@@ -513,6 +513,42 @@ namespace TrollTrack.Services
 
         #endregion
 
+        #region Route Point Operations
+
+        public async Task<int> SaveRoutePointAsync(RoutePointEntity routePoint)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                await db.InsertAsync(routePoint);
+                return 1;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error saving route point: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<List<RoutePointEntity>> GetRoutePointsForTripAsync(Guid tripId)
+        {
+            try
+            {
+                var db = await GetDatabaseAsync();
+                return await db.Table<RoutePointEntity>()
+                    .Where(rp => rp.TripId == tripId)
+                    .OrderBy(rp => rp.Timestamp)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error getting route points: {ex.Message}");
+                return new List<RoutePointEntity>();
+            }
+        }
+
+        #endregion
+
         #region Catch Data Operations
 
         /// <summary>
@@ -1561,6 +1597,7 @@ namespace TrollTrack.Services
             await db.CreateTableAsync<RodSetupEntity>();
             await db.CreateTableAsync<WeatherDataEntity>();
             await db.CreateTableAsync<CustomClarityEntity>();
+            await db.CreateTableAsync<RoutePointEntity>();
         }
 
         public async Task ClearAllTablesAsync()
@@ -1579,6 +1616,7 @@ namespace TrollTrack.Services
                 await db.DeleteAllAsync<TripDataEntity>();
                 await db.DeleteAllAsync<RodSetupEntity>();
                 await db.DeleteAllAsync<WeatherDataEntity>();
+                await db.DeleteAllAsync<RoutePointEntity>();
 
                 // Reload all the tables
                 await LoadDiversJsonAsync();

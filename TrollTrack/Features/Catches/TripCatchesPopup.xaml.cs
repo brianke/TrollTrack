@@ -39,16 +39,18 @@ public partial class TripCatchesPopup : ContentPage
         if (BindingContext is not TripCatchesDisplay display)
             return;
 
-        var catchesWithLocation = display.Catches
-            .Where(c => c.Latitude.HasValue && c.Longitude.HasValue)
-            .ToList();
+        var allLocations = new List<Location>();
 
-        if (catchesWithLocation.Count > 0)
+        allLocations.AddRange(display.RoutePoints
+            .Select(rp => new Location(rp.Latitude, rp.Longitude)));
+
+        allLocations.AddRange(display.Catches
+            .Where(c => c.Latitude.HasValue && c.Longitude.HasValue)
+            .Select(c => new Location(c.Latitude!.Value, c.Longitude!.Value)));
+
+        if (allLocations.Count > 0)
         {
-            var locations = catchesWithLocation
-                .Select(c => new Location(c.Latitude!.Value, c.Longitude!.Value))
-                .ToList();
-            MoveMapToFitPins(locations);
+            MoveMapToFitPins(allLocations);
         }
         else
         {
@@ -82,6 +84,24 @@ public partial class TripCatchesPopup : ContentPage
             .ToList();
 
         CatchesMap.Pins.Clear();
+        CatchesMap.MapElements.Clear();
+
+        // Draw route polyline from tracked route points
+        if (display.RoutePoints.Count >= 2)
+        {
+            var polyline = new Microsoft.Maui.Controls.Maps.Polyline
+            {
+                StrokeColor = Color.FromArgb("#FF6600"),
+                StrokeWidth = 4
+            };
+
+            foreach (var rp in display.RoutePoints)
+            {
+                polyline.Geopath.Add(new Location(rp.Latitude, rp.Longitude));
+            }
+
+            CatchesMap.MapElements.Add(polyline);
+        }
 
         foreach (var catchData in catchesWithLocation)
         {
@@ -97,22 +117,25 @@ public partial class TripCatchesPopup : ContentPage
 
         UpdateMapDebugLabel();
 
-        // Fit map to show all pins (or use default region if none)
-        if (catchesWithLocation.Count > 0)
+        // Collect all points (route + catches) to fit the map bounds
+        var allLocations = new List<Location>();
+
+        allLocations.AddRange(display.RoutePoints
+            .Select(rp => new Location(rp.Latitude, rp.Longitude)));
+
+        allLocations.AddRange(catchesWithLocation
+            .Select(c => new Location(c.Latitude!.Value, c.Longitude!.Value)));
+
+        if (allLocations.Count > 0)
         {
-            var locations = catchesWithLocation
-                .Select(c => new Location(c.Latitude!.Value, c.Longitude!.Value))
-                .ToList();
-            MoveMapToFitPins(locations);
+            MoveMapToFitPins(allLocations);
         }
         else
         {
-            // Default: center of North America with reasonable zoom
             var defaultLocation = new Location(45.0, -95.0);
             CatchesMap.MoveToRegion(MapSpan.FromCenterAndRadius(defaultLocation, Distance.FromKilometers(500)));
         }
 
-        // Second pass after native map has laid out (tiles + camera often need this on Android).
         _ = RefreshMapRegionAfterLayoutAsync();
     }
 

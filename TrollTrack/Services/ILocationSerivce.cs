@@ -12,7 +12,7 @@ namespace TrollTrack.Services
         Task<LocationDataEntity> GetCurrentLocationAsync();
         /// <summary>
         /// Requests a fresh GPS fix. Use when recording a catch so each catch gets its own exact location.
-        /// Does not reuse last-known location.
+        /// When foreground listening is active, returns the latest tracked location (which includes speed/course).
         /// </summary>
         Task<LocationDataEntity> GetExactLocationAsync();
         /// <summary>
@@ -23,6 +23,24 @@ namespace TrollTrack.Services
         Task<bool> RequestLocationPermissionAsync();
         Task<List<LocationDataEntity>> GetLocationHistoryAsync();
         Task SaveLocationAsync(LocationDataEntity location);
+
+        /// <summary>
+        /// Start continuous foreground GPS listening. Call when a trip begins so that
+        /// speed and course are populated on every location update.
+        /// Each location fix is saved as a RoutePoint for the given trip.
+        /// </summary>
+        Task StartListeningAsync(Guid tripId);
+
+        /// <summary>
+        /// Stop continuous foreground GPS listening. Call when a trip ends.
+        /// </summary>
+        Task StopListeningAsync();
+
+        /// <summary>
+        /// True when foreground listening is active (between StartListeningAsync/StopListeningAsync).
+        /// </summary>
+        bool IsListening { get; }
+
         event EventHandler<LocationDataEntity> LocationUpdated;
         bool IsLocationEnabled { get; }
     }

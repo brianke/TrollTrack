@@ -217,6 +217,8 @@ public partial class CatchesViewModel : BaseViewModel
                 return;
             }
 
+            IsBusy = false;
+
             await RequestLocationPermissionAsync();
             if (!HasLocationPermission)
             {
@@ -258,8 +260,7 @@ public partial class CatchesViewModel : BaseViewModel
                 ActiveTrip = trip;
                 HasActiveTrip = true;
 
-                // Start duration timer
-                //StartDurationTimer();
+                await BaseLocationService.StartListeningAsync(trip.Id);
 
                 // Clear form
                 NewTripName = string.Empty;
@@ -373,6 +374,8 @@ public partial class CatchesViewModel : BaseViewModel
 
             await ExecuteSafelyAsync(async () =>
             {
+                await BaseLocationService.StopListeningAsync();
+
                 ActiveTrip.EndTime = DateTime.Now;
                 ActiveTrip.IsActive = false;
 
@@ -410,6 +413,10 @@ public partial class CatchesViewModel : BaseViewModel
 
             // Load catches for the active trip
             await LoadCatchesAsync();
+
+            // Resume foreground GPS listening so speed/course are available for new catches
+            if (!BaseLocationService.IsListening && ActiveTrip != null)
+                await BaseLocationService.StartListeningAsync(ActiveTrip.Id);
 
             Debug.WriteLine($"Active trip loaded: {ActiveTrip?.TripName} with {Catches.Count} catches");
         }
@@ -450,7 +457,8 @@ public partial class CatchesViewModel : BaseViewModel
         try
         {
             var catches = await BaseDatabaseService.GetCatchesForTripAsync(trip.Id);
-            var display = new TripCatchesDisplay(trip, catches);
+            var routePoints = await BaseDatabaseService.GetRoutePointsForTripAsync(trip.Id);
+            var display = new TripCatchesDisplay(trip, catches, routePoints);
             var popup = new TripCatchesPopup(display, BaseDatabaseService, OnPastTripDeletedFromPopupAsync);
 
             var page = Application.Current?.Windows[0]?.Page;

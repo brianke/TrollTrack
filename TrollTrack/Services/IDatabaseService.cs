@@ -1,4 +1,4 @@
-﻿using TrollTrack.Features.Shared.Models.Entities;
+using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Services
 {
@@ -37,6 +37,13 @@ namespace TrollTrack.Services
 
         Task<LocationDataEntity?> GetLocationByIdAsync(Guid id);
         Task<int> SaveLocationAsync(LocationDataEntity location);
+
+        #endregion
+
+        #region Route point methods
+
+        Task<int> SaveRoutePointAsync(RoutePointEntity routePoint);
+        Task<List<RoutePointEntity>> GetRoutePointsForTripAsync(Guid tripId);
 
         #endregion
 
