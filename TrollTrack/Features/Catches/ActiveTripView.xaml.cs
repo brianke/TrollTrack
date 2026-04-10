@@ -158,29 +158,40 @@ public partial class ActiveTripView : ContentView
                 return;
             }
 
-            if (viewModel.FishOptions == null || !viewModel.FishOptions.Any())
+            string? selectedFish;
+
+            var tripTarget = viewModel.ActiveTrip?.TargetSpecies;
+            if (!string.IsNullOrWhiteSpace(tripTarget))
             {
-                Debug.WriteLine("ERROR: No fish options available");
-                await Shell.Current.DisplayAlert("Error", "Fish species list not loaded", "OK");
-                return;
+                selectedFish = tripTarget;
+                Debug.WriteLine($"Using target species from trip: {selectedFish}");
             }
-
-            Debug.WriteLine($"? Fish options available: {viewModel.FishOptions.Count}");
-
-            var fishPopup = new FishSelectionPopup(viewModel.FishOptions);
-            await Shell.Current.Navigation.PushModalAsync(fishPopup);
-            string? selectedFish = await fishPopup.ResultTask;
-
-            Debug.WriteLine($"User selected: {selectedFish}");
-
-            if (string.IsNullOrWhiteSpace(selectedFish))
+            else
             {
-                Debug.WriteLine("User cancelled fish selection");
-                return;
+                if (viewModel.FishOptions == null || !viewModel.FishOptions.Any())
+                {
+                    Debug.WriteLine("ERROR: No fish options available");
+                    await Shell.Current.DisplayAlert("Error", "Fish species list not loaded", "OK");
+                    return;
+                }
+
+                Debug.WriteLine($"Fish options available: {viewModel.FishOptions.Count}");
+
+                var fishPopup = new FishSelectionPopup(viewModel.FishOptions);
+                await Shell.Current.Navigation.PushModalAsync(fishPopup);
+                selectedFish = await fishPopup.ResultTask;
+
+                Debug.WriteLine($"User selected: {selectedFish}");
+
+                if (string.IsNullOrWhiteSpace(selectedFish))
+                {
+                    Debug.WriteLine("User cancelled fish selection");
+                    return;
+                }
             }
 
             viewModel.SelectedFishOption = selectedFish;
-            Debug.WriteLine($"? Set SelectedFishOption to: {selectedFish}");
+            Debug.WriteLine($"Set SelectedFishOption to: {selectedFish}");
 
             if (viewModel.AddNewCatchCommand == null)
             {

@@ -50,6 +50,12 @@
                                 TextColor="#FF6B35"
                                 FontAttributes="Bold"
                                 HorizontalOptions="Fill"/>
+                    <Button Text="📥 Import Database"
+                                Command="{Binding ImportDatabaseCommand}"
+                                BackgroundColor="#C05C2E"
+                                TextColor="White"
+                                FontAttributes="Bold"
+                                HorizontalOptions="Fill"/>
                 </VerticalStackLayout>
             </Border>
 

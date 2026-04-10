@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TrollTrack.Configuration;
 using TrollTrack.Features.Shared.Models.Entities;
 
 namespace TrollTrack.Services
@@ -28,6 +29,9 @@ namespace TrollTrack.Services
 
         private LocationDataEntity? _latestListeningLocation;
         private Guid _listeningTripId;
+
+        private const double MaxAccuracyMetersRoute = 50.0;
+        private const double MaxAccuracyMetersCatch = 20.0;
 
         public LocationService(IDatabaseService databaseService)
         {
@@ -68,6 +72,12 @@ namespace TrollTrack.Services
 
                 var location = await Geolocation.GetLocationAsync(request);
 
+                if (location != null && location.Accuracy.HasValue && location.Accuracy.Value > MaxAccuracyMetersCatch)
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"GetCurrentLocationAsync skipped — accuracy {location.Accuracy.Value:F0}m");
+                    location = null;
+                }
 
                 if (location != null)
                 {
@@ -91,52 +101,21 @@ namespace TrollTrack.Services
         }
 
         /// <summary>
-        /// Requests a fresh GPS fix for the catch position, then fills in speed/course
-        /// from the continuously-tracked location when available (one-shot fixes on Android
-        /// rarely include speed/course). This gives the most accurate lat/lon for the catch
-        /// while still recording trolling speed and heading.
+        /// Returns a location for recording a catch. Android often omits speed/course on a single
+        /// one-shot fix; we poll, use <see cref="GeolocationAccuracy.Best"/>, derive from two fixes
+        /// or from the trip track point vs a fresh fix when needed. Each call creates a new
+        /// LocationDataEntity with a unique Id.
         /// </summary>
         public async Task<LocationDataEntity> GetExactLocationAsync()
         {
             try
             {
-                var request = new GeolocationRequest
-                {
-                    DesiredAccuracy = GeolocationAccuracy.High,
-                    Timeout = TimeSpan.FromSeconds(10)
-                };
-
-                var location = await Geolocation.GetLocationAsync(request);
-
-                if (location != null)
-                {
-                    IsLocationEnabled = true;
-                    var locationEntity = CreateLocationEntity(location);
-
-                    // One-shot fixes on Android often return null for speed/course.
-                    // If we have a recent tracked location from foreground listening,
-                    // use its speed and course — they're far more reliable.
-                    if (IsListening && _latestListeningLocation != null
-                        && _latestListeningLocation.Timestamp > DateTimeOffset.UtcNow.AddSeconds(-60))
-                    {
-                        locationEntity.Speed ??= _latestListeningLocation.Speed;
-                        locationEntity.Course ??= _latestListeningLocation.Course;
-                    }
-
-                    _lastKnownLocation = locationEntity;
-                    await SaveLocationAsync(locationEntity);
-                    LocationUpdated?.Invoke(this, locationEntity);
-                    System.Diagnostics.Debug.WriteLine(
-                        $"GetExactLocationAsync fresh fix: lat={locationEntity.Latitude:F4}, lon={locationEntity.Longitude:F4}, " +
-                        $"speed={locationEntity.Speed}, course={locationEntity.Course}");
-                    return locationEntity;
-                }
-
-                // Fresh fix failed — fall back to tracked location if listening
+                // Fast path: trip listening already produced velocity + bearing on the latest point
                 if (IsListening && _latestListeningLocation != null
-                    && _latestListeningLocation.Timestamp > DateTimeOffset.UtcNow.AddSeconds(-60))
+                    && _latestListeningLocation.Timestamp > DateTimeOffset.UtcNow.AddSeconds(-30)
+                    && HasCompleteVelocity(_latestListeningLocation))
                 {
-                    var tracked = new LocationDataEntity
+                    var catchLocation = new LocationDataEntity
                     {
                         Id = Guid.NewGuid(),
                         Latitude = _latestListeningLocation.Latitude,
@@ -145,24 +124,114 @@ namespace TrollTrack.Services
                         Course = _latestListeningLocation.Course,
                         Speed = _latestListeningLocation.Speed
                     };
-                    _lastKnownLocation = tracked;
-                    await SaveLocationAsync(tracked);
-                    LocationUpdated?.Invoke(this, tracked);
-                    System.Diagnostics.Debug.WriteLine(
-                        $"GetExactLocationAsync fallback to tracked: speed={tracked.Speed}, course={tracked.Course}");
-                    return tracked;
+                    return await PersistCatchLocationAsync(catchLocation,
+                        $"GetExactLocationAsync tracked: lat={catchLocation.Latitude:F4}, lon={catchLocation.Longitude:F4}, " +
+                        $"speed={catchLocation.Speed}, course={catchLocation.Course}");
                 }
 
-                // Last resort — platform last-known
+                // Recent track point for lat/lon (may lack velocity) — pair with fresh fixes to derive
+                LocationDataEntity? anchorSnapshot =
+                    IsListening && _latestListeningLocation != null
+                    && _latestListeningLocation.Timestamp > DateTimeOffset.UtcNow.AddSeconds(-45)
+                        ? _latestListeningLocation
+                        : null;
+
+                var request = new GeolocationRequest
+                {
+                    DesiredAccuracy = GeolocationAccuracy.Best,
+                    Timeout = TimeSpan.FromSeconds(12)
+                };
+
+                Location? previous = null;
+                Location? last = null;
+                const int maxAttempts = 6;
+                const int delayMs = 450;
+
+                for (var i = 0; i < maxAttempts; i++)
+                {
+                    var loc = await Geolocation.GetLocationAsync(request);
+                    if (loc == null)
+                    {
+                        await Task.Delay(delayMs);
+                        continue;
+                    }
+
+                    if (loc.Accuracy.HasValue && loc.Accuracy.Value > MaxAccuracyMetersCatch)
+                    {
+                        System.Diagnostics.Debug.WriteLine(
+                            $"GetExactLocationAsync skipped fix — accuracy {loc.Accuracy.Value:F0}m");
+                        previous ??= loc;
+                        await Task.Delay(delayMs);
+                        continue;
+                    }
+
+                    last = loc;
+
+                    if (HasPlatformVelocity(loc))
+                    {
+                        var entity = CreateLocationEntity(loc);
+                        return await PersistCatchLocationAsync(entity,
+                            $"GetExactLocationAsync platform velocity: lat={entity.Latitude:F4}, lon={entity.Longitude:F4}, " +
+                            $"speed={entity.Speed}, course={entity.Course}");
+                    }
+
+                    if (previous != null
+                        && TryDeriveFromTwoLocations(previous, loc, out var sk1, out var c1))
+                    {
+                        var entity = CreateLocationEntity(loc);
+                        if (!entity.Speed.HasValue) entity.Speed = sk1;
+                        if (!entity.Course.HasValue) entity.Course = c1;
+                        return await PersistCatchLocationAsync(entity,
+                            $"GetExactLocationAsync derived (two fixes): lat={entity.Latitude:F4}, lon={entity.Longitude:F4}, " +
+                            $"speed={entity.Speed}, course={entity.Course}");
+                    }
+
+                    if (anchorSnapshot != null
+                        && TryDeriveFromAnchorAndLocation(anchorSnapshot, loc, out var sk2, out var c2))
+                    {
+                        var entity = CreateLocationEntity(loc);
+                        if (!entity.Speed.HasValue) entity.Speed = sk2;
+                        if (!entity.Course.HasValue) entity.Course = c2;
+                        return await PersistCatchLocationAsync(entity,
+                            $"GetExactLocationAsync derived (track+fix): lat={entity.Latitude:F4}, lon={entity.Longitude:F4}, " +
+                            $"speed={entity.Speed}, course={entity.Course}");
+                    }
+
+                    previous = loc;
+                    await Task.Delay(delayMs);
+                }
+
+                if (last != null)
+                {
+                    var entity = CreateLocationEntity(last);
+                    if (!HasCompleteVelocity(entity) && previous != null
+                        && TryDeriveFromTwoLocations(previous, last, out var sk, out var c))
+                    {
+                        if (!entity.Speed.HasValue) entity.Speed = sk;
+                        if (!entity.Course.HasValue) entity.Course = c;
+                    }
+
+                    if (!HasCompleteVelocity(entity) && anchorSnapshot != null
+                        && TryDeriveFromAnchorAndLocation(anchorSnapshot, last, out sk, out c))
+                    {
+                        if (!entity.Speed.HasValue) entity.Speed = sk;
+                        if (!entity.Course.HasValue) entity.Course = c;
+                    }
+
+                    IsLocationEnabled = true;
+                    return await PersistCatchLocationAsync(entity,
+                        $"GetExactLocationAsync final: lat={entity.Latitude:F4}, lon={entity.Longitude:F4}, " +
+                        $"speed={entity.Speed}, course={entity.Course}");
+                }
+
                 var lastKnown = await Geolocation.GetLastKnownLocationAsync();
                 if (lastKnown != null && lastKnown.Timestamp > DateTimeOffset.UtcNow.AddSeconds(-30))
                 {
                     IsLocationEnabled = true;
                     var locationEntity = CreateLocationEntity(lastKnown);
-                    _lastKnownLocation = locationEntity;
-                    await SaveLocationAsync(locationEntity);
-                    LocationUpdated?.Invoke(this, locationEntity);
-                    return locationEntity;
+                    return await PersistCatchLocationAsync(locationEntity,
+                        $"GetExactLocationAsync last-known: lat={locationEntity.Latitude:F4}, lon={locationEntity.Longitude:F4}, " +
+                        $"speed={locationEntity.Speed}, course={locationEntity.Course}");
                 }
 
                 return defaultLocation;
@@ -175,6 +244,99 @@ namespace TrollTrack.Services
             }
         }
 
+        private static bool HasCompleteVelocity(LocationDataEntity e) =>
+            e.Speed.HasValue && e.Course.HasValue;
+
+        /// <summary>Platform reported speed and course (Android often leaves one or both null on a single fix).</summary>
+        private static bool HasPlatformVelocity(Location loc) =>
+            loc.Speed.HasValue && loc.Speed.Value >= 0 && loc.Course.HasValue;
+
+        private static bool TryDeriveFromTwoLocations(Location a, Location b, out double speedKnots, out double courseDeg)
+        {
+            speedKnots = 0;
+            courseDeg = 0;
+            var dist = HaversineMeters(a.Latitude, a.Longitude, b.Latitude, b.Longitude);
+            var dt = GetSecondsBetweenFixes(a, b);
+            if (dt <= 0)
+                return false;
+
+            var speedMps = dist / dt;
+            if (speedMps > 45)
+                speedMps = 45;
+
+            speedKnots = speedMps * AppConfig.Constants.MetersPerSecondToKnots;
+            courseDeg = BearingDegrees(a.Latitude, a.Longitude, b.Latitude, b.Longitude);
+
+            if (dist < 2.0 && speedMps < 0.25)
+                return false;
+
+            return dist >= 1.5 || speedMps > 0.35;
+        }
+
+        private static bool TryDeriveFromAnchorAndLocation(LocationDataEntity older, Location newer, out double speedKnots, out double courseDeg)
+        {
+            speedKnots = 0;
+            courseDeg = 0;
+            var dist = HaversineMeters(older.Latitude, older.Longitude, newer.Latitude, newer.Longitude);
+            var dt = (newer.Timestamp - older.Timestamp).TotalSeconds;
+            if (dt <= 0.05)
+                dt = 0.5;
+            else if (dt > 600)
+                dt = 600;
+
+            var speedMps = dist / dt;
+            if (speedMps > 45)
+                speedMps = 45;
+
+            speedKnots = speedMps * AppConfig.Constants.MetersPerSecondToKnots;
+            courseDeg = BearingDegrees(older.Latitude, older.Longitude, newer.Latitude, newer.Longitude);
+
+            if (dist < 2.0 && speedMps < 0.25)
+                return false;
+
+            return dist >= 1.5 || speedMps > 0.35;
+        }
+
+        private static double GetSecondsBetweenFixes(Location a, Location b)
+        {
+            var dt = Math.Abs((b.Timestamp - a.Timestamp).TotalSeconds);
+            if (dt is >= 0.05 and <= 120)
+                return dt;
+            return 0.5;
+        }
+
+        private static double HaversineMeters(double lat1, double lon1, double lat2, double lon2)
+        {
+            const double R = 6371000.0;
+            var dLat = (lat2 - lat1) * (Math.PI / 180.0);
+            var dLon = (lon2 - lon1) * (Math.PI / 180.0);
+            var s1 = Math.Sin(dLat / 2);
+            var s2 = Math.Sin(dLon / 2);
+            var h = s1 * s1 + Math.Cos(lat1 * (Math.PI / 180.0)) * Math.Cos(lat2 * (Math.PI / 180.0)) * s2 * s2;
+            return 2 * R * Math.Asin(Math.Min(1.0, Math.Sqrt(h)));
+        }
+
+        private static double BearingDegrees(double lat1, double lon1, double lat2, double lon2)
+        {
+            var lat1R = lat1 * (Math.PI / 180.0);
+            var lat2R = lat2 * (Math.PI / 180.0);
+            var dLon = (lon2 - lon1) * (Math.PI / 180.0);
+            var y = Math.Sin(dLon) * Math.Cos(lat2R);
+            var x = Math.Cos(lat1R) * Math.Sin(lat2R) - Math.Sin(lat1R) * Math.Cos(lat2R) * Math.Cos(dLon);
+            var brng = Math.Atan2(y, x) * (180.0 / Math.PI);
+            return (brng + 360.0) % 360.0;
+        }
+
+        private async Task<LocationDataEntity> PersistCatchLocationAsync(LocationDataEntity entity, string logLine)
+        {
+            IsLocationEnabled = true;
+            _lastKnownLocation = entity;
+            await SaveLocationAsync(entity);
+            LocationUpdated?.Invoke(this, entity);
+            System.Diagnostics.Debug.WriteLine(logLine);
+            return entity;
+        }
+
         public async Task StartListeningAsync(Guid tripId)
         {
             if (IsListening)
@@ -184,7 +346,7 @@ namespace TrollTrack.Services
 
             try
             {
-                var request = new GeolocationListeningRequest(GeolocationAccuracy.High, TimeSpan.FromSeconds(30));
+                var request = new GeolocationListeningRequest(GeolocationAccuracy.Best, TimeSpan.FromSeconds(10));
 
                 Geolocation.LocationChanged += OnLocationChanged;
 
@@ -222,6 +384,13 @@ namespace TrollTrack.Services
 
         private async void OnLocationChanged(object? sender, GeolocationLocationChangedEventArgs e)
         {
+            if (e.Location.Accuracy.HasValue && e.Location.Accuracy.Value > MaxAccuracyMetersRoute)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"Listening update skipped — accuracy {e.Location.Accuracy.Value:F0}m > {MaxAccuracyMetersRoute}m threshold");
+                return;
+            }
+
             var entity = CreateLocationEntity(e.Location);
             _latestListeningLocation = entity;
             _lastKnownLocation = entity;

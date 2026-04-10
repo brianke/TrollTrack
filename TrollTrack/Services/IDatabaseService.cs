@@ -92,6 +92,8 @@ namespace TrollTrack.Services
         Task<long> GetDatabaseSizeAsync();
         string? BackupDatabaseAsync();
         Task ClearAllTablesAsync();
+        /// <summary>Closes the DB, replaces the file from a copy of <paramref name="sourcePath"/>, then reopens on next use.</summary>
+        Task ImportDatabaseFromFileAsync(string sourcePath);
 
         #endregion
     }

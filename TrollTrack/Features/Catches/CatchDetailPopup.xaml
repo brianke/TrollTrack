@@ -20,11 +20,22 @@
             <!--<Label Text="{Binding FishName, StringFormat='{🐟:g}'}"
                    FontSize="48"
                    HorizontalOptions="Center"/>-->
-            <Label Text="{Binding FishName, StringFormat='🐟  {0}'}"
-                   FontSize="24"
-                   FontAttributes="Bold"
-                   HorizontalOptions="Center"
-                   TextColor="#1A1A1A"/>
+            <VerticalStackLayout HorizontalOptions="Center">
+                <Label x:Name="FishNameLabel"
+                       Text="{Binding FishName, StringFormat='🐟  {0}'}"
+                       FontSize="24"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="#1A1A1A">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnChangeSpeciesClicked"/>
+                    </Label.GestureRecognizers>
+                </Label>
+                <Label Text="tap to change"
+                       FontSize="10"
+                       TextColor="#999999"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
             <Label Text="{Binding Timestamp, StringFormat='{0:g}'}"
                    FontSize="14"
                    HorizontalOptions="Center"

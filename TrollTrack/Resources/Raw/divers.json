@@ -61,5 +61,32 @@
     "Size": "3 oz",
     "Color": "Gray",
     "Setting": ""
+  },
+  {
+    "Id": "F916CEE2-4C2E-49E3-9751-330692D1F131",
+    "Manufacturer": "Big Jon",
+    "DiverType": "Downrigger",
+    "Name": "Cannonball",
+    "Size": "6 lb",
+    "Color": "Black",
+    "Setting": ""
+  },
+  {
+    "Id": "0ACCD14B-6B00-4AF3-908E-75F4B43D15EA",
+    "Manufacturer": "Big Jon",
+    "DiverType": "Downrigger",
+    "Name": "Cannonball",
+    "Size": "8 lb",
+    "Color": "Black",
+    "Setting": ""
+  },
+  {
+    "Id": "36FE227D-ECDA-4395-9059-35714C42DF04",
+    "Manufacturer": "Big Jon",
+    "DiverType": "Downrigger",
+    "Name": "Cannonball",
+    "Size": "10 lb",
+    "Color": "Black",
+    "Setting": ""
   }
 ]

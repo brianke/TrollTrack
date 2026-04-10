@@ -100,21 +100,57 @@ From this repo’s project file:
 
 Every new file you upload must have a **higher version code** than the last one **for that same app**.
 
+### 3.1 Step-by-step: update version numbers before each upload
+
+You must increment the version code before every Play Console upload. Optionally update the display version when shipping a user-visible change.
+
+1. Open `TrollTrack\TrollTrack.csproj`.
+2. Find the **Versions** section near the top of the file:
+
+```xml
+<!-- Versions -->
+<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+<ApplicationVersion>2</ApplicationVersion>
+```
+
+3. **`ApplicationVersion`** (version code) — **Required** change for every upload.  
+   - This is an **integer** that Google Play uses to determine if a build is newer.  
+   - Increment by 1 each time (e.g. `2` → `3` → `4`).  
+   - If you forget, Play Console will reject the upload with: *"Version code X has already been used."*
+
+4. **`ApplicationDisplayVersion`** (display version) — **Optional** but recommended for user-facing releases.  
+   - This is the version string users see in the Play Store listing (e.g. `1.0`, `1.1`, `2.0`).  
+   - Update when shipping a meaningful change so testers/users can tell which version they have.  
+   - Does **not** need to change for every upload (Play only checks the version code), but keeping it in sync avoids confusion.
+
+5. Save the file.
+6. **Rebuild the AAB** after saving — the version numbers are baked into the bundle at build time.
+
+**Example progression:**
+
+| Upload | `ApplicationVersion` | `ApplicationDisplayVersion` | Notes |
+|--------|----------------------|-----------------------------|-------|
+| First upload | `1` | `0.1.0` | Initial closed testing release |
+| Bug fix | `2` | `0.1.0` | Same display version, code-only fix |
+| New feature | `3` | `0.2.0` | Bumped display version for visible change |
+| Another fix | `4` | `0.2.0` | Patch, no user-visible version change |
+
+**Important:** The version code must **only go up** — you can never reuse or decrease it for a given Play app listing.
+
 ---
 
 ## Part 4 — Release build: Android App Bundle (AAB) and signing
 
 Google Play **requires** **Android App Bundle (.aab)** for new apps (not a raw APK as the primary upload format).
 
-### 4.1 Step-by-step: update project settings for AAB output
+### 4.1 Android packaging: APK for device deploy, AAB for Play Store
 
-1. Open `TrollTrack.csproj`.
-2. Find the Android packaging properties. You currently have values forcing APK output.
-3. Update Release settings so Play uploads are AAB:
-   - Set `AndroidPackageFormat` to `aab` for Release builds.
-   - Remove or change any `AndroidPackageFormats` value that forces only `apk`.
-4. Save the file.
-5. Keep Debug behavior however you prefer for local device testing; this section is for Release upload artifacts only.
+The project defaults to **APK** packaging for Android (`AndroidPackageFormat` / `AndroidPackageFormats` at the top of `TrollTrack.csproj`). That is intentional:
+
+- **Visual Studio Deploy** with **AAB** as the primary format uses the Android SDK’s *bundle* install path, which runs **`adb uninstall`** before installing split APKs from the bundle. That **deletes your app’s private data** (including the SQLite database) on every deploy.
+- **APK** deploy uses **`adb install -r`**, which upgrades the app **in place** and **keeps** trips, catches, and settings.
+
+For **Google Play**, you still upload an **AAB**. Do **not** change the `.csproj` back to default `aab` for Release; pass the format only when publishing (see **4.6.4**).
 
 Because this guide uses **Option A** (free + paid as separate apps), you will produce **two Release AABs** (one per package ID).
 
@@ -240,10 +276,10 @@ cd C:\GitHub\TrollTrack
 
 #### 4.6.4 Publish Release (produces the AAB)
 
-Signing and `aab` format for Android **Release** are configured in `TrollTrack.csproj` for `Release|net9.0-android`. Run:
+Signing is configured in `TrollTrack.csproj` for `Release|net9.0-android`. Request **AAB** explicitly on the command line so Play gets a bundle while day-to-day VS deploy stays on APK (and preserves data):
 
 ```text
-dotnet publish TrollTrack\TrollTrack.csproj -f net9.0-android -c Release
+dotnet publish TrollTrack\TrollTrack.csproj -f net9.0-android -c Release -p:AndroidPackageFormat=aab
 ```
 
 #### 4.6.5 Find the output file
@@ -396,7 +432,7 @@ When you are ready for everyone: create a **Production** release and go through 
 ## Part 9 — Checklist before each upload
 
 - [ ] `ApplicationVersion` (version code) **incremented** for **this** Play app
-- [ ] **Release** configuration, **AAB** output
+- [ ] **Release** configuration; **`dotnet publish` with `-p:AndroidPackageFormat=aab`** for the upload artifact
 - [ ] Correct **`ApplicationId`** for free vs paid app package
 - [ ] Signed with your **upload** keystore (passwords available)
 - [ ] `GOOGLE_MAPS_API_KEY` set for release; Maps restrictions match signing certs **and** package name(s)
@@ -417,7 +453,14 @@ When you are ready for everyone: create a **Production** release and go through 
 
 ---
 
-## Part 11 — Official references (bookmark these)
+## Part 11 - Common PowerShell commands
+
+1. Push database to emulator
+   - adb -s emulator-5554 push "C:\GitHub\TrollTrack\trolltrack_testing.db" /data/local/tmp/trolltrack_backup.db
+   - adb -s emulator-5554 shell run-as com.trolltrack.fishing cp /data/local/tmp/trolltrack_backup.db /data/data/com.trolltrack.fishing/files/trolltrack.db
+
+
+## Part 12 — Official references (bookmark these)
 
 - [Google Play Console](https://play.google.com/console)  
 - [Set up an open, closed, or internal test](https://support.google.com/googleplay/android-developer/answer/9845334)  

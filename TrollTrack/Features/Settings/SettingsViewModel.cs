@@ -73,6 +73,9 @@ public partial class SettingsViewModel : BaseViewModel
     }
 
     [RelayCommand]
+    private Task ImportDatabaseAsync() => DatabaseImportFlow.RunAsync(BaseDatabaseService);
+
+    [RelayCommand]
     private async Task ExportDatabaseAsync()
     {
         try

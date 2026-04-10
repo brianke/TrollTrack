@@ -22,6 +22,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <Grid.ColumnDefinitions>
@@ -50,43 +51,50 @@
                                 Format="D"
                                 Grid.Row="2" Grid.Column="1" />
 
-                <Label Text="Water Temp (F)"
+                <Label Text="Target Species"
                             VerticalOptions="Center"
                             Grid.Row="3" Grid.Column="0" />
+                <Picker ItemsSource="{Binding TargetSpeciesOptions}"
+                            SelectedItem="{Binding TargetSpecies, Mode=TwoWay}"
+                            Grid.Row="3" Grid.Column="1" />
+
+                <Label Text="Water Temp (F)"
+                            VerticalOptions="Center"
+                            Grid.Row="4" Grid.Column="0" />
                 <Picker Title="Water Temp (F)"
                             ItemsSource="{Binding WaterTemps}"
                             SelectedItem="{Binding WaterTemp, Mode=TwoWay}"
-                            Grid.Row="3" Grid.Column="1" />
+                            Grid.Row="4" Grid.Column="1" />
 
                 <Label Text="Secchi Depth (ft)"
                             VerticalOptions="Center"
-                            Grid.Row="4" Grid.Column="0" />
+                            Grid.Row="5" Grid.Column="0" />
                 <Picker ItemsSource="{Binding SecchiNumberList}"
                             SelectedItem="{Binding SecchiDepth, Mode=TwoWay}"
-                            Grid.Row="4" Grid.Column="1" />
+                            Grid.Row="5" Grid.Column="1" />
 
                 <Label Text="Water Clarity"
                             VerticalOptions="Center"
-                            Grid.Row="5" Grid.Column="0" />
+                            Grid.Row="6" Grid.Column="0" />
                 <Picker ItemsSource="{Binding ClarityOptions}"
                             SelectedItem="{Binding Clarity, Mode=TwoWay}"
-                            Grid.Row="5" Grid.Column="1" />
+                            Grid.Row="6" Grid.Column="1" />
 
                 <Label Text="Trip Notes"
                             VerticalOptions="Center"
-                            Grid.Row="6" Grid.Column="0" />
+                            Grid.Row="7" Grid.Column="0" />
                 <Entry Text="{Binding TripNotes}"
                             Placeholder="e.g., Taking friends out for walleye"
                             PlaceholderColor="White"
                             Keyboard="{x:Static Keyboard.Chat}"
-                            Grid.Row="6" Grid.Column="1" />
+                            Grid.Row="7" Grid.Column="1" />
 
                 <Button Text="Start Trip"
                             Command="{Binding StartNewTripCommand}"
                             BackgroundColor="#D3D3D3"
                             TextColor="#555555"
                             Margin="0,10,0,0"
-                            Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2">
+                            Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2">
                     <VisualStateManager.VisualStateGroups>
                         <VisualStateGroupList>
                             <VisualStateGroup x:Name="CommonStates">

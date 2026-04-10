@@ -84,9 +84,23 @@ public partial class DashboardViewModel : BaseViewModel
 
                     _hasRequestedLocationOnStart = true;
 
-                    var weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
+                    List<WeatherDataEntity>? weather = null;
+                    int maxRetries = isRefresh ? 1 : 3;
+                    for (int attempt = 0; attempt < maxRetries; attempt++)
+                    {
+                        try
+                        {
+                            weather = await _weatherService.GetWeatherForecastAsync(CurrentLatitude, CurrentLongitude);
+                            if (weather != null) break;
+                        }
+                        catch (Exception ex) when (attempt < maxRetries - 1)
+                        {
+                            Debug.WriteLine($"Weather fetch attempt {attempt + 1} failed: {ex.Message}");
+                            await Task.Delay(2000 * (attempt + 1));
+                        }
+                    }
 
-                    if (weather != null)
+                    if (weather != null && weather.Count > 0)
                     {
                         WeatherEntity = weather[0];
                         LocationName = weather[0].LocationName ?? "Location Unavailable";

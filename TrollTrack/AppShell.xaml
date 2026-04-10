@@ -34,9 +34,11 @@
             Title="Settings"
             ContentTemplate="{DataTemplate settings:SettingsView}"
             Route="Settings" />
+        <!-- Inline page (not DataTemplate) so XAML Clicked handlers in code-behind wire correctly -->
         <ShellContent x:Name="AboutTab"
             Title="About"
-            ContentTemplate="{DataTemplate about:AboutView}"
-            Route="About" />
+            Route="About">
+            <about:AboutView />
+        </ShellContent>
     </TabBar>
 </Shell>

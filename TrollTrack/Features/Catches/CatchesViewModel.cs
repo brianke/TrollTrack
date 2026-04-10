@@ -58,6 +58,12 @@ public partial class CatchesViewModel : BaseViewModel
     [ObservableProperty]
     private string _clarity = "Clear";
 
+    [ObservableProperty]
+    private ObservableCollection<string> _targetSpeciesOptions = new();
+
+    [ObservableProperty]
+    private string _targetSpecies = string.Empty;
+
     private bool CanStartNewTrip() => !string.IsNullOrWhiteSpace(NewTripName);
 
     #endregion Trip Properties
@@ -132,6 +138,12 @@ public partial class CatchesViewModel : BaseViewModel
 
         // Add "Custom..." at the end
         ClarityOptions.Add("Custom...");
+
+        // Target species options from fish catalog
+        var speciesNames = FishData.GetAllFishNames();
+        speciesNames.Insert(0, "Any");
+        TargetSpeciesOptions = new ObservableCollection<string>(speciesNames);
+        TargetSpecies = "Any";
 
         //_ = InitializeAsync();
 
@@ -250,6 +262,7 @@ public partial class CatchesViewModel : BaseViewModel
                     SecchiDepth = SecchiDepth,
                     Clarity = Clarity,
                     Notes = TripNotes,
+                    TargetSpecies = TargetSpecies == "Any" ? string.Empty : TargetSpecies,
                     Catches = new List<CatchDataEntity>()
                 };
 
@@ -265,6 +278,7 @@ public partial class CatchesViewModel : BaseViewModel
                 // Clear form
                 NewTripName = string.Empty;
                 NewTripDate = DateTime.Today;
+                TargetSpecies = "Any";
 
                 // Reload recent trips
                 await LoadRecentTripsAsync();
@@ -415,8 +429,15 @@ public partial class CatchesViewModel : BaseViewModel
             await LoadCatchesAsync();
 
             // Resume foreground GPS listening so speed/course are available for new catches
-            if (!BaseLocationService.IsListening && ActiveTrip != null)
-                await BaseLocationService.StartListeningAsync(ActiveTrip.Id);
+            try
+            {
+                if (!BaseLocationService.IsListening && ActiveTrip != null)
+                    await BaseLocationService.StartListeningAsync(ActiveTrip.Id);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Failed to resume location listening on startup: {ex.Message}");
+            }
 
             Debug.WriteLine($"Active trip loaded: {ActiveTrip?.TripName} with {Catches.Count} catches");
         }
@@ -841,7 +862,7 @@ public partial class CatchesViewModel : BaseViewModel
 
         try
         {
-            var popup = new CatchDetailPopup(catchData, BaseDatabaseService, OnCatchDeletedFromDetailAsync);
+            var popup = new CatchDetailPopup(catchData, BaseDatabaseService, OnCatchDeletedFromDetailAsync, OnCatchUpdatedFromDetailAsync);
             var page = Application.Current?.Windows[0]?.Page;
             if (page?.Navigation != null)
             {
@@ -882,6 +903,31 @@ public partial class CatchesViewModel : BaseViewModel
 
             TotalCatches = Catches.Count;
             TodaysCatches = Catches.Count(c => c.Timestamp.Date == DateTime.Today);
+        });
+    }
+
+    private async Task OnCatchUpdatedFromDetailAsync(CatchDataEntity updated)
+    {
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            var match = Catches.FirstOrDefault(c => c.Id == updated.Id);
+            if (match != null)
+            {
+                var index = Catches.IndexOf(match);
+                Catches[index] = updated;
+            }
+
+            if (ActiveTrip?.Catches != null)
+            {
+                var inTrip = ActiveTrip.Catches.FirstOrDefault(c => c.Id == updated.Id);
+                if (inTrip != null)
+                {
+                    inTrip.FishInfoId = updated.FishInfoId;
+                    inTrip.FishName = updated.FishName;
+                }
+            }
+
+            OnPropertyChanged(nameof(CatchesBySpeciesSummary));
         });
     }
 

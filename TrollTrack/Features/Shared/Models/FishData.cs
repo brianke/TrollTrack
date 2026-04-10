@@ -29,10 +29,73 @@ namespace TrollTrack.Features.Shared.Models
             },
             new FishInfoEntity
             {
-                Id = Guid.Parse("2DF05EC7-F99D-483A-9660-E2743C322EFF"),
-                CommonName = "Cobia",
-                ScientificName = "Rachycentron canadum",
-                Habitat = "Saltwater"
+                Id = Guid.Parse("A1B2C3D4-1111-4A00-B000-000000000001"),
+                CommonName = "King Salmon (Chinook)",
+                ScientificName = "Oncorhynchus tshawytscha",
+                Habitat = "Freshwater / Saltwater"
+            },
+            new FishInfoEntity
+            {
+                Id = Guid.Parse("A1B2C3D4-2222-4A00-B000-000000000002"),
+                CommonName = "Coho Salmon (Silver)",
+                ScientificName = "Oncorhynchus kisutch",
+                Habitat = "Freshwater / Saltwater"
+            },
+            new FishInfoEntity
+            {
+                Id = Guid.Parse("A1B2C3D4-3333-4A00-B000-000000000003"),
+                CommonName = "Atlantic Salmon",
+                ScientificName = "Salmo salar",
+                Habitat = "Freshwater / Saltwater"
+            },
+            new FishInfoEntity
+            {
+                Id = Guid.Parse("A1B2C3D4-4444-4A00-B000-000000000004"),
+                CommonName = "Pink Salmon",
+                ScientificName = "Oncorhynchus gorbuscha",
+                Habitat = "Freshwater / Saltwater"
+            },
+            new FishInfoEntity
+            {
+                Id = Guid.Parse("A1B2C3D4-5555-4A00-B000-000000000005"),
+                CommonName = "Sockeye Salmon",
+                ScientificName = "Oncorhynchus nerka",
+                Habitat = "Freshwater / Saltwater"
+            },
+            new FishInfoEntity
+            {
+                Id = Guid.Parse("A1B2C3D4-6666-4A00-B000-000000000006"),
+                CommonName = "Rainbow Trout",
+                ScientificName = "Oncorhynchus mykiss",
+                Habitat = "Freshwater"
+            },
+            new FishInfoEntity
+            {
+                Id = Guid.Parse("A1B2C3D4-7777-4A00-B000-000000000007"),
+                CommonName = "Brown Trout",
+                ScientificName = "Salmo trutta",
+                Habitat = "Freshwater"
+            },
+            new FishInfoEntity
+            {
+                Id = Guid.Parse("A1B2C3D4-8888-4A00-B000-000000000008"),
+                CommonName = "Lake Trout",
+                ScientificName = "Salvelinus namaycush",
+                Habitat = "Freshwater"
+            },
+            new FishInfoEntity
+            {
+                Id = Guid.Parse("A1B2C3D4-9999-4A00-B000-000000000009"),
+                CommonName = "Brook Trout",
+                ScientificName = "Salvelinus fontinalis",
+                Habitat = "Freshwater"
+            },
+            new FishInfoEntity
+            {
+                Id = Guid.Parse("A1B2C3D4-AAAA-4A00-B000-00000000000A"),
+                CommonName = "Steelhead",
+                ScientificName = "Oncorhynchus mykiss",
+                Habitat = "Freshwater / Saltwater"
             }
         };
 

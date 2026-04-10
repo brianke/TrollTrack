@@ -27,7 +27,12 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         public int SecchiDepth { get; set; } = 0; // feet
 
-        public string Clarity { get; set; } = string.Empty;
+        private string _clarity = string.Empty;
+        public string Clarity
+        {
+            get => _clarity ?? string.Empty;
+            set => _clarity = value ?? string.Empty;
+        }
 
         // OneToMany relationship - Trip owns the catches
         [OneToMany(CascadeOperations = CascadeOperation.All)]
@@ -63,7 +68,19 @@ namespace TrollTrack.Features.Shared.Models.Entities
 
         public bool IsActive { get; set; }
 
-        public string Notes { get; set; } = string.Empty;
+        private string _notes = string.Empty;
+        public string Notes
+        {
+            get => _notes ?? string.Empty;
+            set => _notes = value ?? string.Empty;
+        }
+
+        private string _targetSpecies = string.Empty;
+        public string TargetSpecies
+        {
+            get => _targetSpecies ?? string.Empty;
+            set => _targetSpecies = value ?? string.Empty;
+        }
 
     }
 }

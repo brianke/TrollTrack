@@ -12,6 +12,12 @@
 			<action android:name="android.intent.action.GET_CONTENT" />
 			<data android:mimeType="image/*" />
 		</intent>
+
+		<!-- Android 11+ package visibility: apps that handle SEND (Drive, Gmail, Files, etc.) -->
+		<intent>
+			<action android:name="android.intent.action.SEND" />
+			<data android:mimeType="application/octet-stream" />
+		</intent>
 	</queries>
 	
 	<application
@@ -23,6 +29,17 @@
 		<!-- Google Maps API key - replace with your key from Google Cloud Console -->
 		<meta-data android:name="com.google.android.geo.API_KEY" android:value="GOOGLE_MAPS_API_KEY_PLACEHOLDER" />
 		<meta-data android:name="com.google.android.gms.version" android:value="@integer/google_play_services_version" />
+
+		<!-- Share exported DB from app cache (content:// URI) -->
+		<provider
+			android:name="androidx.core.content.FileProvider"
+			android:authorities="com.trolltrack.fishing.fileprovider"
+			android:exported="false"
+			android:grantUriPermissions="true">
+			<meta-data
+				android:name="android.support.FILE_PROVIDER_PATHS"
+				android:resource="@xml/file_paths_share" />
+		</provider>
 	</application>
 
 	<!-- Network permissions -->
@@ -36,6 +53,10 @@
 
 	<!-- For background location (if needed) -->
 	<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+	<!-- Required for Geolocation.StartListeningForegroundAsync (continuous GPS tracking during trips) -->
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
 	<!-- For storing catch data -->
 	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />

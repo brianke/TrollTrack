@@ -21,6 +21,8 @@ namespace TrollTrack.Features.Shared.Models.Entities
         [Description("Inline Weight")]
         InlineWeight = 3,
 
+        [Description("Cannonball")]
+        Downrigger = 4,
 
     }
 
@@ -97,7 +99,7 @@ namespace TrollTrack.Features.Shared.Models.Entities
             _name.Append(Name);
 
             // if this is a weight, add the Size parameter
-            if (DiverType.Equals(DiverType.InlineWeight))
+            if (DiverType.Equals(DiverType.InlineWeight) || DiverType.Equals(DiverType.Downrigger))
             {
                 _name.Append($" ({Size})");
             }

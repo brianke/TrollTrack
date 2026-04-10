@@ -86,21 +86,24 @@ public partial class TripCatchesPopup : ContentPage
         CatchesMap.Pins.Clear();
         CatchesMap.MapElements.Clear();
 
-        // Draw route polyline from tracked route points
+        // Draw route as gradient segments: green → blue → red
         if (display.RoutePoints.Count >= 2)
         {
-            var polyline = new Microsoft.Maui.Controls.Maps.Polyline
-            {
-                StrokeColor = Color.FromArgb("#FF6600"),
-                StrokeWidth = 4
-            };
+            var points = display.RoutePoints;
+            int segmentCount = points.Count - 1;
 
-            foreach (var rp in display.RoutePoints)
+            for (int i = 0; i < segmentCount; i++)
             {
-                polyline.Geopath.Add(new Location(rp.Latitude, rp.Longitude));
+                double progress = segmentCount == 1 ? 0.0 : (double)i / (segmentCount - 1);
+                var segment = new Microsoft.Maui.Controls.Maps.Polyline
+                {
+                    StrokeColor = InterpolateRouteColor(progress),
+                    StrokeWidth = 4
+                };
+                segment.Geopath.Add(new Location(points[i].Latitude, points[i].Longitude));
+                segment.Geopath.Add(new Location(points[i + 1].Latitude, points[i + 1].Longitude));
+                CatchesMap.MapElements.Add(segment);
             }
-
-            CatchesMap.MapElements.Add(polyline);
         }
 
         foreach (var catchData in catchesWithLocation)
@@ -139,6 +142,32 @@ public partial class TripCatchesPopup : ContentPage
         _ = RefreshMapRegionAfterLayoutAsync();
     }
 
+    /// <summary>
+    /// Green (0.0) → Blue (0.5) → Red (1.0)
+    /// </summary>
+    private static Color InterpolateRouteColor(double t)
+    {
+        t = Math.Clamp(t, 0.0, 1.0);
+
+        double r, g, b;
+        if (t < 0.5)
+        {
+            double local = t / 0.5;
+            r = 0;
+            g = 1.0 - local;
+            b = local;
+        }
+        else
+        {
+            double local = (t - 0.5) / 0.5;
+            r = local;
+            g = 0;
+            b = 1.0 - local;
+        }
+
+        return Color.FromRgb(r, g, b);
+    }
+
     private void MoveMapToFitPins(IReadOnlyList<Location> locations)
     {
         if (locations.Count == 0) return;
@@ -163,7 +192,7 @@ public partial class TripCatchesPopup : ContentPage
 
         try
         {
-            var detailPopup = new CatchDetailPopup(catchData, _databaseService, OnCatchDeletedFromDetailAsync);
+            var detailPopup = new CatchDetailPopup(catchData, _databaseService, OnCatchDeletedFromDetailAsync, OnCatchUpdatedFromDetailAsync);
             await Navigation.PushModalAsync(detailPopup);
         }
         catch (Exception ex)
@@ -221,6 +250,22 @@ public partial class TripCatchesPopup : ContentPage
             }
 
             PopulateMapWithCatches();
+        });
+    }
+
+    private async Task OnCatchUpdatedFromDetailAsync(CatchDataEntity updated)
+    {
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            if (BindingContext is TripCatchesDisplay display)
+            {
+                var existing = display.Catches.FirstOrDefault(c => c.Id == updated.Id);
+                if (existing != null)
+                {
+                    var index = display.Catches.IndexOf(existing);
+                    display.Catches[index] = updated;
+                }
+            }
         });
     }
 }

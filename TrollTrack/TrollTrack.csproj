@@ -17,8 +17,8 @@
 		<ApplicationId>com.trolltrack.fishing</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-		<ApplicationVersion>2</ApplicationVersion>
+		<ApplicationDisplayVersion>0.1.2</ApplicationDisplayVersion>
+		<ApplicationVersion>4</ApplicationVersion>
 
 		<!-- Android specific settings -->
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
@@ -36,7 +36,7 @@
 		<AndroidCreatePackagePerAbi Condition="'$(Configuration)' == 'Debug'">false</AndroidCreatePackagePerAbi>
 		<AndroidUseSharedRuntime Condition="'$(Configuration)' == 'Debug'">true</AndroidUseSharedRuntime>
 		
-		<!-- Release settings -->
+		<!-- Release: SdkOnly keeps AAB size down; MAUI assemblies preserved via LinkDescription (see below). -->
 		<AndroidLinkMode Condition="'$(Configuration)' == 'Release'">SdkOnly</AndroidLinkMode>
 		<RunAOTCompilation Condition="'$(Configuration)' == 'Release'">false</RunAOTCompilation>
 		<AndroidCreatePackagePerAbi Condition="'$(Configuration)' == 'Release'">false</AndroidCreatePackagePerAbi>
@@ -64,28 +64,18 @@
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
-	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
 	  <AndroidUseAapt2>True</AndroidUseAapt2>
 	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
-	  <AndroidPackageFormat>aab</AndroidPackageFormat>
+	  <!-- Do not set AndroidPackageFormat to aab here: VS/device Install uses the AAB pipeline and runs adb uninstall first, which wipes app data. Default apk (see top of file) uses adb install -r and keeps your database. -->
 	  <!-- Must be false unless AndroidSigningKeyStore + alias/passwords are set; true with no path causes MSB4044 KeyStore. -->
 	  <AndroidKeyStore>False</AndroidKeyStore>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-ios|AnyCPU'">
-	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-maccatalyst|AnyCPU'">
-	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
-	</PropertyGroup>
-
 	<!-- Release Android: use android-signing/release.keystore only when that file exists; otherwise use default debug signing (avoids MSB4044 KeyStore empty). -->
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
-	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
 	  <AndroidUseAapt2>True</AndroidUseAapt2>
 	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
-	  <AndroidPackageFormat>aab</AndroidPackageFormat>
+	  <!-- Same as Debug: aab + Install from VS uninstalls the app and wipes SQLite. Keep apk for local deploy; see Play Store doc for AAB command. -->
 	  <AndroidKeyStore Condition="Exists('$(MSBuildThisFileDirectory)..\android-signing\release.keystore')">True</AndroidKeyStore>
 	  <AndroidKeyStore Condition="!Exists('$(MSBuildThisFileDirectory)..\android-signing\release.keystore')">False</AndroidKeyStore>
 	</PropertyGroup>
@@ -95,14 +85,6 @@
 	  <AndroidSigningKeyAlias>$(TROLLTRACK_ANDROID_KEY_ALIAS)</AndroidSigningKeyAlias>
 	  <AndroidSigningKeyPass>$(TROLLTRACK_ANDROID_KEY_PASS)</AndroidSigningKeyPass>
 	  <AndroidSigningStorePass>$(TROLLTRACK_ANDROID_STORE_PASS)</AndroidSigningStorePass>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-ios|AnyCPU'">
-	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-maccatalyst|AnyCPU'">
-	  <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
 	</PropertyGroup>
 
 	<!-- Fail early if no Google Maps API key is configured -->
@@ -176,6 +158,10 @@
 	  <MauiImage Include="Resources\Images\Lures\moonshine_lures_agent_orange.png" />
 	  <MauiImage Include="Resources\Images\Lures\moonshine_lures_jj_mac_muffin.png" />
 	  <MauiImage Include="Resources\Images\Lures\walleye_sport_fruit_loopz_walleye_weapon.png" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0-android'">
+		<LinkDescription Include="Platforms\Android\TrollTrack.LinkDescription.xml" />
 	</ItemGroup>
 
 	<ItemGroup>

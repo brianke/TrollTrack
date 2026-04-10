@@ -1598,6 +1598,9 @@ namespace TrollTrack.Services
             await db.CreateTableAsync<WeatherDataEntity>();
             await db.CreateTableAsync<CustomClarityEntity>();
             await db.CreateTableAsync<RoutePointEntity>();
+
+            // Backfill NULLs in columns added after initial release so old rows are safe
+            await db.ExecuteAsync("UPDATE Trips SET TargetSpecies = '' WHERE TargetSpecies IS NULL");
         }
 
         public async Task ClearAllTablesAsync()
@@ -1629,6 +1632,36 @@ namespace TrollTrack.Services
             {
                 System.Diagnostics.Debug.WriteLine($"Error clearing database: {ex.Message}");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Replaces the app database file. Callers should copy the picked file to a local path first (e.g. cache) when using content URIs.
+        /// </summary>
+        public async Task ImportDatabaseFromFileAsync(string sourcePath)
+        {
+            if (string.IsNullOrWhiteSpace(sourcePath))
+                throw new ArgumentException("Source path is required.", nameof(sourcePath));
+            if (!File.Exists(sourcePath))
+                throw new FileNotFoundException("Selected file was not found.", sourcePath);
+
+            await _initializationSemaphore.WaitAsync();
+            try
+            {
+                if (_database != null)
+                {
+                    await _database.CloseAsync();
+                    _database = null;
+                }
+
+                _initializationTask = null;
+
+                File.Copy(sourcePath, _databasePath, overwrite: true);
+                System.Diagnostics.Debug.WriteLine($"Database replaced from import: {_databasePath}");
+            }
+            finally
+            {
+                _initializationSemaphore.Release();
             }
         }
 

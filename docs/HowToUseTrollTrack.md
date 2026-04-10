@@ -31,9 +31,10 @@ The **Trips** tab is where you **start and end trips**, **set up rods**, and **l
 You’ll see the **Start New Trip** form:
 
 1. Enter a **trip name** (required).
-2. Set the **trip date**, **water temperature**, **Secchi depth**, and **water clarity** using the pickers.
-3. Optionally add **trip notes**.
-4. Tap **Start Trip**.
+2. Select the **target species**. If set, this will be the selected catch when a catch is recorded. If left as "Any", each recorded catch will prompt for the species caught.
+3. Set the **trip date**, **water temperature**, **Secchi depth**, and **water clarity** using the pickers.
+4. Optionally add **trip notes**.
+5. Tap **Start Trip**.
 
 **Before the trip is created**, TrollTrack shows a **location disclosure** screen. Read it, then tap **Continue** to proceed or **Cancel** to go back. You will then be asked for **location permission** if it hasn’t been granted yet. Location is used for catch coordinates, speed, and heading when you log catches.
 
@@ -50,7 +51,7 @@ Tap **End Trip** when you’re done fishing. Confirm if prompted. The trip is sa
 **Add Rod**  
 Tap **+ Add Rod** to open the rod setup screen. There you can:
 
-- Give the rod a **name**.
+- Give the rod a **name**. The **name** will default to "Rod x" where x is the next number after the number of rods already defined.
 - Enter **line out** (distance from boat to lure, in feet).
 - Choose a **diver** from the list (if you use divers / inline weights).
 - **Select a lure** from your lure library (you can open the lure picker and filters from here).
@@ -91,24 +92,6 @@ Tap **+ Add Lure** to open the add-lure flow. Fill in manufacturer, description,
 
 ---
 
-## Settings
-
-The **Settings** tab has tools for understanding and managing local data.
-
-**Database information**  
-Shows summary information such as approximate database size and catch counts.
-
-**View Database Path**  
-Shows where the app stores its database file on your device (useful for support or advanced backup).
-
-**Export Database** (under Developer Tools)  
-Exports a copy of the database so you can save it elsewhere (for example cloud storage or a PC). This is a practical way to **back up** your data because everything is stored locally.
-
-**Clear All Data** (Danger Zone)  
-Permanently deletes app data such as trips and catches, then reloads bundled default lure/diver catalog data. This **cannot be undone**. Only use this if you intentionally want to reset the app.
-
----
-
 ## About
 
 The **About** tab shows the **TrollTrack** name, **version**, and a short description.
@@ -122,6 +105,8 @@ You can also use **Export Database** from this screen to save a copy of your dat
 - Grant **location** when asked so catches and the Dashboard stay accurate.
 - **Back up** your database occasionally using **Export Database** if you replace your phone or reinstall the app.
 - If the **map** on a trip detail screen is blank, the app build must include a valid **Google Maps API key**; that is a setup issue for developers, not something you fix inside the app’s menus.
+- Practice using the app by setting up a trip and then walk around your neighborhood and track catches, change lures and line out, etc. before hitting the water.
+- Rod setups are saved between trips. Update lures, line out, etc. as needed instead of creating new rods each trip.
 
 ---
 
