@@ -236,7 +236,8 @@ Your build injects `GOOGLE_MAPS_API_KEY` into Android manifest during build.
    - Paid app package: your paid package ID (for example `com.trolltrack.fishing.pro`) + correct SHA fingerprint(s)
 3. Start with upload key SHA fingerprint for local signed uploads.
 4. After Play App Signing is active, add Play signing certificate SHA fingerprint as required by Google for installed-store builds.
-5. In your build terminal, set the key before publish:
+5. **Grey map / no tiles on Play-installed builds** (while sideload or debug still works): store installs are signed with **Play App Signing**. Your key’s Android restriction must include package `com.trolltrack.fishing` and the **App signing certificate** SHA-1 from Play Console → **Setup** → **App integrity** (upload-key-only restrictions are a common miss). The Cloud project must also have **billing enabled** and **Maps SDK for Android** enabled for that key.
+6. In your build terminal, set the key before publish:
 
 ```text
 set GOOGLE_MAPS_API_KEY=your_release_key_here
@@ -309,6 +310,15 @@ Rename or copy the `.aab` after each build if you build both (for example `Troll
 1. **Signing errors** — Confirm `TROLLTRACK_ANDROID_KEY_ALIAS`, `TROLLTRACK_ANDROID_KEY_PASS`, and `TROLLTRACK_ANDROID_STORE_PASS` are set in the **same** session as `dotnet publish` (or restart the terminal after `setx`).
 2. **Maps / manifest warnings** — Set `GOOGLE_MAPS_API_KEY` before publish; in Google Cloud, restrict the key to your package name and signing certificate SHA fingerprints (**4.5**).
 3. **Android SDK errors** — Install/update the Android SDK and required API levels for your target framework.
+
+#### 4.6.8 App crashes or closes immediately after installing from Play
+
+If **Debug** builds work but the **Play Store** update fails on launch, common causes are:
+
+1. **Wrong AAB** — Upload only the **`*-Signed` / `*-signed`** `.aab` from `publish\` (see **4.6.5**). An unsigned or mismatched artifact can behave badly after Play processing.
+2. **Maps API key missing in the shipped manifest** — The release build must inject your real key. The project uses **`AndroidManifestPlaceholders`** so `dotnet publish` merges `MAPS_API_KEY` into the final manifest. Confirm `GOOGLE_MAPS_API_KEY` was set in the **same** terminal session as `dotnet publish`, and in Google Cloud restrict the key to package **`com.trolltrack.fishing`** and the **Play App Signing** certificate SHA-1 (and your upload key if you use key restrictions).
+3. **Release linking** — `Release` uses `AndroidLinkMode` **SdkOnly** with a linker preserve file. If you still see native/.NET crashes only in Release, capture a trace: connect the device via USB, run `adb logcat`, reproduce the crash, and look for `AndroidRuntime`, `DEBUG`, or `mono`. As a **diagnostic** (not for production), you can temporarily set `AndroidLinkMode` to `None` in `TrollTrack.csproj` for `Release`, rebuild the AAB, and see if the crash disappears (that points at linking).
+4. **Smoke-test the AAB locally** — Before upload, install a release build on a device (e.g. `adb install -r` on an APK produced from the same commit, or `bundletool` to install from the bundle). Catching startup failures before Play saves iteration time.
 
 ### 4.7 Pre-upload checklist (do this every release)
 

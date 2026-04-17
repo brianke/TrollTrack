@@ -12,4 +12,12 @@
 	<assembly fullname="Microsoft.Maui.Essentials" preserve="all" />
 	<assembly fullname="Microsoft.Maui.Graphics" preserve="all" />
 	<assembly fullname="Microsoft.Maui.Controls.Maps" preserve="all" />
+	<assembly fullname="CommunityToolkit.Maui" preserve="all" />
+	<assembly fullname="CommunityToolkit.Maui.Core" preserve="all" />
+	<assembly fullname="SQLite-net" preserve="all" />
+	<assembly fullname="SQLiteNetExtensions" preserve="all" />
+	<assembly fullname="SQLitePCLRaw.core" preserve="all" />
+	<assembly fullname="SQLitePCLRaw.batteries_v2" preserve="all" />
+	<assembly fullname="SQLitePCLRaw.provider.e_sqlite3" preserve="all" />
+	<assembly fullname="Newtonsoft.Json" preserve="all" />
 </linker>

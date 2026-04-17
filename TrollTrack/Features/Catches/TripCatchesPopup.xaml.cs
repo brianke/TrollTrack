@@ -86,7 +86,7 @@ public partial class TripCatchesPopup : ContentPage
         CatchesMap.Pins.Clear();
         CatchesMap.MapElements.Clear();
 
-        // Draw route as gradient segments: green → blue → red
+        // Draw route as gradient segments: bright orange → near-black orange along trip progress
         if (display.RoutePoints.Count >= 2)
         {
             var points = display.RoutePoints;
@@ -143,27 +143,23 @@ public partial class TripCatchesPopup : ContentPage
     }
 
     /// <summary>
-    /// Green (0.0) → Blue (0.5) → Red (1.0)
+    /// Route trace: bright orange at trip start (t=0) fading to near-black orange by trip end (t=1).
     /// </summary>
     private static Color InterpolateRouteColor(double t)
     {
         t = Math.Clamp(t, 0.0, 1.0);
 
-        double r, g, b;
-        if (t < 0.5)
-        {
-            double local = t / 0.5;
-            r = 0;
-            g = 1.0 - local;
-            b = local;
-        }
-        else
-        {
-            double local = (t - 0.5) / 0.5;
-            r = local;
-            g = 0;
-            b = 1.0 - local;
-        }
+        const double startR = 1.0;
+        const double startG = 0.42;
+        const double startB = 0.0;
+
+        const double endR = 0.07;
+        const double endG = 0.02;
+        const double endB = 0.0;
+
+        var r = startR + (endR - startR) * t;
+        var g = startG + (endG - startG) * t;
+        var b = startB + (endB - startB) * t;
 
         return Color.FromRgb(r, g, b);
     }

@@ -196,17 +196,18 @@ STEP 1: Placeholder in AndroidManifest.xml
 ------------------------------------------
 The manifest at TrollTrack/Platforms/Android/AndroidManifest.xml contains:
 
-  <meta-data android:name="com.google.android.geo.API_KEY" android:value="GOOGLE_MAPS_API_KEY_PLACEHOLDER" />
+  <meta-data android:name="com.google.android.geo.API_KEY" android:value="${MAPS_API_KEY}" />
 
-The literal text GOOGLE_MAPS_API_KEY_PLACEHOLDER is replaced at build time
-with the value of GOOGLE_MAPS_API_KEY. Do NOT put your real key here.
+At build time, .NET Android merges AndroidManifestPlaceholders from TrollTrack.csproj:
+MAPS_API_KEY is set from $(GoogleMapsApiKey), which comes from GOOGLE_MAPS_API_KEY
+(or TrollTrack.Local.props). Do NOT put your real key in the source manifest file.
 
 
-STEP 2: MSBuild Target (already in TrollTrack.csproj)
------------------------------------------------------
-The target _InjectGoogleMapsApiKey runs before the Android build. It reads
-GOOGLE_MAPS_API_KEY from the environment, replaces the placeholder in the
-manifest, and uses the result for the build. The source manifest stays unchanged.
+STEP 2: MSBuild (already in TrollTrack.csproj)
+----------------------------------------------
+The project sets AndroidManifestPlaceholders when GoogleMapsApiKey is set, so
+`dotnet publish` and Visual Studio both inject the key into the final merged
+manifest (reliable for Play Store AAB builds).
 
 
 STEP 3: Set the environment variable before building

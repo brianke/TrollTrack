@@ -20,6 +20,12 @@
                    TextColor="#888888"
                    HorizontalOptions="Center"/>
 
+            <Label x:Name="CopyrightLabel"
+                   FontSize="12"
+                   TextColor="#AAAAAA"
+                   HorizontalOptions="Center"
+                   Margin="0,10,0,10"/>   
+            
             <Button Text="📤 Export Database"
                     Clicked="OnExportDatabaseClicked"
                     BackgroundColor="#2E8BC0"
@@ -39,12 +45,33 @@
                     HeightRequest="50"
                     HorizontalOptions="Fill"
                     Margin="0,10,0,0"/>
+            
+            <VerticalStackLayout Spacing="8"
+                                 Margin="0,8,0,0"
+                                 HorizontalOptions="Fill">
+                <Label Text="Version 0.1.7"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="#333333"
+                       HorizontalOptions="Center"/>
+                <Label FontSize="14"
+                       TextColor="#444444"
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="Fill"
+                       Text="&#x2022; Fixed issue with color picker hiding 'Done' and 'Close' buttons.&#10;"/>
+                <Label Text="Version 0.1.6"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="#333333"
+                       HorizontalOptions="Center"/>
+                <Label FontSize="14"
+                       TextColor="#444444"
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="Fill"
+                       Text="&#x2022; Added Target Species to the New Trip details.&#10;&#x2022; Added option to Export and Import database.&#10;&#x2022; Added new species for Trout and Salmon.&#10;&#x2022; Added new Cannonballs to Diver options."/>
+            </VerticalStackLayout>
 
-            <Label x:Name="CopyrightLabel"
-                   FontSize="12"
-                   TextColor="#AAAAAA"
-                   HorizontalOptions="Center"
-                   Margin="0,40,0,20"/>
+
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
