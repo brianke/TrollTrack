@@ -302,6 +302,9 @@ namespace TrollTrack.Features.RodSetup
         {
             try
             {
+                await LuresVM.RefreshLuresAsync();
+                OnPropertyChanged(nameof(FilteredLures));
+
                 var popup = new LureSelectionPopup(this);
                 var page = Application.Current?.Windows[0]?.Page;
                 if (page?.Navigation != null)

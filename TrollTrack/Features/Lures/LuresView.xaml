@@ -21,42 +21,69 @@
 
 
         <CollectionView ItemsSource="{Binding Lures}"
-                        Grid.Row="1">
+                        Grid.Row="1"
+                        Margin="4,0">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical"
+                                 Span="2"
+                                 HorizontalItemSpacing="6"
+                                 VerticalItemSpacing="6" />
+            </CollectionView.ItemsLayout>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="e:LureDataEntity">
-                    <Border Style="{StaticResource LureCard}">
-                        <!--<Border.GestureRecognizers>
-                            <TapGestureRecognizer Tapped="OnImageTapped" />
-                        </Border.GestureRecognizers>-->
-                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*">
-                            <Image Grid.RowSpan="2" 
-                                   Source="{Binding PrimaryImage.Path}" 
-                                   Style="{StaticResource LureImage}">
-                                <Image.GestureRecognizers>                                    
-                                    <!-- Using the code behind here as I could not get RelayCommand to work directly from here --> 
-                                    <TapGestureRecognizer Tapped="OnImageTapped" />
-                                </Image.GestureRecognizers>
-                            </Image>
-                            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Padding="10,0,0,0">
-                                <Label Text="{Binding Manufacturer}" Style="{StaticResource LureTitle}" />
-                                <Label Text="{Binding Description}" Style="{StaticResource LureSubtitle}" />
+                    <Grid Margin="2">
+                        <Border Style="{StaticResource LureCard}"
+                                Padding="6"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Fill">
+                            <VerticalStackLayout Spacing="6">
+                                <Border StrokeThickness="0"
+                                        BackgroundColor="{StaticResource Gray100}"
+                                        StrokeShape="RoundRectangle 6"
+                                        HeightRequest="140">
+                                    <Image Source="{Binding PrimaryImage.Path}"
+                                           HorizontalOptions="Fill"
+                                           InputTransparent="True" />
+                                </Border>
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding Description}"
+                                           Style="{StaticResource LureTitle}"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="1"
+                                           InputTransparent="True" />
+                                    <Label Text="{Binding Manufacturer}"
+                                           Style="{StaticResource LureSubtitle}"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="2"
+                                           InputTransparent="True" />
+                                </VerticalStackLayout>
+                                <Grid ColumnDefinitions="*,*,*">
+                                    <VerticalStackLayout>
+                                        <Label Text="Buoyancy" Style="{StaticResource LureDetailLabel}" InputTransparent="True" />
+                                        <Label Text="{Binding Buoyancy}" Style="{StaticResource LureDetailLabel}" InputTransparent="True" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="1">
+                                        <Label Text="Length" Style="{StaticResource LureDetailLabel}" InputTransparent="True" />
+                                        <Label Text="{Binding Length, StringFormat='{0:F2} '}" Style="{StaticResource LureDetailLabel}" InputTransparent="True" />
+                                    </VerticalStackLayout>
+                                    <VerticalStackLayout Grid.Column="2">
+                                        <Label Text="Weight" Style="{StaticResource LureDetailLabel}" InputTransparent="True" />
+                                        <Label Text="{Binding Weight, StringFormat='{0:F3} oz'}" Style="{StaticResource LureDetailLabel}" InputTransparent="True" />
+                                    </VerticalStackLayout>
+                                </Grid>
                             </VerticalStackLayout>
-                            <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,*,*" Margin="0,10,0,0" Padding="10,0,0,0">
-                                <VerticalStackLayout>
-                                    <Label Text="Buoyancy" Style="{StaticResource LureDetailLabel}" />
-                                    <Label Text="{Binding Buoyancy}" Style="{StaticResource LureDetailLabel}" />
-                                </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="1">
-                                    <Label Text="Length" Style="{StaticResource LureDetailLabel}" />
-                                    <Label Text="{Binding Length, StringFormat='{0:F2} '}" Style="{StaticResource LureDetailLabel}" />
-                                </VerticalStackLayout>
-                                <VerticalStackLayout Grid.Column="2">
-                                    <Label Text="Weight" Style="{StaticResource LureDetailLabel}" />
-                                    <Label Text="{Binding Weight, StringFormat='{0:F3} oz'}" Style="{StaticResource LureDetailLabel}" />
-                                </VerticalStackLayout>
-                            </Grid>
-                        </Grid>
-                    </Border>
+                        </Border>
+                        <Button BackgroundColor="Transparent"
+                                BorderColor="Transparent"
+                                BorderWidth="0"
+                                CornerRadius="8"
+                                CommandParameter="{Binding .}"
+                                Clicked="OnLureClicked"
+                                Pressed="OnLurePressed"
+                                Released="OnLureReleased"
+                                HorizontalOptions="Fill"
+                                VerticalOptions="Fill" />
+                    </Grid>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

@@ -40,7 +40,7 @@ namespace TrollTrack
             builder.Services.AddTransient<SettingsViewModel>();
             builder.Services.AddTransient<CatchesViewModel>();
             builder.Services.AddTransient<RodSetupViewModel>();
-            builder.Services.AddTransient<LuresViewModel>();
+            builder.Services.AddSingleton<LuresViewModel>();
             builder.Services.AddTransient<AddLureViewModel>();
             builder.Services.AddTransient<AnalyticsViewModel>();
 

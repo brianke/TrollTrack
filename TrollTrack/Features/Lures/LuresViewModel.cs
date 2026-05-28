@@ -34,9 +34,9 @@ namespace TrollTrack.Features.Lures
         #region Events
 
         /// <summary>
-        /// Event raised when add lure is confirmed 
+        /// Raised when the shared lures collection is reloaded (add, edit, or refresh).
         /// </summary>
-        //public event EventHandler<LureDataEntity>? AddLureConfirmed;
+        public event EventHandler? LuresUpdated;
 
         #endregion
 
@@ -103,15 +103,20 @@ namespace TrollTrack.Features.Lures
         #region Commands
 
 
-        public async Task LoadLuresAsync()
+        public Task RefreshLuresAsync() => LoadLuresAsync(showEmptyAlert: false);
+
+        public async Task LoadLuresAsync(bool showEmptyAlert = true)
         {
             var lureList = await BaseDatabaseService.GetAllLureDataAsync();
 
             if (lureList == null || !lureList.Any())
             {
                 Debug.WriteLine("No lures found in database");
-                await ShowAlertAsync("No Lures", "No lures found. Please add lures first from the Lures tab.");
+                await MainThread.InvokeOnMainThreadAsync(() => Lures.Clear());
+                if (showEmptyAlert)
+                    await ShowAlertAsync("No Lures", "No lures found. Please add lures first from the Lures tab.");
                 IsLoading = false;
+                LuresUpdated?.Invoke(this, EventArgs.Empty);
                 return;
             }
 
@@ -126,6 +131,7 @@ namespace TrollTrack.Features.Lures
 
             Debug.WriteLine($"Loaded {lureList.Count} lures for selection");
             IsLoading = false;
+            LuresUpdated?.Invoke(this, EventArgs.Empty);
         }
 
 
@@ -171,32 +177,36 @@ namespace TrollTrack.Features.Lures
         }
 
         [RelayCommand]
-        private async Task AddLure()
+        private async Task AddLure() => await ShowLurePopupAsync();
+
+        [RelayCommand]
+        private async Task EditLure(LureDataEntity? lure)
+        {
+            if (lure == null) return;
+            await ShowLurePopupAsync(lure);
+        }
+
+        private async Task ShowLurePopupAsync(LureDataEntity? lureToEdit = null)
         {
             try
             {
-                Debug.WriteLine("=== AddLure Command Started ===");
+                if (lureToEdit == null)
+                    _addLureVM.ResetForNewLure();
+                else
+                    _addLureVM.LoadForEdit(lureToEdit);
 
-                _addLureVM.ResetForNewLure();
-
-                // Subscribe to the ad lure confirmed event
                 _addLureVM.AddLureConfirmed += OnAddLureConfirmed;
-                Debug.WriteLine("Subscribed to OnAddLureConfirmed event");
 
-                // Create and show the popup
                 var popup = new AddLurePopup(_addLureVM);
-                Debug.WriteLine("Pushing modal popup");
-
                 var page = Application.Current?.Windows[0]?.Page;
                 if (page?.Navigation == null) return;
 
-                await page?.Navigation.PushModalAsync(popup)!;
-                Debug.WriteLine("Modal popup displayed");
+                await page.Navigation.PushModalAsync(popup);
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"!!! ERROR in AddRod: {ex.Message}");
-                await ShowAlertAsync("Error", "Failed to open rod setup. Please try again.");
+                Debug.WriteLine($"!!! ERROR opening lure popup: {ex.Message}");
+                await ShowAlertAsync("Error", "Failed to open lure editor. Please try again.");
             }
         }
 
@@ -266,9 +276,11 @@ namespace TrollTrack.Features.Lures
                 // Verify the rod was added
                 Debug.WriteLine($"Total lures after reload: {Lures.Count}");
 
+                var wasEdit = lureEntity.Id != Guid.Empty;
                 await ShowAlertAsync("Success",
-                    $"Lure added:\n" +
-                    $"{newLure.DisplayName}");
+                    wasEdit
+                        ? $"Lure updated:\n{newLure.DisplayName}"
+                        : $"Lure added:\n{newLure.DisplayName}");
             }
             catch (Exception ex)
             {

@@ -586,6 +586,8 @@ public partial class CatchesViewModel : BaseViewModel
 
             if (_luresVM == null) return;
 
+            await _luresVM.RefreshLuresAsync();
+
             // Create the rod setup view model
             _rodSetupVM = new RodSetupViewModel(BaseLocationService, BaseDatabaseService, _luresVM);
             _rodSetupVM.Name = $"Rod {Rods.Count + 1}";
@@ -692,6 +694,8 @@ public partial class CatchesViewModel : BaseViewModel
             Debug.WriteLine("=== EditRod Command Started ===");
 
             if (_luresVM == null) return;
+
+            await _luresVM.RefreshLuresAsync();
 
             // Create the rod setup view model
             _rodSetupVM = new RodSetupViewModel(BaseLocationService, BaseDatabaseService, _luresVM)

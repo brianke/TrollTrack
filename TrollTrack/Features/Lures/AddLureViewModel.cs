@@ -101,6 +101,8 @@ public partial class AddLureViewModel : BaseViewModel
 
     #endregion
 
+    private Guid _editingLureId = Guid.Empty;
+
     public AddLureViewModel(ILocationService locationService, IDatabaseService databaseService)
         : base(locationService, databaseService)
     {
@@ -430,7 +432,7 @@ public partial class AddLureViewModel : BaseViewModel
 
         var lureData = new LureDataEntity
         {
-            Id = Guid.Empty,
+            Id = _editingLureId,
             Manufacturer = Manufacturer,
             LureType = SelectedLureType,
             Description = LureDescription,
@@ -461,6 +463,10 @@ public partial class AddLureViewModel : BaseViewModel
 
     public void ResetForNewLure()
     {
+        _editingLureId = Guid.Empty;
+        Title = "Add New Lure";
+        AddButtonText = "Add Lure";
+
         Manufacturer = string.Empty;
         SelectedLureType = LureTypes.NA;
         LureDescription = string.Empty;
@@ -473,6 +479,40 @@ public partial class AddLureViewModel : BaseViewModel
 
         SelectedFrontColors = new ObservableCollection<LureColor>();
         SelectedBackColors = new ObservableCollection<LureColor>();
+        RefreshColorDisplays();
+    }
+
+    public void LoadForEdit(LureDataEntity lure)
+    {
+        _editingLureId = lure.Id;
+        Title = "Edit Lure";
+        AddButtonText = "Save Lure";
+
+        Manufacturer = lure.Manufacturer;
+        SelectedLureType = lure.LureType;
+        LureDescription = lure.Description;
+        SelectedBuoyancy = lure.Buoyancy;
+        LengthText = lure.Length > 0 ? lure.Length.ToString("F2") : string.Empty;
+        WeightText = lure.Weight > 0 ? lure.Weight.ToString("F3") : string.Empty;
+
+        LureImages.Clear();
+        if (lure.Images != null)
+        {
+            foreach (var img in lure.Images)
+            {
+                LureImages.Add(new LureImageEntity
+                {
+                    Id = img.Id,
+                    Path = img.Path,
+                    LureDataEntityId = lure.Id
+                });
+            }
+        }
+
+        PrimaryImageId = lure.PrimaryImageId;
+        SelectedFrontColors = new ObservableCollection<LureColor>(lure.FrontColorsList);
+        SelectedBackColors = new ObservableCollection<LureColor>(lure.BackColorsList);
+        RefreshColorDisplays();
     }
 
     #endregion

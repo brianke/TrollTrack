@@ -17,8 +17,8 @@
 		<ApplicationId>com.trolltrack.fishing</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>0.1.8</ApplicationDisplayVersion>
-		<ApplicationVersion>8</ApplicationVersion>
+		<ApplicationDisplayVersion>0.1.9</ApplicationDisplayVersion>
+		<ApplicationVersion>9</ApplicationVersion>
 
 		<!-- Android specific settings -->
 		<AndroidPackageFormat>apk</AndroidPackageFormat>

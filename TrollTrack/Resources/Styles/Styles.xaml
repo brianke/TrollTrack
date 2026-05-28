@@ -276,15 +276,15 @@
     </Style>
 
     <Style x:Key="LureTitle" TargetType="Label">
-        <Setter Property="FontSize" Value="Large" />
-    </Style>
-
-    <Style x:Key="LureSubtitle" TargetType="Label">
         <Setter Property="FontSize" Value="Medium" />
     </Style>
 
-    <Style x:Key="LureDetailLabel" TargetType="Label">
+    <Style x:Key="LureSubtitle" TargetType="Label">
         <Setter Property="FontSize" Value="Small" />
+    </Style>
+
+    <Style x:Key="LureDetailLabel" TargetType="Label">
+        <Setter Property="FontSize" Value="12" />
     </Style>
 
     <Style x:Key="ModalOverlay" TargetType="Grid">
