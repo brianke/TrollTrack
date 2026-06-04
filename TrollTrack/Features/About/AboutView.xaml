@@ -49,6 +49,16 @@
             <VerticalStackLayout Spacing="8"
                                  Margin="0,8,0,0"
                                  HorizontalOptions="Fill">
+                <Label Text="Version 0.1.9"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="#333333"
+                       HorizontalOptions="Center"/>
+                <Label FontSize="14"
+                       TextColor="#444444"
+                       LineBreakMode="WordWrap"
+                       HorizontalOptions="Fill"
+                       Text="&#x2022; Updated Lures page to show larger images and more details.&#10;&#x2022; Added ability to edit existing lures.&#10;&#x2022; Fixed issue with using a newly added lure in a current trip.&#10;"/>
                 <Label Text="Version 0.1.7"
                        FontSize="18"
                        FontAttributes="Bold"
